@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'michael';
+  src: url('/fonts/michael.otf') format('opentype'),
+       url('/fonts/michael.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 30, 30, 30;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: 'Manrope', sans-serif;
+}
+
+@layer components {
+  .input-field {
+    @apply w-full bg-white text-black rounded-2xl px-7 py-5 text-lg font-medium;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white rounded-2xl px-7 py-5 text-lg font-semibold flex justify-center items-center;
+  }
+  
+  .social-btn {
+    @apply bg-white rounded-3xl px-10 py-4 flex items-center justify-center;
+  }
+} 

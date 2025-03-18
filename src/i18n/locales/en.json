@@ -1,0 +1,37 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Submit",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "auth": {
+    "loginSuccessful": "Login successful",
+    "loginFailed": "Login failed",
+    "registrationSuccessful": "Registration successful",
+    "registrationFailed": "Registration failed",
+    "requiredField": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordMismatch": "Passwords do not match",
+    "passwordLength": "Password must be at least 6 characters"
+  },
+  "dashboard": {
+    "overview": "Overview",
+    "statistics": "Statistics",
+    "recentActivity": "Recent Activity",
+    "welcomeBack": "Welcome back"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Invalid email format",
+    "minLength": "Minimum {{count}} characters required",
+    "maxLength": "Maximum {{count}} characters allowed"
+  }
+} 

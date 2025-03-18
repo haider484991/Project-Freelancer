@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
+    restart: always
+    volumes:
+      - ./.env:/app/.env
+
+  # You can add more services here like a database if needed
+  # Example:
+  # db:
+  #   image: postgres:13
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=myapp
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+# Define volumes if needed
+# volumes:
+#   postgres_data: 
