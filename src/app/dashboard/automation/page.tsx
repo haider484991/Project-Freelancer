@@ -7,6 +7,7 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useAppContext } from '@/context/AppContext'
+import { useTranslation } from 'react-i18next'
 
 // Define message types
 type MessageStatus = 'sent' | 'schedule'
@@ -77,6 +78,14 @@ export default function WhatsAppAutomationPage() {
   
   // Get clients and groups from context
   const { clients, groups } = useAppContext()
+  const { t, i18n } = useTranslation()
+  const [isRtl, setIsRtl] = useState(false)
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar']
+    setIsRtl(rtlLanguages.includes(i18n.language))
+  }, [i18n.language])
   
   // State for message form
   const [selectedRecipient, setSelectedRecipient] = useState<string>('')
@@ -208,9 +217,9 @@ export default function WhatsAppAutomationPage() {
     
     alert('Message sent successfully!')
   }
-  
+
   return (
-    <div className="min-h-screen bg-[#1E1E1E] relative overflow-hidden">
+    <div className={`min-h-screen bg-[#1E1E1E] relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
       {/* Background grid lines */}
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
@@ -249,14 +258,14 @@ export default function WhatsAppAutomationPage() {
                   size={40}
                 />
                 <div>
-                  <h3 className="text-white font-semibold">Alex Dube</h3>
-                  <p className="text-white/70 text-sm">Admin</p>
+                  <h3 className="text-white font-semibold">{t('profile')}</h3>
+                  <p className="text-white/70 text-sm">{t('admin')}</p>
                 </div>
               </div>
               <button 
                 className="text-white"
                 onClick={() => setIsMobileMenuOpen(false)}
-                aria-label="Close Menu"
+                aria-label={t('close')}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -272,12 +281,12 @@ export default function WhatsAppAutomationPage() {
       {/* Desktop Layout */}
       <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`fixed top-0 left-0 h-full z-20 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'}`}>
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
           <Sidebar />
         </div>
         
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? 'ml-[304px]' : 'ml-0'} p-5`}>
+        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
           {/* White Background Container */}
           <div className="bg-white rounded-[35px] p-8">
             {/* Header */}
@@ -287,7 +296,7 @@ export default function WhatsAppAutomationPage() {
                 <button 
                   className="w-[45px] h-[45px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  aria-label={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
+                  aria-label={isSidebarOpen ? t('hide') : t('show')}
                 >
                   <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -296,7 +305,7 @@ export default function WhatsAppAutomationPage() {
                   </svg>
                 </button>
                 
-                <h2 className="text-[25px] font-bold text-[#1E1E1E]">WhatsApp Message Automation</h2>
+                <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('whatsapp')}</h2>
               </div>
               
               <div className="flex items-center gap-[5px]">
@@ -308,7 +317,7 @@ export default function WhatsAppAutomationPage() {
                     e.stopPropagation()
                     console.log('Search clicked')
                   }}
-                  aria-label="Search"
+                  aria-label={t('search')}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.66663 9.58329 1.66663C5.21104 1.66663 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -329,7 +338,7 @@ export default function WhatsAppAutomationPage() {
                     e.stopPropagation()
                     console.log('Notifications clicked')
                   }}
-                  aria-label="Notification"
+                  aria-label={t('notification')}
                 >
                   <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" stroke="#2B180A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -348,8 +357,8 @@ export default function WhatsAppAutomationPage() {
                     size={45}
                   />
                   <div className="flex flex-col">
-                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">Alex Dube</span>
-                    <span className="text-[14px] text-[#636363] capitalize">Admin</span>
+                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">{t('profile')}</span>
+                    <span className="text-[14px] text-[#636363] capitalize">{t('admin')}</span>
                   </div>
                 </div>
               </div>
@@ -365,7 +374,7 @@ export default function WhatsAppAutomationPage() {
                     onChange={handleRecipientChange} 
                     className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
                   >
-                    <option value="">Select Recipient (Client Or Group)</option>
+                    <option value="">{t('select')}</option>
                     {clients.map(client => (
                       <option key={client.id} value={`individual:${client.id}`}>{client.name}</option>
                     ))}
@@ -384,13 +393,13 @@ export default function WhatsAppAutomationPage() {
                     onChange={handleTemplateChange} 
                     className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
                   >
-                    <option value="">Select Message Template</option>
+                    <option value="">{t('select')}</option>
                     {messageTemplates.map(template => (
                       <option key={template.id} value={template.id}>{template.name}</option>
                     ))}
                   </select>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.96004 4.47498L6.70004 7.73498C6.31504 8.11998 5.68504 8.11998 5.30004 7.73498L2.04004 4.47498" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.96004 4.47498L6.70004 7.73498C6.31504 8.11998 5.68504 8.11998 5.30004 7.73498L2.04004 4.47498" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
               </div>
@@ -419,13 +428,13 @@ export default function WhatsAppAutomationPage() {
                   className="bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] px-6 py-3 font-semibold"
                   onClick={handleScheduleMessage}
                 >
-                  Schedule
+                  {t('schedule')}
                 </button>
                 <button 
                   className="bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] px-6 py-3 font-semibold ml-4"
                   onClick={handleSendNow}
                 >
-                  Send Now
+                  {t('send')}
                 </button>
               </div>
             </div>
@@ -435,11 +444,11 @@ export default function WhatsAppAutomationPage() {
               <table className="w-full min-w-[700px] border-collapse">
                 <thead>
                   <tr className="border-b-[1.2px] border-[#E2ECE2] bg-white text-black">
-                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">Recipient</th>
-                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">Type</th>
-                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">Message</th>
-                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">Status</th>
-                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">Timestamp</th>
+                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">{t('recipient')}</th>
+                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">{t('type')}</th>
+                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">{t('message')}</th>
+                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">{t('status')}</th>
+                    <th className="text-left py-4 px-4 text-[#1E1E1E] font-bold uppercase text-[16px]">{t('timestamp')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -454,7 +463,7 @@ export default function WhatsAppAutomationPage() {
                             ? 'bg-[#EBF9EB] text-[#368C48] border-[2px] border-[#B7DFBA]' 
                             : 'bg-[#FFFAE1] text-[#9F7918] border-[2px] border-[#F8DA84]'
                         }`}>
-                          {message.status === 'sent' ? 'Sent' : 'Schedule'}
+                          {message.status === 'sent' ? t('sent') : t('schedule')}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-[#636363] font-medium">{message.timestamp}</td>
@@ -468,7 +477,7 @@ export default function WhatsAppAutomationPage() {
       </div>
       
       {/* Mobile Layout */}
-      <div className="relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E]">
+      <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
         {/* Background blur elements - adjusted size and position */}
         <div className="absolute w-[418px] h-[633px] top-[-404px] right-[199px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[287px] z-0"></div>
         <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-271px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[324px] z-0"></div>
@@ -536,7 +545,7 @@ export default function WhatsAppAutomationPage() {
             
             {/* Page Title */}
             <div className="mb-6">
-              <h2 className="text-[20px] font-bold text-[#1E1E1E] ml-[2px]">WhatsApp Message Automation</h2>
+              <h2 className="text-[20px] font-bold text-[#1E1E1E] ml-[2px]">{t('whatsapp')}</h2>
             </div>
             
             {/* Mobile Message Controls */}
@@ -549,7 +558,7 @@ export default function WhatsAppAutomationPage() {
                     onChange={handleRecipientChange} 
                     className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
                   >
-                    <option value="">Select Recipient (Client Or Group)</option>
+                    <option value="">{t('select')}</option>
                     {clients.map(client => (
                       <option key={client.id} value={`individual:${client.id}`}>{client.name}</option>
                     ))}
@@ -568,7 +577,7 @@ export default function WhatsAppAutomationPage() {
                     onChange={handleTemplateChange} 
                     className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
                   >
-                    <option value="">Select Message Template</option>
+                    <option value="">{t('select')}</option>
                     {messageTemplates.map(template => (
                       <option key={template.id} value={template.id}>{template.name}</option>
                     ))}
@@ -602,13 +611,13 @@ export default function WhatsAppAutomationPage() {
                 className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px]"
                 onClick={handleScheduleMessage}
               >
-                Schedule
+                {t('schedule')}
               </button>
               <button 
                 className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px] mt-4"
                 onClick={handleSendNow}
               >
-                Send Now
+                {t('send')}
               </button>
             </div>
             
@@ -628,7 +637,7 @@ export default function WhatsAppAutomationPage() {
                         ? 'bg-[#EBF9EB] text-[#368C48] border-[1.5px] border-[#B7DFBA]' 
                         : 'bg-[#FFFAE1] text-[#9F7918] border-[1.5px] border-[#F8DA84]'
                     }`}>
-                      {message.status === 'sent' ? 'Sent' : 'Schedule'}
+                      {message.status === 'sent' ? t('sent') : t('schedule')}
                     </span>
                   </div>
                   

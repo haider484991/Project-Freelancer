@@ -48,14 +48,14 @@ export default function DashboardPage() {
       <div className="absolute w-[300px] h-[300px] top-[-150px] right-[-150px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[150px] lg:hidden block"></div>
       
       {/* Desktop Layout */}
-      <div className="hidden lg:flex h-screen relative z-10">
+      <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[304px]' : 'w-0 overflow-hidden'}`}>
-          {isSidebarOpen && <Sidebar />}
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
+          <Sidebar />
         </div>
         
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
           <div className="max-w-[1600px] mx-auto px-8 py-8">
             {/* Header */}
             <header className="flex items-center justify-between bg-white rounded-[20px] px-6 py-5 mb-6">

@@ -1,17 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Sidebar from '@/components/dashboard/Sidebar'
+import { useTranslation } from 'react-i18next'
 
 export default function SettingsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [whatsappEnabled, setWhatsappEnabled] = useState(true)
   const [weeklyResetsEnabled, setWeeklyResetsEnabled] = useState(true)
+  const { t, i18n } = useTranslation()
+  const [isRtl, setIsRtl] = useState(false)
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar']
+    setIsRtl(rtlLanguages.includes(i18n.language))
+  }, [i18n.language])
   
   return (
-    <div className="min-h-screen bg-[#1E1E1E] relative overflow-hidden">
+    <div className={`min-h-screen bg-[#1E1E1E] relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
       {/* Background grid lines */}
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
@@ -77,12 +86,12 @@ export default function SettingsPage() {
       {/* Desktop Layout */}
       <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`fixed top-0 left-0 h-full z-20 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'}`}>
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
           <Sidebar />
         </div>
         
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? 'ml-[304px]' : 'ml-0'} p-5`}>
+        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
           {/* White Background Container */}
           <div className="bg-white rounded-[35px] p-8">
             {/* Header */}

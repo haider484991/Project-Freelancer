@@ -165,6 +165,7 @@ interface ClientDetailsModalProps {
 export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsModalProps) {
   const { t, i18n } = useTranslation();
   const [isRtl, setIsRtl] = useState(false);
+  const [activeWeek, setActiveWeek] = useState(1);
   
   // Check if current language is RTL
   useEffect(() => {
@@ -173,8 +174,6 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
   }, [i18n.language]);
   
   if (!client) return null;
-
-  const [activeWeek, setActiveWeek] = useState(1);
   
   const handleWeekChange = (e: React.MouseEvent, week: number) => {
     e.preventDefault();

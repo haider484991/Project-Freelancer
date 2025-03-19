@@ -137,7 +137,7 @@ export default function ClientManagementPage() {
   }
   
   return (
-    <div className="min-h-screen bg-[#1E1E1E] relative overflow-hidden" dir={isRtl ? "rtl" : "ltr"}>
+    <div className={`min-h-screen bg-[#1E1E1E] relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
       {/* Background grid lines */}
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
@@ -200,15 +200,15 @@ export default function ClientManagementPage() {
         </div>
       )}
       
-      {/* Desktop View */}
+      {/* Desktop Layout */}
       <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`fixed top-0 left-0 h-full z-20 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'}`}>
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
           <Sidebar />
         </div>
         
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? 'ml-[304px]' : 'ml-0'} p-5`}>
+        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
           <div className="bg-white rounded-[35px] p-8">
             {/* Header */}
             <header className="flex justify-between items-center mb-[36px]">
@@ -383,8 +383,8 @@ export default function ClientManagementPage() {
         </div>
       </div>
       
-      {/* Mobile View */}
-      <div className="relative w-full min-h-screen z-10 lg:hidden">
+      {/* Mobile Layout */}
+      <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
         {/* Header */}
         <header className="bg-white px-5 py-4 flex justify-between items-center shadow-sm">
           <button 

@@ -27,6 +27,9 @@ export default function CoachingGroupsPage() {
   useEffect(() => {
     const rtlLanguages = ['he', 'ar']
     setIsRtl(rtlLanguages.includes(i18n.language))
+    
+    // Set document direction
+    document.documentElement.dir = rtlLanguages.includes(i18n.language) ? 'rtl' : 'ltr'
   }, [i18n.language])
 
   // Search and filter states
@@ -206,12 +209,12 @@ export default function CoachingGroupsPage() {
       {/* Desktop Layout */}
       <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`fixed top-0 left-0 h-full z-20 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'}`}>
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
           <Sidebar />
         </div>
         
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? 'ml-[304px]' : 'ml-0'} p-5`}>
+        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
           {/* White Background Container */}
           <div className="bg-white rounded-[35px] p-8">
             {/* Header */}
@@ -420,7 +423,7 @@ export default function CoachingGroupsPage() {
       </div>
       
       {/* Mobile Layout */}
-      <div className="relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E]">
+      <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
         {/* Background blur elements - adjusted size and position */}
         <div className="absolute w-[418px] h-[633px] top-[-404px] right-[199px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[287px] z-0"></div>
         <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-271px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[324px] z-0"></div>
@@ -466,22 +469,28 @@ export default function CoachingGroupsPage() {
                 </button>
                 
                 {/* Notification Button */}
-                <button className="w-[38px] h-[38px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative">
-                  <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" stroke="#2B180A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="13.5" cy="5.5" r="4.5" fill="#FF0000"/>
+                <button className="text-white">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[10px] font-bold">
-                    1
+                    7
                   </div>
                 </button>
                 
                 {/* Profile */}
-                <ProfileAvatar 
-                  src="/images/profile.jpg" 
-                  alt="Profile"
-                  size={38}
-                />
+                <div className="flex items-center gap-2">
+                  <ProfileAvatar 
+                    src="/images/profile.jpg" 
+                    alt="Profile"
+                    size={38}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">{t('profile_name')}</span>
+                    <span className="text-[14px] text-[#636363] capitalize">{t('admin')}</span>
+                  </div>
+                </div>
               </div>
             </div>
             

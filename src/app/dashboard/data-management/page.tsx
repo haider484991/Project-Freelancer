@@ -6,6 +6,7 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useAppContext } from '@/context/AppContext'
+import { useTranslation } from 'react-i18next'
 
 export default function DataManagementPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -13,6 +14,8 @@ export default function DataManagementPage() {
   const [selectedWeek, setSelectedWeek] = useState('Week 1')
   const [selectedClientFilter, setSelectedClientFilter] = useState('All Clients')
   const { clients } = useAppContext()
+  const { t, i18n } = useTranslation()
+  const [isRtl, setIsRtl] = useState(false)
   
   // Derived data for statistics
   const activeClients = clients.filter(client => client.status === 'active')
@@ -259,8 +262,17 @@ export default function DataManagementPage() {
     document.body.removeChild(link)
   }
   
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar']
+    setIsRtl(rtlLanguages.includes(i18n.language))
+    
+    // Set document direction
+    document.documentElement.dir = rtlLanguages.includes(i18n.language) ? 'rtl' : 'ltr'
+  }, [i18n.language])
+  
   return (
-    <div className="min-h-screen bg-[#1E1E1E] relative overflow-hidden">
+    <div className={`min-h-screen bg-[#1E1E1E] relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
       {/* Background grid lines */}
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
@@ -303,8 +315,8 @@ export default function DataManagementPage() {
                   />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">Alex Dube</h3>
-                  <p className="text-white/70 text-sm">Admin</p>
+                  <h3 className="text-white font-semibold">{t('Alex Dube')}</h3>
+                  <p className="text-white/70 text-sm">{t('Admin')}</p>
                 </div>
               </div>
               <button 
@@ -326,12 +338,12 @@ export default function DataManagementPage() {
       {/* Desktop Layout */}
       <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`fixed top-0 left-0 h-full z-20 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'}`}>
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
           <Sidebar />
         </div>
         
         {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? 'ml-[304px]' : 'ml-0'} p-5`}>
+        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
           {/* White Background Container */}
           <div className="bg-white rounded-[35px] p-8">
             {/* Header */}
@@ -349,7 +361,7 @@ export default function DataManagementPage() {
                     <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
-                <h2 className="text-[25px] font-bold text-[#1E1E1E]">Data & Statistics</h2>
+                <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('Data & Statistics')}</h2>
               </div>
               
               <div className="flex items-center gap-[5px]">
@@ -376,14 +388,18 @@ export default function DataManagementPage() {
                 
                 {/* Profile */}
                 <div className="flex items-center gap-[6px]">
-                  <ProfileAvatar 
-                    src="/images/profile.jpg" 
-                    alt="Alex Dube"
-                    size={45}
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">Alex Dube</span>
-                    <span className="text-[14px] text-[#636363] capitalize">Admin</span>
+                  <div className="w-[40px] h-[40px] rounded-full overflow-hidden">
+                    <Image 
+                      src="/images/profile.jpg" 
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold">{t('Alex Dube')}</h3>
+                    <p className="text-white/70 text-sm">{t('Admin')}</p>
                   </div>
                 </div>
               </div>
@@ -404,23 +420,23 @@ export default function DataManagementPage() {
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M11.3334 8.6665V12.6665H4.08342V8.6665H3.3334V12.6665C3.3334 13.3998 3.93341 13.9998 4.08342 13.9998H11.3334C12.0667 13.9998 12.6667 13.3998 12.6667 12.6665V8.6665H11.3334ZM10.6667 7.99984L9.72008 7.05317L8.66675 8.1065V3.33317H7.33341V8.1065L6.28008 7.05317L5.33341 7.99984L8.00008 10.6665L10.6667 7.99984Z" fill="white"/>
                   </svg>
-                  <span className="text-white text-sm font-semibold">Export</span>
+                  <span className="text-white text-sm font-semibold">{t('Export')}</span>
                 </button>
               </div>
               
               {/* Client Overview Chart */}
               <div className="mb-6 bg-white rounded-[30px] p-6 shadow-md border border-gray-100">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">Overview All Clients.</h3>
+                  <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">{t('Overview All Clients')}</h3>
                   
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-gradient-to-b from-[#13A753] to-[#1E2120]"></div>
-                      <span className="text-[#2B180A] text-sm">Total Active</span>
+                      <span className="text-[#2B180A] text-sm">{t('Total Active')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-[#F45C5C]"></div>
-                      <span className="text-[#2B180A] text-sm">Inactive</span>
+                      <span className="text-[#2B180A] text-sm">{t('Inactive')}</span>
                     </div>
                   </div>
                 </div>
@@ -481,7 +497,7 @@ export default function DataManagementPage() {
               {/* Caloric Trends Chart */}
               <div className="bg-white rounded-[30px] p-6 shadow-md mb-6 border border-gray-100">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">Caloric Trends</h3>
+                  <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">{t('Caloric Trends')}</h3>
                   
                   <WeekSelector />
                 </div>
@@ -538,9 +554,9 @@ export default function DataManagementPage() {
                       <div className="absolute top-[130px] left-[360px] transform -translate-x-1/2 -translate-y-16 bg-gradient-to-b from-[#13A753] to-[#1E2120] p-2 rounded-[10px] shadow-md z-10">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="w-3 h-3 bg-primary rounded-full"></div>
-                          <span className="text-sm text-white">Week 3</span>
+                          <span className="text-sm text-white">{t('Week 3')}</span>
                         </div>
-                        <span className="font-bold text-white text-[18px]"> Calories : 1300</span>
+                        <span className="font-bold text-white text-[18px]">{t('Calories : 1300')}</span>
                       </div>
                     </div>
                   </div>
@@ -559,7 +575,7 @@ export default function DataManagementPage() {
                 {/* Compliance Rates Card */}
                 <div className="bg-white rounded-[30px] p-6 shadow-md border border-gray-100">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">Compliance Rates</h3>
+                    <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">{t('Compliance Rates')}</h3>
                     <WeekSelector />
                   </div>
 
@@ -579,14 +595,14 @@ export default function DataManagementPage() {
                       </svg>
                       
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[#636363] text-xs">Rate</span>
+                        <span className="text-[#636363] text-xs">{t('Rate')}</span>
                         <span className="text-[#1E1E1E] text-xl font-bold">{complianceRate} %</span>
                       </div>
                     </div>
                     
                     <div className="bg-[#DAEEDA] w-full py-3 rounded-[10px] text-center">
-                      <h4 className="text-[#1E1E1E] text-base font-semibold uppercase">Compliance</h4>
-                      <p className="text-[#636363] text-sm">For {selectedWeek}</p>
+                      <h4 className="text-[#1E1E1E] text-base font-semibold uppercase">{t('Compliance')}</h4>
+                      <p className="text-[#636363] text-sm">{t('For')} {selectedWeek}</p>
                     </div>
                   </div>
                 </div>
@@ -594,7 +610,7 @@ export default function DataManagementPage() {
                 {/* Inactive Clients Card */}
                 <div className="bg-white rounded-[30px] p-6 shadow-md lg:col-span-2 border border-gray-100">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">Inactive Clients</h3>
+                    <h3 className="text-[18px] font-bold text-[#1E1E1E] capitalize">{t('Inactive Clients')}</h3>
                     <WeekSelector />
                   </div>
 
@@ -619,12 +635,12 @@ export default function DataManagementPage() {
                             <span className="text-[#1E1E1E] font-medium text-base">{client.name}</span>
                           </div>
                           <span className="text-[#D40101] font-medium text-base">
-                            Last Active: {Math.floor(Math.random() * 10) + 5} days ago
+                            {t('Last Active')} : {Math.floor(Math.random() * 10) + 5} {t('days ago')}
                           </span>
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-4 text-gray-500">No inactive clients found</div>
+                      <div className="text-center py-4 text-gray-500">{t('No inactive clients found')}</div>
                     )}
                   </div>
                 </div>
@@ -635,7 +651,7 @@ export default function DataManagementPage() {
       </div>
       
       {/* Mobile Layout */}
-      <div className="relative w-full min-h-screen z-10 lg:hidden">
+      <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
         {/* Mobile Header */}
         <div className="flex justify-between items-center p-4 bg-[#1E1E1E]">
           <div className="flex items-center gap-3">
@@ -658,7 +674,7 @@ export default function DataManagementPage() {
                 height={24}
                 className="text-[#636363]"
               />
-              <h1 className="text-[20px] font-bold text-white">Data & Statistics</h1>
+              <h1 className="text-[20px] font-bold text-white">{t('Data & Statistics')}</h1>
             </div>
           </div>
           
@@ -708,7 +724,7 @@ export default function DataManagementPage() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10.0001 7.58317V11.0832H4.08342V7.58317H2.91675V11.0832C2.91675 11.7332 3.43342 12.2498 4.08342 12.2498H10.0001C10.6501 12.2498 11.1667 11.7332 11.1667 11.0832V7.58317H10.0001ZM9.33342 6.99984L8.50592 6.17234L7.58342 7.09484V2.9165H6.41675V7.09484L5.49425 6.17234L4.66675 6.99984L7.00008 9.33317L9.33342 6.99984Z" fill="white"/>
               </svg>
-              <span className="text-white text-xs font-semibold">Export</span>
+              <span className="text-white text-xs font-semibold">{t('Export')}</span>
             </button>
           </div>
           
@@ -717,16 +733,16 @@ export default function DataManagementPage() {
             {/* Client Overview Chart - Mobile */}
             <div className="bg-white rounded-[20px] p-4 shadow-md border border-gray-100">
               <div className="mb-3">
-                <h3 className="text-[16px] font-bold text-[#1E1E1E] mb-2 capitalize">Overview All Clients.</h3>
+                <h3 className="text-[16px] font-bold text-[#1E1E1E] mb-2 capitalize">{t('Overview All Clients')}</h3>
                 
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-gradient-to-b from-[#13A753] to-[#1E2120]"></div>
-                    <span className="text-[#2B180A] text-xs">Total Active</span>
+                    <span className="text-[#2B180A] text-xs">{t('Total Active')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-[#F45C5C]"></div>
-                    <span className="text-[#2B180A] text-xs">Inactive</span>
+                    <span className="text-[#2B180A] text-xs">{t('Inactive')}</span>
                   </div>
                 </div>
               </div>
@@ -757,7 +773,7 @@ export default function DataManagementPage() {
             
             {/* Caloric Trends Chart */}
             <div className="bg-white rounded-[20px] p-4 shadow-md border border-gray-100">
-              <h3 className="text-[16px] font-bold text-[#1E1E1E] mb-4 capitalize">Caloric Trends</h3>
+              <h3 className="text-[16px] font-bold text-[#1E1E1E] mb-4 capitalize">{t('Caloric Trends')}</h3>
               
               <MobileWeekSelector />
               
@@ -811,10 +827,10 @@ export default function DataManagementPage() {
               
               {/* X-Axis Labels */}
               <div className="flex justify-between px-4 mt-2 text-[#636363] text-xs">
-                <span>Week 1</span>
-                <span>Week 2</span>
-                <span>Week 3</span>
-                <span>Week 4</span>
+                <span>{t('Week 1')}</span>
+                <span>{t('Week 2')}</span>
+                <span>{t('Week 3')}</span>
+                <span>{t('Week 4')}</span>
               </div>
             </div>
             
@@ -823,7 +839,7 @@ export default function DataManagementPage() {
               {/* Compliance Rates Card - Mobile */}
               <div className="bg-white rounded-[20px] p-4 shadow-md border border-gray-100">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-[16px] font-bold text-[#1E1E1E] capitalize">Compliance Rates</h3>
+                  <h3 className="text-[16px] font-bold text-[#1E1E1E] capitalize">{t('Compliance Rates')}</h3>
                   <MobileWeekSelector />
                 </div>
                 
@@ -843,14 +859,14 @@ export default function DataManagementPage() {
                     </svg>
                     
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-[#636363] text-xs">Rate</span>
+                      <span className="text-[#636363] text-xs">{t('Rate')}</span>
                       <span className="text-[#1E1E1E] text-xl font-bold">{complianceRate} %</span>
                     </div>
                   </div>
                   
                   <div className="bg-[#DAEEDA] w-full py-2 rounded-[8px] text-center">
-                    <h4 className="text-[#1E1E1E] text-sm font-semibold uppercase">Compliance</h4>
-                    <p className="text-[#636363] text-xs">For {selectedWeek}</p>
+                    <h4 className="text-[#1E1E1E] text-sm font-semibold uppercase">{t('Compliance')}</h4>
+                    <p className="text-[#636363] text-xs">{t('For')} {selectedWeek}</p>
                   </div>
                 </div>
               </div>
@@ -858,7 +874,7 @@ export default function DataManagementPage() {
               {/* Inactive Clients Card - Mobile */}
               <div className="bg-white rounded-[20px] p-4 shadow-md border border-gray-100">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-[16px] font-bold text-[#1E1E1E] capitalize">Inactive Clients</h3>
+                  <h3 className="text-[16px] font-bold text-[#1E1E1E] capitalize">{t('Inactive Clients')}</h3>
                   <MobileWeekSelector />
                 </div>
                 
@@ -883,12 +899,12 @@ export default function DataManagementPage() {
                           <span className="text-[#1E1E1E] font-medium text-sm">{client.name}</span>
                         </div>
                         <span className="text-[#D40101] font-medium text-xs ml-10">
-                          Last Active: {Math.floor(Math.random() * 10) + 5} days ago
+                          {t('Last Active')} : {Math.floor(Math.random() * 10) + 5} {t('days ago')}
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-gray-500">No inactive clients found</div>
+                    <div className="text-center py-4 text-gray-500">{t('No inactive clients found')}</div>
                   )}
                 </div>
               </div>
@@ -897,7 +913,7 @@ export default function DataManagementPage() {
             {/* Full Inactive Clients Card - Mobile */}
             <div className="sm:hidden bg-white rounded-[20px] p-4 shadow-md border border-gray-100">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-[16px] font-bold text-[#1E1E1E] capitalize">Inactive Clients</h3>
+                <h3 className="text-[16px] font-bold text-[#1E1E1E] capitalize">{t('Inactive Clients')}</h3>
                 <MobileWeekSelector />
               </div>
               
@@ -921,7 +937,7 @@ export default function DataManagementPage() {
                       <span className="text-[#1E1E1E] font-medium text-sm">{client.name}</span>
                     </div>
                     <span className="text-[#D40101] font-medium text-xs ml-10">
-                      Last Active: {Math.floor(Math.random() * 10) + 5} days ago
+                      {t('Last Active')} : {Math.floor(Math.random() * 10) + 5} {t('days ago')}
                     </span>
                   </div>
                 ))}
