@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LanguageSwitcher from '../LanguageSwitcher'
+import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react'
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -10,7 +12,7 @@ interface SidebarProps {
 
 const menuItems = [
   {
-    title: 'Dashboard',
+    title: 'sidebar.dashboard',
     href: '/dashboard',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -22,7 +24,7 @@ const menuItems = [
     ),
   },
   {
-    title: 'Client Management',
+    title: 'sidebar.clients',
     href: '/dashboard/clients',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -32,7 +34,7 @@ const menuItems = [
     ),
   },
   {
-    title: 'Coaching Groups Management',
+    title: 'sidebar.groups',
     href: '/dashboard/groups',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,7 +46,7 @@ const menuItems = [
     ),
   },
   {
-    title: 'WhatsApp Message Automation',
+    title: 'sidebar.automation',
     href: '/dashboard/automation',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -53,7 +55,7 @@ const menuItems = [
     ),
   },
   {
-    title: 'Data & Statistics',
+    title: 'sidebar.dataManagement',
     href: '/dashboard/data-management',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,7 +65,7 @@ const menuItems = [
     ),
   },
   {
-    title: 'Settings',
+    title: 'sidebar.settings',
     href: '/dashboard/settings',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -75,9 +77,17 @@ const menuItems = [
 
 export default function Sidebar({ isMobile = false }: SidebarProps) {
   const pathname = usePathname()
-
+  const { t, i18n } = useTranslation()
+  const [isRtl, setIsRtl] = useState(false)
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar']
+    setIsRtl(rtlLanguages.includes(i18n.language))
+  }, [i18n.language])
+  
   return (
-    <aside className={`${isMobile ? 'relative w-full' : 'w-[304px] h-full'} p-[30px] z-20`}>
+    <aside className={`${isMobile ? 'relative w-full' : 'w-[304px] h-full'} p-[30px] z-20 ${isRtl ? 'rtl' : 'ltr'}`}>
       {/* Logo */}
       <div className="flex flex-col gap-[5px]">
         <h1 className="font-michael text-primary text-[29px] uppercase tracking-[0.04em] leading-[100%] font-bold">
@@ -98,12 +108,12 @@ export default function Sidebar({ isMobile = false }: SidebarProps) {
               href={item.href}
               className={`flex items-center gap-[14px] ${
                 isActive ? 'text-primary' : 'text-[#CFCFCF]'
-              } hover:text-primary transition-colors`}
+              } hover:text-primary transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
             >
               <span className="w-6 h-6">
                 {item.icon}
               </span>
-              <span className="text-[16px] font-semibold">{item.title}</span>
+              <span className="text-[16px] font-semibold">{t(item.title)}</span>
             </Link>
           )
         })}
@@ -112,10 +122,10 @@ export default function Sidebar({ isMobile = false }: SidebarProps) {
       {/* Language Switcher */}
       <div className="mt-8 pt-8 border-t border-gray-700">
         <div className="flex flex-col gap-2">
-          <span className="text-[#CFCFCF] text-sm font-medium">Language</span>
+          <span className="text-[#CFCFCF] text-sm font-medium">{t('common.language')}</span>
           <LanguageSwitcher />
         </div>
       </div>
     </aside>
   )
-} 
+}

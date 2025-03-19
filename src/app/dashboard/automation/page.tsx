@@ -1,61 +1,69 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import Sidebar from '@/components/dashboard/Sidebar'
 import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { useAppContext } from '@/context/AppContext'
 
 // Define message types
 type MessageStatus = 'sent' | 'schedule'
 type RecipientType = 'individual' | 'group'
 
 interface Message {
-  id: number
-  recipient: string
-  type: RecipientType
-  message: string
-  status: MessageStatus
-  timestamp: string
+  id: string;
+  recipient: string;
+  recipientId: string;
+  type: RecipientType;
+  message: string;
+  status: MessageStatus;
+  timestamp: string;
 }
 
 // Mock data for messages
 const mockMessages: Message[] = [
   {
-    id: 1,
+    id: '1',
     recipient: 'Tanning Bude',
+    recipientId: '1',
     type: 'individual',
     message: 'Meal Reminder',
     status: 'sent',
     timestamp: '2023-01-13 10:00 AM'
   },
   {
-    id: 2,
+    id: '2',
     recipient: 'Muscle Gain',
+    recipientId: '2',
     type: 'group',
     message: 'Weekly Check-In',
     status: 'schedule',
     timestamp: '2023-01-13 10:00 AM'
   },
   {
-    id: 3,
+    id: '3',
     recipient: 'Tanning Bude',
+    recipientId: '1',
     type: 'individual',
     message: 'Meal Reminder',
     status: 'sent',
     timestamp: '2023-01-13 10:00 AM'
   },
   {
-    id: 4,
+    id: '4',
     recipient: 'Tanning Bude',
+    recipientId: '1',
     type: 'individual',
     message: 'Meal Reminder',
     status: 'sent',
     timestamp: '2023-01-13 10:00 AM'
   },
   {
-    id: 5,
+    id: '5',
     recipient: 'Tanning Bude',
+    recipientId: '1',
     type: 'individual',
     message: 'Meal Reminder',
     status: 'sent',
@@ -66,6 +74,140 @@ const mockMessages: Message[] = [
 export default function WhatsAppAutomationPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  
+  // Get clients and groups from context
+  const { clients, groups } = useAppContext()
+  
+  // State for message form
+  const [selectedRecipient, setSelectedRecipient] = useState<string>('')
+  const [selectedRecipientType, setSelectedRecipientType] = useState<RecipientType>('individual')
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('')
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [messages, setMessages] = useState<Message[]>(mockMessages)
+  
+  // Templates for messages
+  const messageTemplates = [
+    { id: '1', name: 'Meal Reminder' },
+    { id: '2', name: 'Weekly Check-In' },
+    { id: '3', name: 'Workout Reminder' },
+    { id: '4', name: 'Progress Update Request' }
+  ]
+  
+  // Handle recipient selection
+  const handleRecipientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
+    if (!value) {
+      setSelectedRecipient('')
+      return
+    }
+    
+    const [type, id] = value.split(':')
+    setSelectedRecipientType(type as RecipientType)
+    setSelectedRecipient(id)
+  }
+  
+  // Handle template selection
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedTemplate(e.target.value)
+  }
+  
+  // Handle date selection
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(e.target.value)
+  }
+  
+  // Handle schedule message
+  const handleScheduleMessage = () => {
+    if (!selectedRecipient || !selectedTemplate || !selectedDate) {
+      alert('Please fill in all fields to schedule a message')
+      return
+    }
+    
+    // Find recipient name
+    let recipientName = ''
+    if (selectedRecipientType === 'individual') {
+      const client = clients.find(c => c.id === selectedRecipient)
+      recipientName = client ? client.name : 'Unknown Client'
+    } else {
+      const group = groups.find(g => g.id === selectedRecipient)
+      recipientName = group ? group.name : 'Unknown Group'
+    }
+    
+    // Find template name
+    const template = messageTemplates.find(t => t.id === selectedTemplate)
+    const templateName = template ? template.name : 'Custom Message'
+    
+    // Create new message
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      recipient: recipientName,
+      recipientId: selectedRecipient,
+      type: selectedRecipientType,
+      message: templateName,
+      status: 'schedule',
+      timestamp: selectedDate + ' 10:00 AM'
+    }
+    
+    // Add to messages
+    setMessages(prev => [newMessage, ...prev])
+    
+    // Reset form
+    setSelectedRecipient('')
+    setSelectedTemplate('')
+    setSelectedDate('')
+    
+    alert('Message scheduled successfully!')
+  }
+  
+  // Handle send now (instead of scheduling)
+  const handleSendNow = () => {
+    if (!selectedRecipient || !selectedTemplate) {
+      alert('Please select a recipient and message template')
+      return
+    }
+    
+    // Find recipient name
+    let recipientName = ''
+    if (selectedRecipientType === 'individual') {
+      const client = clients.find(c => c.id === selectedRecipient)
+      recipientName = client ? client.name : 'Unknown Client'
+    } else {
+      const group = groups.find(g => g.id === selectedRecipient)
+      recipientName = group ? group.name : 'Unknown Group'
+    }
+    
+    // Find template name
+    const template = messageTemplates.find(t => t.id === selectedTemplate)
+    const templateName = template ? template.name : 'Custom Message'
+    
+    // Create new message
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      recipient: recipientName,
+      recipientId: selectedRecipient,
+      type: selectedRecipientType,
+      message: templateName,
+      status: 'sent',
+      timestamp: new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      })
+    }
+    
+    // Add to messages
+    setMessages(prev => [newMessage, ...prev])
+    
+    // Reset form
+    setSelectedRecipient('')
+    setSelectedTemplate('')
+    setSelectedDate('')
+    
+    alert('Message sent successfully!')
+  }
   
   return (
     <div className="min-h-screen bg-[#1E1E1E] relative overflow-hidden">
@@ -158,12 +300,44 @@ export default function WhatsAppAutomationPage() {
               </div>
               
               <div className="flex items-center gap-[5px]">
+                {/* Search Button */}
+                <button 
+                  className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log('Search clicked')
+                  }}
+                  aria-label="Search"
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.66663 9.58329 1.66663C5.21104 1.66663 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M18.3333 18.3333L16.6666 16.6666" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                
+                {/* Language Switcher */}
+                <div className="hidden md:block">
+                  <LanguageSwitcher />
+                </div>
+                
                 {/* Notification Button */}
-                <button className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative">
+                <button 
+                  className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log('Notifications clicked')
+                  }}
+                  aria-label="Notification"
+                >
                   <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" stroke="#2B180A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
                     <circle cx="13.5" cy="5.5" r="4.5" fill="#FF0000"/>
                   </svg>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[10px] font-bold">
+                    7
+                  </div>
                 </button>
                 
                 {/* Profile */}
@@ -186,14 +360,35 @@ export default function WhatsAppAutomationPage() {
               {/* Recipient Selection */}
               <div className="w-full md:w-[280px]">
                 <div className="border border-[#13A753]/20 rounded-[25px] px-4 py-3">
-                  <span className="text-[#636363] text-sm">Recipient (Client Or Group)</span>
+                  <select 
+                    value={selectedRecipient} 
+                    onChange={handleRecipientChange} 
+                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
+                  >
+                    <option value="">Select Recipient (Client Or Group)</option>
+                    {clients.map(client => (
+                      <option key={client.id} value={`individual:${client.id}`}>{client.name}</option>
+                    ))}
+                    {groups.map(group => (
+                      <option key={group.id} value={`group:${group.id}`}>{group.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
               {/* Message Template */}
               <div className="w-full md:w-[280px]">
                 <div className="border border-[#13A753]/20 rounded-[25px] px-4 py-3 flex justify-between items-center">
-                  <span className="text-[#636363] text-sm">Select Message Template</span>
+                  <select 
+                    value={selectedTemplate} 
+                    onChange={handleTemplateChange} 
+                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
+                  >
+                    <option value="">Select Message Template</option>
+                    {messageTemplates.map(template => (
+                      <option key={template.id} value={template.id}>{template.name}</option>
+                    ))}
+                  </select>
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.96004 4.47498L6.70004 7.73498C6.31504 8.11998 5.68504 8.11998 5.30004 7.73498L2.04004 4.47498" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -203,7 +398,12 @@ export default function WhatsAppAutomationPage() {
               {/* Date Selection */}
               <div className="w-full md:w-[180px]">
                 <div className="border border-[#13A753]/20 rounded-[25px] px-4 py-3 flex justify-between items-center">
-                  <span className="text-[#636363] text-sm">mm/dd/yyyy</span>
+                  <input 
+                    type="date" 
+                    value={selectedDate} 
+                    onChange={handleDateChange} 
+                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
+                  />
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5.33325 1.33337V3.33337" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M10.6667 1.33337V3.33337" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
@@ -215,8 +415,17 @@ export default function WhatsAppAutomationPage() {
               
               {/* Schedule Button */}
               <div className="w-full md:w-auto">
-                <button className="bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] px-6 py-3 font-semibold">
+                <button 
+                  className="bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] px-6 py-3 font-semibold"
+                  onClick={handleScheduleMessage}
+                >
                   Schedule
+                </button>
+                <button 
+                  className="bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] px-6 py-3 font-semibold ml-4"
+                  onClick={handleSendNow}
+                >
+                  Send Now
                 </button>
               </div>
             </div>
@@ -234,7 +443,7 @@ export default function WhatsAppAutomationPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockMessages.map((message) => (
+                  {messages.map((message) => (
                     <tr key={message.id} className="border-b-[1.2px] border-[#E2ECE2]">
                       <td className="py-4 px-4 text-[#636363] font-medium">{message.recipient}</td>
                       <td className="py-4 px-4 text-[#636363] capitalize font-medium">{message.type}</td>
@@ -335,18 +544,35 @@ export default function WhatsAppAutomationPage() {
               {/* Mobile Recipient Input */}
               <div className="mb-3">
                 <div className="flex items-center rounded-[20px] bg-white px-3 py-2.5 border border-[#13A753]/20">
-                  <input 
-                    type="text" 
-                    placeholder="Recipient (Client Or Group)" 
+                  <select 
+                    value={selectedRecipient} 
+                    onChange={handleRecipientChange} 
                     className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
-                  />
+                  >
+                    <option value="">Select Recipient (Client Or Group)</option>
+                    {clients.map(client => (
+                      <option key={client.id} value={`individual:${client.id}`}>{client.name}</option>
+                    ))}
+                    {groups.map(group => (
+                      <option key={group.id} value={`group:${group.id}`}>{group.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
               {/* Mobile Message Template */}
               <div className="mb-3">
                 <div className="flex items-center justify-between rounded-[20px] bg-white px-3 py-2.5 border border-[#13A753]/20">
-                  <span className="text-[#636363] text-[12px]">Select Message Template</span>
+                  <select 
+                    value={selectedTemplate} 
+                    onChange={handleTemplateChange} 
+                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
+                  >
+                    <option value="">Select Message Template</option>
+                    {messageTemplates.map(template => (
+                      <option key={template.id} value={template.id}>{template.name}</option>
+                    ))}
+                  </select>
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9.96004 4.47498L6.70004 7.73498C6.31504 8.11998 5.68504 8.11998 5.30004 7.73498L2.04004 4.47498" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -356,7 +582,12 @@ export default function WhatsAppAutomationPage() {
               {/* Mobile Date Selection */}
               <div className="mb-3">
                 <div className="flex items-center justify-between rounded-[20px] bg-white px-3 py-2.5 border border-[#13A753]/20">
-                  <span className="text-[#636363] text-[12px]">mm/dd/yyyy</span>
+                  <input 
+                    type="date" 
+                    value={selectedDate} 
+                    onChange={handleDateChange} 
+                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
+                  />
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5.33325 1.33337V3.33337" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M10.6667 1.33337V3.33337" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
@@ -367,15 +598,24 @@ export default function WhatsAppAutomationPage() {
               </div>
               
               {/* Mobile Schedule Button */}
-              <button className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px]">
+              <button 
+                className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px]"
+                onClick={handleScheduleMessage}
+              >
                 Schedule
+              </button>
+              <button 
+                className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px] mt-4"
+                onClick={handleSendNow}
+              >
+                Send Now
               </button>
             </div>
             
             {/* Mobile Messages List */}
             <div className="bg-white rounded-[25px] border border-[#F3F7F3] mb-4">
-              {mockMessages.map((message, index) => (
-                <div key={message.id} className={`p-4 ${index !== mockMessages.length - 1 ? 'border-b border-[#E2ECE2]' : ''}`}>
+              {messages.map((message, index) => (
+                <div key={message.id} className={`p-4 ${index !== messages.length - 1 ? 'border-b border-[#E2ECE2]' : ''}`}>
                   <div className="flex justify-between items-center mb-2">
                     <div className="font-medium text-[14px] text-[#636363]">{message.recipient}</div>
                     <div className="text-[12px] text-[#636363] capitalize">{message.type}</div>
@@ -406,4 +646,4 @@ export default function WhatsAppAutomationPage() {
       </div>
     </div>
   )
-} 
+}

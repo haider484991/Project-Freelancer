@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Modal from '../Modal';
+import { useTranslation } from 'react-i18next';
 
 // ==========================================================================
 // Add Client Modal
@@ -22,6 +23,15 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   
   const goals = ['Weight Loss', 'Muscle Gain', 'Vegan', 'Maintenance'];
+  
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,14 +62,14 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-sm md:max-w-3xl lg:max-w-4xl">
       <div className="p-5">
-        <h2 className="text-center font-semibold text-xl mb-5">Add Client</h2>
+        <h2 className="text-center font-semibold text-xl mb-5">{t('add_client')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Client Name */}
           <div>
             <input
               type="text"
-              placeholder="Client Name"
+              placeholder={t('client_name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -71,7 +81,7 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
           <div>
             <input
               type="text"
-              placeholder="Enter Order/Cost"
+              placeholder={t('order_cost')}
               value={dietaryGoal}
               onChange={(e) => setDietaryGoal(e.target.value)}
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
@@ -82,14 +92,19 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
           <div className="relative">
             <select
               value={group}
-              onChange={(e) => setGroup(e.target.value)}
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setGroup(e.target.value);
+              }}
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+              onClick={(e) => e.stopPropagation()}
             >
-              <option value="" disabled>Select Group</option>
-              <option value="Weight Loss">Weight Loss</option>
-              <option value="Muscle Gain">Muscle Gain</option>
-              <option value="Vegan">Vegan</option>
-              <option value="Maintenance">Maintenance</option>
+              <option value="" disabled>{t('select_group')}</option>
+              <option value="Weight Loss">{t('weight_loss')}</option>
+              <option value="Muscle Gain">{t('muscle_gain')}</option>
+              <option value="Vegan">{t('vegan')}</option>
+              <option value="Maintenance">{t('maintenance')}</option>
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -107,9 +122,13 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
                   className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
                     selectedGoals.includes(goal) ? 'bg-white font-medium' : 'text-gray-500'
                   }`}
-                  onClick={() => toggleGoal(goal)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleGoal(goal);
+                  }}
                 >
-                  {goal}
+                  {t(goal)}
                 </div>
               ))}
             </div>
@@ -120,7 +139,7 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
               type="submit"
               className="w-full bg-[#13A753] text-white font-medium py-3 rounded-full hover:bg-[#0D8A40] transition-colors"
             >
-              Add
+              {t('add')}
             </button>
           </div>
         </form>
@@ -144,7 +163,30 @@ interface ClientDetailsModalProps {
 }
 
 export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsModalProps) {
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
+  
+  if (!client) return null;
+
   const [activeWeek, setActiveWeek] = useState(1);
+  
+  const handleWeekChange = (e: React.MouseEvent, week: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveWeek(week);
+  };
+  
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md md:max-w-3xl lg:max-w-5xl">
@@ -167,16 +209,16 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
         </div>
         
         <div className="mb-5">
-          <h4 className="text-base font-medium mb-2">Goal/Compliance</h4>
+          <h4 className="text-base font-medium mb-2">{t('goal_compliance')}</h4>
           
           <div className="bg-[#F8F8F8] rounded-xl p-4">
             <div className="flex justify-between items-center mb-3">
-              <span className="font-medium text-sm">Weekly Goals</span>
+              <span className="font-medium text-sm">{t('weekly_goals')}</span>
               <div className="flex space-x-1.5">
                 {[1, 2, 3, 4].map(week => (
                   <button
                     key={week}
-                    onClick={() => setActiveWeek(week)}
+                    onClick={(e) => handleWeekChange(e, week)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
                       activeWeek === week 
                         ? 'bg-[#13A753] text-white' 
@@ -192,7 +234,7 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
             <div className="flex justify-between">
               {[1, 2, 3, 4].map(week => (
                 <div key={week} className="flex flex-col items-center space-y-1">
-                  <span className="text-xs text-[#636363]">Week {week}</span>
+                  <span className="text-xs text-[#636363]">{t('week')} {week}</span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     week <= 2 ? 'bg-[#13A753]' : 'bg-white border border-[#13A753]'
                   }`}>
@@ -208,9 +250,26 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
           </div>
         </div>
         
-        <div className="flex justify-center">
-          <button className="bg-[#13A753] text-white py-3 px-8 rounded-full font-medium hover:bg-[#0D8A40] transition-colors">
-            Chat
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="col-span-2">
+            <div className="h-56 bg-[#F8F8F8] rounded-xl flex items-center justify-center">
+              <span className="text-gray-400">{t('client_metrics_chart')}</span>
+            </div>
+          </div>
+          
+          <div>
+            <div className="h-56 bg-[#F8F8F8] rounded-xl flex items-center justify-center">
+              <span className="text-gray-400">{t('additional_info')}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end">
+          <button 
+            onClick={handleClose}
+            className="bg-[#13A753] text-white font-medium py-2 px-6 rounded-full hover:bg-[#0D8A40] transition-colors"
+          >
+            {t('close')}
           </button>
         </div>
       </div>
@@ -234,6 +293,7 @@ interface CreateGroupModalProps {
     clients: string[];
     dietary: string;
     mealPlan: string;
+    dietaryGoal?: string;
   }) => void;
   availableClients: Client[];
 }
@@ -244,29 +304,42 @@ export function CreateGroupModal({
   onCreateGroup,
   availableClients = [] 
 }: CreateGroupModalProps) {
-  const [groupName, setGroupName] = useState('');
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [dietaryGuidelines, setDietaryGuidelines] = useState('');
+  const [name, setName] = useState('');
+  const [dietary, setDietary] = useState('');
   const [mealPlan, setMealPlan] = useState('');
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     onCreateGroup({
-      name: groupName,
+      name,
       clients: selectedClients,
-      dietary: dietaryGuidelines,
-      mealPlan
+      dietary,
+      mealPlan,
+      dietaryGoal: dietary // Map dietary to dietaryGoal for consistency
     });
+    
     resetForm();
     onClose();
   };
   
   const resetForm = () => {
-    setGroupName('');
-    setSelectedClients([]);
-    setDietaryGuidelines('');
+    setName('');
+    setDietary('');
     setMealPlan('');
+    setSelectedClients([]);
     setSearchTerm('');
   };
   
@@ -280,121 +353,116 @@ export function CreateGroupModal({
   
   const filteredClients = availableClients.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'James Wilson' },
-    { id: '4', name: 'Emma Brown' },
-    { id: '5', name: 'Mike Johnson' },
-  ];
+  );
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md md:max-w-3xl lg:max-w-5xl">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
       <div className="p-5">
-        <h2 className="text-center font-semibold text-xl mb-6">Create Group</h2>
+        <h2 className="text-center font-semibold text-xl mb-5">{t('create_group')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Group Name */}
           <div>
             <input
               type="text"
-              placeholder="Enter Group Name"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
+              placeholder={t('group_name')}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               required
             />
           </div>
           
-          {/* Assign Clients */}
-          <div className="relative">
-            <button
-              type="button"
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm text-left flex justify-between items-center"
-            >
-              <span className="text-[#636363]">Assign Clients</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            
-            <div className="mt-2 border border-gray-100 rounded-xl p-3">
-              <div className="mb-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search Client"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-gray-100 rounded-full text-sm focus:outline-none"
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M22 22L20 20" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
-                {filteredClients.map(client => (
-                  <div 
-                    key={client.id}
-                    className="flex items-center p-2 hover:bg-gray-50 rounded-md"
-                  >
-                    <input
-                      type="checkbox"
-                      id={`client-${client.id}`}
-                      checked={selectedClients.includes(client.id)}
-                      onChange={() => toggleClient(client.id)}
-                      className="w-4 h-4 text-[#13A753] border-gray-300 rounded focus:ring-[#13A753]"
-                    />
-                    <label htmlFor={`client-${client.id}`} className="ml-3 text-sm text-[#636363] cursor-pointer">
-                      {client.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          {/* Dietary Guidelines */}
+          {/* Dietary Plan */}
           <div>
-            <textarea
-              placeholder="Enter dietary guidelines"
-              value={dietaryGuidelines}
-              onChange={(e) => setDietaryGuidelines(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] resize-none"
-              rows={3}
-            ></textarea>
+            <select
+              value={dietary}
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDietary(e.target.value);
+              }}
+              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+            >
+              <option value="" disabled>{t('select_dietary_plan')}</option>
+              <option value="Vegan">{t('vegan')}</option>
+              <option value="Vegetarian">{t('vegetarian')}</option>
+              <option value="Keto">{t('keto')}</option>
+              <option value="Paleo">{t('paleo')}</option>
+            </select>
           </div>
           
           {/* Meal Plan */}
-          <div className="relative">
+          <div>
             <select
               value={mealPlan}
-              onChange={(e) => setMealPlan(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] appearance-none"
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMealPlan(e.target.value);
+              }}
+              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
             >
-              <option value="" disabled>Select Meal Plan</option>
-              <option value="Low Carb">Low Carb</option>
-              <option value="High Protein">High Protein</option>
+              <option value="" disabled>{t('select_meal_plan')}</option>
+              <option value="1800 kcal/day">{t('1800_kcal_day')}</option>
+              <option value="2000 kcal/day">{t('2000_kcal_day')}</option>
+              <option value="2200 kcal/day">{t('2200_kcal_day')}</option>
+              <option value="2500 kcal/day">{t('2500_kcal_day')}</option>
             </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
           </div>
           
-          {/* Create Button */}
+          {/* Search Clients */}
+          <div>
+            <input
+              type="text"
+              placeholder={t('search_clients')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+          
+          {/* Client List */}
+          <div className="bg-[#F8F8F8] rounded-2xl p-3 max-h-48 overflow-y-auto">
+            {filteredClients.length > 0 ? (
+              <div className="grid grid-cols-1 gap-2">
+                {filteredClients.map(client => (
+                  <div 
+                    key={client.id}
+                    className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center ${
+                      selectedClients.includes(client.id) ? 'bg-white font-medium' : 'text-gray-500'
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleClient(client.id);
+                    }}
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={selectedClients.includes(client.id)} 
+                      onChange={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleClient(client.id);
+                      }} 
+                      className="mr-2" 
+                    />
+                    {client.name}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-3 text-gray-400">{t('no_clients_found')}</div>
+            )}
+          </div>
+          
           <div className="pt-3">
             <button
               type="submit"
               className="w-full bg-[#13A753] text-white font-medium py-3 rounded-full hover:bg-[#0D8A40] transition-colors"
             >
-              Create Group
+              {t('create_group')}
             </button>
           </div>
         </form>
@@ -410,16 +478,24 @@ interface EditGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEditGroup: (group: {
+    id: string;
     name: string;
     clients: string[];
     dietary: string;
     mealPlan: string;
+    members?: number;
+    createdAt?: string;
+    dietaryGoal?: string;
   }) => void;
   group?: {
+    id: string;
     name: string;
-    clients: string[];
-    dietary: string;
-    mealPlan: string;
+    clients?: string[];
+    dietary?: string;
+    mealPlan?: string;
+    members?: number;
+    createdAt?: string;
+    dietaryGoal?: string;
   };
   availableClients: Client[];
 }
@@ -437,14 +513,46 @@ export function EditGroupModal({
   const [mealPlan, setMealPlan] = useState(group?.mealPlan || '');
   const [searchTerm, setSearchTerm] = useState('');
   
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
+  
+  // Update state when group prop changes
+  React.useEffect(() => {
+    if (group) {
+      setGroupName(group.name || '');
+      setSelectedClients(group.clients || []);
+      setDietaryGuidelines(group.dietary || '');
+      setMealPlan(group.mealPlan || '');
+    }
+  }, [group]);
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onEditGroup({
+    e.stopPropagation();
+    
+    if (!group || !group.id) {
+      console.error('Cannot edit group: missing group ID');
+      return;
+    }
+    
+    const updatedGroup = {
+      ...group, // Preserve all original properties
+      id: group.id,
       name: groupName,
       clients: selectedClients,
       dietary: dietaryGuidelines,
-      mealPlan
-    });
+      mealPlan,
+      dietaryGoal: dietaryGuidelines // Update dietaryGoal to match dietary
+    };
+    
+    console.log('Submitting edited group:', updatedGroup);
+    onEditGroup(updatedGroup);
     onClose();
   };
   
@@ -458,28 +566,22 @@ export function EditGroupModal({
   
   const filteredClients = availableClients.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [
-    { id: '1', name: 'John Doe' },
-    { id: '2', name: 'Jane Smith' },
-    { id: '3', name: 'James Wilson' },
-    { id: '4', name: 'Emma Brown' },
-    { id: '5', name: 'Mike Johnson' },
-  ];
+  );
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md md:max-w-3xl lg:max-w-5xl">
       <div className="p-5">
-        <h2 className="text-center font-semibold text-xl mb-6">Edit Group</h2>
+        <h2 className="text-center font-semibold text-xl mb-6">{t('edit_group')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Group Name */}
           <div>
             <input
               type="text"
-              placeholder="Enter Group Name"
+              placeholder={t('enter_group_name')}
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] resize-none"
               required
             />
           </div>
@@ -490,7 +592,7 @@ export function EditGroupModal({
               type="button"
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm text-left flex justify-between items-center"
             >
-              <span className="text-[#636363]">Assign Clients</span>
+              <span className="text-[#636363]">{t('assign_clients')}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -501,7 +603,7 @@ export function EditGroupModal({
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search Client"
+                    placeholder={t('search_client')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 border border-gray-100 rounded-full text-sm focus:outline-none"
@@ -525,7 +627,11 @@ export function EditGroupModal({
                       type="checkbox"
                       id={`edit-client-${client.id}`}
                       checked={selectedClients.includes(client.id)}
-                      onChange={() => toggleClient(client.id)}
+                      onChange={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleClient(client.id);
+                      }}
                       className="w-4 h-4 text-[#13A753] border-gray-300 rounded focus:ring-[#13A753]"
                     />
                     <label htmlFor={`edit-client-${client.id}`} className="ml-3 text-sm text-[#636363] cursor-pointer">
@@ -540,7 +646,7 @@ export function EditGroupModal({
           {/* Dietary Guidelines */}
           <div>
             <textarea
-              placeholder="Enter dietary guidelines"
+              placeholder={t('enter_dietary_guidelines')}
               value={dietaryGuidelines}
               onChange={(e) => setDietaryGuidelines(e.target.value)}
               className="w-full px-4 py-3 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] resize-none"
@@ -552,12 +658,16 @@ export function EditGroupModal({
           <div className="relative">
             <select
               value={mealPlan}
-              onChange={(e) => setMealPlan(e.target.value)}
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMealPlan(e.target.value);
+              }}
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] appearance-none"
             >
-              <option value="" disabled>Select Meal Plan</option>
-              <option value="Low Carb">Low Carb</option>
-              <option value="High Protein">High Protein</option>
+              <option value="" disabled>{t('select_meal_plan')}</option>
+              <option value="Low Carb">{t('low_carb')}</option>
+              <option value="High Protein">{t('high_protein')}</option>
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -572,7 +682,7 @@ export function EditGroupModal({
               type="submit"
               className="w-full bg-[#13A753] text-white font-medium py-3 rounded-full hover:bg-[#0D8A40] transition-colors"
             >
-              Edit Group
+              {t('edit_group')}
             </button>
           </div>
         </form>
@@ -585,49 +695,47 @@ export function EditGroupModal({
 // Week Selector Component
 // ==========================================================================
 interface WeekSelectorProps {
-  selectedWeek: number;
-  onWeekChange: (week: number) => void;
+  selectedWeek: string;
+  onWeekChange: (week: string) => void;
 }
 
 export function WeekSelector({ selectedWeek, onWeekChange }: WeekSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
   
-  const toggleDropdown = () => setIsOpen(!isOpen);
-  
-  const handleSelect = (week: number) => {
-    onWeekChange(week);
-    setIsOpen(false);
-  };
-  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
+
+  const weeks = [
+    { id: 'Week 1', label: t('week_1') },
+    { id: 'Week 2', label: t('week_2') },
+    { id: 'Week 3', label: t('week_3') },
+    { id: 'Week 4', label: t('week_4') },
+  ];
+
   return (
-    <div className="relative">
-      <button 
-        onClick={toggleDropdown}
-        className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-full py-2 px-3 text-sm"
-      >
-        <span>Week {selectedWeek}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-md py-1">
-          {[1, 2, 3, 4].map(week => (
-            <button
-              key={week}
-              onClick={() => handleSelect(week)}
-              className={`block w-full px-3 py-2 text-left text-sm ${
-                selectedWeek === week
-                  ? 'bg-[#F3F7F3] font-medium'
-                  : 'hover:bg-gray-50'
-              }`}
-            >
-              Week {week}
-            </button>
+    <div className={`flex items-center gap-2 ${isRtl ? 'rtl' : 'ltr'}`}>
+      <div className="relative">
+        <select
+          value={selectedWeek}
+          onChange={(e) => onWeekChange(e.target.value)}
+          className="appearance-none bg-white border border-[#F3F7F3] rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#13A753] text-sm"
+        >
+          {weeks.map((week) => (
+            <option key={week.id} value={week.id}>
+              {week.label}
+            </option>
           ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -641,45 +749,42 @@ interface TemplateSelectorProps {
 }
 
 export function TemplateSelector({ selectedTemplate, onTemplateChange }: TemplateSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const templates = ['Healhty Protein', 'Weekly Check-In'];
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
   
-  const toggleDropdown = () => setIsOpen(!isOpen);
-  
-  const handleSelect = (template: string) => {
-    onTemplateChange(template);
-    setIsOpen(false);
-  };
-  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
+
+  const templates = [
+    { id: 'Template 1', label: t('template_1') },
+    { id: 'Template 2', label: t('template_2') },
+    { id: 'Template 3', label: t('template_3') },
+    { id: 'Template 4', label: t('template_4') },
+  ];
+
   return (
-    <div className="relative">
-      <button 
-        onClick={toggleDropdown}
-        className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-full py-2 px-3 text-sm"
-      >
-        <span className="truncate">{selectedTemplate}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-md py-1">
-          {templates.map(template => (
-            <button
-              key={template}
-              onClick={() => handleSelect(template)}
-              className={`block w-full px-3 py-2 text-left text-sm ${
-                selectedTemplate === template
-                  ? 'bg-[#F3F7F3] font-medium'
-                  : 'hover:bg-gray-50'
-              }`}
-            >
-              {template}
-            </button>
+    <div className={`flex items-center gap-2 ${isRtl ? 'rtl' : 'ltr'}`}>
+      <div className="relative">
+        <select
+          value={selectedTemplate}
+          onChange={(e) => onTemplateChange(e.target.value)}
+          className="appearance-none bg-white border border-[#F3F7F3] rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#13A753] text-sm"
+        >
+          {templates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.label}
+            </option>
           ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -693,54 +798,42 @@ interface ClientSelectorProps {
 }
 
 export function ClientSelector({ selectedClient, onClientChange }: ClientSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const { t, i18n } = useTranslation();
+  const [isRtl, setIsRtl] = useState(false);
+  
+  // Check if current language is RTL
+  useEffect(() => {
+    const rtlLanguages = ['he', 'ar'];
+    setIsRtl(rtlLanguages.includes(i18n.language));
+  }, [i18n.language]);
+
   const clients = [
-    { id: '1', name: 'All Users' },
-    { id: '2', name: 'AI User' },
-    { id: '3', name: 'Al Group' },
+    { id: 'Client 1', label: t('client_1') },
+    { id: 'Client 2', label: t('client_2') },
+    { id: 'Client 3', label: t('client_3') },
+    { id: 'Client 4', label: t('client_4') },
   ];
-  
-  const toggleDropdown = () => setIsOpen(!isOpen);
-  
-  const handleSelect = (clientId: string) => {
-    onClientChange(clientId);
-    setIsOpen(false);
-  };
-  
-  const getSelectedClientName = () => {
-    const selected = clients.find(c => c.id === selectedClient);
-    return selected ? selected.name : "To Client";
-  };
-  
+
   return (
-    <div className="relative">
-      <button 
-        onClick={toggleDropdown}
-        className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-full py-2 px-3 text-sm"
-      >
-        <span className="truncate">{getSelectedClientName()}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-md py-1">
-          {clients.map(client => (
-            <button
-              key={client.id}
-              onClick={() => handleSelect(client.id)}
-              className={`block w-full px-3 py-2 text-left text-sm ${
-                selectedClient === client.id
-                  ? 'bg-[#F3F7F3] font-medium'
-                  : 'hover:bg-gray-50'
-              }`}
-            >
-              {client.name}
-            </button>
+    <div className={`flex items-center gap-2 ${isRtl ? 'rtl' : 'ltr'}`}>
+      <div className="relative">
+        <select
+          value={selectedClient}
+          onChange={(e) => onClientChange(e.target.value)}
+          className="appearance-none bg-white border border-[#F3F7F3] rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-[#13A753] text-sm"
+        >
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.label}
+            </option>
           ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-      )}
+      </div>
     </div>
   );
-} 
+}

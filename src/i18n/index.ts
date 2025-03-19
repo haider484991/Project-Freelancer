@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 
 import enTranslation from './locales/en.json';
 import heTranslation from './locales/he.json';
+import arTranslation from './locales/ar.json';
 
 // This is necessary to avoid i18next trying to access window/document in SSR
 const isBrowser = typeof window !== 'undefined';
@@ -13,6 +14,9 @@ const resources = {
   },
   he: {
     translation: heTranslation
+  },
+  ar: {
+    translation: arTranslation
   }
 };
 
@@ -36,4 +40,4 @@ i18n
     initImmediate: isBrowser,
   });
 
-export default i18n; 
+export default i18n;
