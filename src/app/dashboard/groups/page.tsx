@@ -224,7 +224,7 @@ export default function CoachingGroupsPage() {
                 <button 
                   className="w-[45px] h-[45px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  aria-label={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
+                  aria-label={isSidebarOpen ? t('common.hideSidebar') : t('common.showSidebar')}
                 >
                   <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -232,20 +232,18 @@ export default function CoachingGroupsPage() {
                     <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
-                
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-5">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#636363"/>
                     <path d="M16.5 11C18.1569 11 19.5 9.65685 19.5 8C19.5 6.34315 18.1569 5 16.5 5C14.8431 5 13.5 6.34315 13.5 8C13.5 9.65685 14.8431 11 16.5 11Z" fill="#636363"/>
                     <path d="M9 13C6.33 13 1 14.34 1 17V19H17V17C17 14.34 11.67 13 9 13Z" fill="#636363"/>
                     <path d="M16.5 13C15.71 13 14.73 13.16 13.69 13.44C14.76 14.45 15.5 15.74 15.5 17V19H23V17C23 14.34 18.67 13 16.5 13Z" fill="#636363"/>
                   </svg>
-                  
-                  <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('coaching_groups_management')}</h2>
+                  <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('Groups Management')}</h2>
                 </div>
               </div>
               
-              <div className="flex items-center gap-[5px]">
+              <div className="flex items-center gap-3">
                 {/* Search Button */}
                 <button 
                   className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]"
@@ -254,11 +252,11 @@ export default function CoachingGroupsPage() {
                     e.stopPropagation()
                     console.log('Search clicked')
                   }}
-                  aria-label="Search"
+                  aria-label={t('common.search')}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.66663 9.58329 1.66663C5.21104 1.66663 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M18.3333 18.3333L16.6666 16.6666" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.5 9.58329 1.5C5.21104 1.5 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
                 
@@ -269,17 +267,19 @@ export default function CoachingGroupsPage() {
                 
                 {/* Notification Button */}
                 <button 
-                  className="text-white"
+                  className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     console.log('Notifications clicked')
                   }}
-                  aria-label="Notification"
+                  aria-label={t('common.notifications')}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 6L6 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
+                    <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
+                    <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
+                    <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
                   </svg>
                   <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[10px] font-bold">
                     7
@@ -287,15 +287,15 @@ export default function CoachingGroupsPage() {
                 </button>
                 
                 {/* Profile */}
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-[6px] ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <ProfileAvatar 
                     src="/images/profile.jpg" 
-                    alt="Profile"
+                    alt="Alex Dube"
                     size={45}
                   />
                   <div className="flex flex-col">
-                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">{t('profile_name')}</span>
-                    <span className="text-[14px] text-[#636363] capitalize">{t('admin')}</span>
+                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">Alex Dube</span>
+                    <span className="text-[14px] text-[#636363] capitalize">{t('common.admin')}</span>
                   </div>
                 </div>
               </div>

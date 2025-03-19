@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Sidebar from '@/components/dashboard/Sidebar'
 import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
 
 export default function SettingsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -101,7 +103,7 @@ export default function SettingsPage() {
                 <button 
                   className="w-[45px] h-[45px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  aria-label={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
+                  aria-label={isSidebarOpen ? t('common.hideSidebar') : t('common.showSidebar')}
                 >
                   <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -114,41 +116,63 @@ export default function SettingsPage() {
                     <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#636363" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M2 12.8799V11.1199C2 10.0799 2.85 9.21994 3.9 9.21994C5.71 9.21994 6.45 7.93994 5.54 6.36994C5.02 5.46994 5.33 4.29994 6.24 3.77994L7.97 2.78994C8.76 2.31994 9.78 2.59994 10.25 3.38994L10.36 3.57994C11.26 5.14994 12.74 5.14994 13.65 3.57994L13.76 3.38994C14.23 2.59994 15.25 2.31994 16.04 2.78994L17.77 3.77994C18.68 4.29994 18.99 5.46994 18.47 6.36994C17.56 7.93994 18.3 9.21994 20.11 9.21994C21.15 9.21994 22.01 10.0699 22.01 11.1199V12.8799C22.01 13.9199 21.16 14.7799 20.11 14.7799C18.3 14.7799 17.56 16.0599 18.47 17.6299C18.99 18.5399 18.68 19.6999 17.77 20.2199L16.04 21.2099C15.25 21.6799 14.23 21.3999 13.76 20.6099L13.65 20.4199C12.75 18.8499 11.27 18.8499 10.36 20.4199L10.25 20.6099C9.78 21.3999 8.76 21.6799 7.97 21.2099L6.24 20.2199C5.33 19.6999 5.02 18.5299 5.54 17.6299C6.45 16.0599 5.71 14.7799 3.9 14.7799C2.85 14.7799 2 13.9199 2 12.8799Z" stroke="#636363" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <h2 className="text-[25px] font-bold text-[#1E1E1E]">Settings & Preferences</h2>
+                  <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('Settings & Preferences')}</h2>
                 </div>
               </div>
               
-              <div className="flex items-center gap-[5px]">
+              <div className="flex items-center gap-3">
                 {/* Search Button */}
-                <button className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]">
+                <button 
+                  className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log('Search clicked')
+                  }}
+                  aria-label={t('common.search')}
+                >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.66663 9.58329 1.66663C5.21104 1.66663 1.66663 5.21104 1.66663 9.58329C1.66663 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M18.3333 18.3333L16.6666 16.6666" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.5 9.58329 1.5C5.21104 1.5 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
                 
+                {/* Language Switcher */}
+                <div className="hidden md:block">
+                  <LanguageSwitcher />
+                </div>
+                
                 {/* Notification Button */}
-                <button className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative">
+                <button 
+                  className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    console.log('Notifications clicked')
+                  }}
+                  aria-label={t('common.notifications')}
+                >
                   <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" stroke="#2B180A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="13.5" cy="5.5" r="4.5" fill="#FF0000"/>
+                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
+                    <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
+                    <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
+                    <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
                   </svg>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[10px] font-bold">
+                    7
+                  </div>
                 </button>
                 
                 {/* Profile */}
-                <div className="flex items-center gap-[6px]">
-                  <div className="w-[45px] h-[45px] rounded-full overflow-hidden">
-                    <Image 
-                      src="/images/profile.jpg" 
-                      alt="Profile"
-                      width={45}
-                      height={45}
-                      className="object-cover"
-                    />
-                  </div>
+                <div className={`flex items-center gap-[6px] ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <ProfileAvatar 
+                    src="/images/profile.jpg" 
+                    alt="Alex Dube"
+                    size={45}
+                  />
                   <div className="flex flex-col">
                     <span className="text-[16px] font-semibold text-[#201D1D] capitalize">Alex Dube</span>
-                    <span className="text-[14px] text-[#636363] capitalize">Admin</span>
+                    <span className="text-[14px] text-[#636363] capitalize">{t('common.admin')}</span>
                   </div>
                 </div>
               </div>

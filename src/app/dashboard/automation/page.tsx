@@ -296,7 +296,7 @@ export default function WhatsAppAutomationPage() {
                 <button 
                   className="w-[45px] h-[45px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  aria-label={isSidebarOpen ? t('hide') : t('show')}
+                  aria-label={isSidebarOpen ? t('common.hideSidebar') : t('common.showSidebar')}
                 >
                   <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -304,11 +304,17 @@ export default function WhatsAppAutomationPage() {
                     <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
-                
-                <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('whatsapp')}</h2>
+                <div className="flex items-center gap-5">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 16.23C9.40999 16.23 7.30999 14.13 7.30999 11.54C7.30999 8.95 9.40999 6.85001 12 6.85001C14.59 6.85001 16.69 8.95 16.69 11.54" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 16.23V22" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('WhatsApp Automation')}</h2>
+                </div>
               </div>
               
-              <div className="flex items-center gap-[5px]">
+              <div className="flex items-center gap-3">
                 {/* Search Button */}
                 <button 
                   className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]"
@@ -317,11 +323,11 @@ export default function WhatsAppAutomationPage() {
                     e.stopPropagation()
                     console.log('Search clicked')
                   }}
-                  aria-label={t('search')}
+                  aria-label={t('common.search')}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.66663 9.58329 1.66663C5.21104 1.66663 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M18.3333 18.3333L16.6666 16.6666" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.5 9.58329 1.5C5.21104 1.5 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
                 
@@ -338,11 +344,13 @@ export default function WhatsAppAutomationPage() {
                     e.stopPropagation()
                     console.log('Notifications clicked')
                   }}
-                  aria-label={t('notification')}
+                  aria-label={t('common.notifications')}
                 >
                   <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" stroke="#2B180A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-                    <circle cx="13.5" cy="5.5" r="4.5" fill="#FF0000"/>
+                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
+                    <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
+                    <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
+                    <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
                   </svg>
                   <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[10px] font-bold">
                     7
@@ -350,15 +358,15 @@ export default function WhatsAppAutomationPage() {
                 </button>
                 
                 {/* Profile */}
-                <div className="flex items-center gap-[6px]">
+                <div className={`flex items-center gap-[6px] ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <ProfileAvatar 
                     src="/images/profile.jpg" 
-                    alt="Profile"
+                    alt="Alex Dube"
                     size={45}
                   />
                   <div className="flex flex-col">
-                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">{t('profile')}</span>
-                    <span className="text-[14px] text-[#636363] capitalize">{t('admin')}</span>
+                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">Alex Dube</span>
+                    <span className="text-[14px] text-[#636363] capitalize">{t('common.admin')}</span>
                   </div>
                 </div>
               </div>
