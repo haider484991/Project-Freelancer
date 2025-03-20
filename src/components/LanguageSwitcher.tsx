@@ -1,36 +1,53 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
-  const currentLanguage = i18n.language;
+  const [currentLanguage, setCurrentLanguage] = useState<string>('en');
+  
+  // Initialize current language
+  useEffect(() => {
+    setCurrentLanguage(i18n.language || 'en');
+  }, [i18n.language]);
 
   // Define RTL languages
   const rtlLanguages = ['he', 'ar'];
-  const isRtl = rtlLanguages.includes(currentLanguage);
-
+  
   const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-    
-    // Set direction for RTL/LTR languages
-    const isRtlLanguage = rtlLanguages.includes(lng);
-    document.documentElement.dir = isRtlLanguage ? 'rtl' : 'ltr';
-    document.documentElement.lang = lng;
-    
-    // Save language preference
-    localStorage.setItem('language', lng);
-    
-    // Force reload to apply RTL/LTR layout changes properly
-    window.location.reload();
+    try {
+      i18n.changeLanguage(lng);
+      setCurrentLanguage(lng);
+      
+      // Set direction for RTL/LTR languages
+      const isRtlLanguage = rtlLanguages.includes(lng);
+      document.documentElement.dir = isRtlLanguage ? 'rtl' : 'ltr';
+      document.documentElement.lang = lng;
+      
+      // Save language preference - only if in browser
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('language', lng);
+        
+        // Force reload to apply RTL/LTR layout changes properly
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error changing language:', error);
+    }
   };
 
   // Apply RTL/LTR direction on component mount
   useEffect(() => {
-    const savedLang = localStorage.getItem('language') || 'en';
-    const isRtlLanguage = rtlLanguages.includes(savedLang);
-    document.documentElement.dir = isRtlLanguage ? 'rtl' : 'ltr';
+    if (typeof window !== 'undefined') {
+      try {
+        const savedLang = localStorage.getItem('language') || 'en';
+        const isRtlLanguage = rtlLanguages.includes(savedLang);
+        document.documentElement.dir = isRtlLanguage ? 'rtl' : 'ltr';
+      } catch (error) {
+        console.error('Error setting document direction:', error);
+      }
+    }
   }, []);
 
   return (

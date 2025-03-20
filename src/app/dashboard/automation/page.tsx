@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
 import Sidebar from '@/components/dashboard/Sidebar'
 import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -486,7 +484,7 @@ export default function WhatsAppAutomationPage() {
       
       {/* Mobile Layout */}
       <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
-        {/* Background blur elements - adjusted size and position */}
+        {/* Background blur elements and grid lines */}
         <div className="absolute w-[418px] h-[633px] top-[-404px] right-[199px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[287px] z-0"></div>
         <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-271px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[324px] z-0"></div>
         
@@ -504,159 +502,185 @@ export default function WhatsAppAutomationPage() {
           </div>
         </div>
         
-        {/* Mobile Content */}
-        <div className="p-4 relative z-10">
-          {/* White Background Container */}
-          <div className="bg-white rounded-[25px] p-4 mx-3 min-h-[892px]">
             {/* Mobile Header */}
-            <div className="flex justify-between items-center mb-8 pt-2">
+        <header className="flex items-center justify-between bg-white p-4 relative z-10">
+          <div className="flex items-center gap-3">
+            <button 
+              className="w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? t('common.closeMenu') : t('common.openMenu')}
+            >
+              <svg width="18" height="14" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 1H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <h1 className="font-michael text-primary text-[24px] uppercase tracking-[0.04em] leading-[100%] font-bold">
+              FITTrack
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              className="w-[40px] h-[40px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('Notifications clicked')
+              }}
+              aria-label={t('common.notifications')}
+            >
+              <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
+                <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
+                <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
+                <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
+              </svg>
+              <div className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[8px] font-bold">
+                7
+              </div>
+            </button>
+            <ProfileAvatar 
+              src="/images/profile.jpg" 
+              alt="Alex Dube"
+              size={40}
+            />
+          </div>
+        </header>
+        
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 bg-[#1E1E1E] z-50 overflow-auto">
+            <div className="p-4">
               <button 
-                className="w-[38px] h-[38px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
-                onClick={() => setIsMobileMenuOpen(true)}
+                className="w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#3DD559] mb-6"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label={t('common.closeMenu')}
               >
-                <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3.375 7H14.625" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3.375 2.5H14.625" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3.375 11.5H14.625" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1L13 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M13 1L1 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
+              <Sidebar isMobile={true} />
+            </div>
+          </div>
+        )}
+        
+        {/* Mobile Content */}
+        <div className="p-4 relative z-10">
+          <div className="bg-white rounded-[20px] p-4">
+            {/* WhatsApp Automation Content for Mobile */}
+            <div className="mb-4">
+              <h2 className="text-[20px] font-bold text-[#1E1E1E] mb-4">{t('WhatsApp Automation')}</h2>
               
-              <div className="flex items-center gap-2">
-                {/* Search Button */}
-                <button className="w-[38px] h-[38px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.625 15.75C12.56 15.75 15.75 12.56 15.75 8.625C15.75 4.68997 12.56 1.5 8.625 1.5C4.68997 1.5 1.5 4.68997 1.5 8.625C1.5 12.56 4.68997 15.75 8.625 15.75Z" stroke="#2B180A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.5 16.5L15 15" stroke="#2B180A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                
-                {/* Notification Button */}
-                <button className="w-[38px] h-[38px] flex items-center justify-center rounded-full bg-[#3DD559] relative">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 2.25C6.75 2.25 4.5 4.5 4.5 6.75V9L3 10.5V12H15V10.5L13.5 9V6.75C13.5 4.5 11.25 2.25 9 2.25Z" stroke="#1E1E1E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+              <div className="space-y-4">
+                {/* Schedule Message Form */}
+                <div className="bg-[#F9F9F9] rounded-[15px] p-4">
+                  <h3 className="text-[16px] font-semibold text-[#1E1E1E] mb-3">{t('Schedule Message')}</h3>
                   
-                  {/* Notification Badge */}
-                  <div className="absolute top-1 right-1 w-[13px] h-[13px] rounded-full bg-[#FF0000] flex items-center justify-center">
-                    <span className="text-[10px] font-extrabold text-white">1</span>
-                  </div>
-                </button>
-                
-                {/* Profile */}
-                <ProfileAvatar 
-                  src="/images/profile.jpg" 
-                  alt="Profile"
-                  size={38}
-                />
-              </div>
-            </div>
-            
-            {/* Page Title */}
-            <div className="mb-6">
-              <h2 className="text-[20px] font-bold text-[#1E1E1E] ml-[2px]">{t('whatsapp')}</h2>
-            </div>
-            
-            {/* Mobile Message Controls */}
-            <div className="bg-[#F3F7F3] rounded-[25px] p-3 mb-4">
-              {/* Mobile Recipient Input */}
-              <div className="mb-3">
-                <div className="flex items-center rounded-[20px] bg-white px-3 py-2.5 border border-[#13A753]/20">
+                  <div className="space-y-3">
+                    {/* Recipient Selector */}
+                    <div>
+                      <label className="block text-[14px] text-[#636363] mb-1">{t('Select Recipient')}</label>
                   <select 
-                    value={selectedRecipient} 
+                        className="w-full py-2 px-3 rounded-[10px] border border-[#E0E0E0] focus:outline-none"
                     onChange={handleRecipientChange} 
-                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
+                        value={selectedRecipientType + ':' + selectedRecipient}
                   >
-                    <option value="">{t('select')}</option>
+                        <option value="">{t('Select...')}</option>
+                        <optgroup label={t('Clients')}>
                     {clients.map(client => (
-                      <option key={client.id} value={`individual:${client.id}`}>{client.name}</option>
+                            <option key={`client-${client.id}`} value={`individual:${client.id}`}>
+                              {client.name}
+                            </option>
                     ))}
+                        </optgroup>
+                        <optgroup label={t('Groups')}>
                     {groups.map(group => (
-                      <option key={group.id} value={`group:${group.id}`}>{group.name}</option>
+                            <option key={`group-${group.id}`} value={`group:${group.id}`}>
+                              {group.name}
+                            </option>
                     ))}
+                        </optgroup>
                   </select>
-                </div>
               </div>
               
-              {/* Mobile Message Template */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between rounded-[20px] bg-white px-3 py-2.5 border border-[#13A753]/20">
+                    {/* Template Selector */}
+                    <div>
+                      <label className="block text-[14px] text-[#636363] mb-1">{t('Select Template')}</label>
                   <select 
+                        className="w-full py-2 px-3 rounded-[10px] border border-[#E0E0E0] focus:outline-none"
                     value={selectedTemplate} 
                     onChange={handleTemplateChange} 
-                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
                   >
-                    <option value="">{t('select')}</option>
+                        <option value="">{t('Select...')}</option>
                     {messageTemplates.map(template => (
-                      <option key={template.id} value={template.id}>{template.name}</option>
+                          <option key={template.id} value={template.id}>
+                            {template.name}
+                          </option>
                     ))}
                   </select>
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.96004 4.47498L6.70004 7.73498C6.31504 8.11998 5.68504 8.11998 5.30004 7.73498L2.04004 4.47498" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
               </div>
               
-              {/* Mobile Date Selection */}
-              <div className="mb-3">
-                <div className="flex items-center justify-between rounded-[20px] bg-white px-3 py-2.5 border border-[#13A753]/20">
+                    {/* Date Selector */}
+                    <div>
+                      <label className="block text-[14px] text-[#636363] mb-1">{t('Select Date')}</label>
                   <input 
                     type="date" 
+                        className="w-full py-2 px-3 rounded-[10px] border border-[#E0E0E0] focus:outline-none"
                     value={selectedDate} 
                     onChange={handleDateChange} 
-                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
-                  />
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5.33325 1.33337V3.33337" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10.6667 1.33337V3.33337" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M2.33325 6.06006H13.6666" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14 5.66671V11.3334C14 13.3334 13 14.6667 10.6667 14.6667H5.33333C3 14.6667 2 13.3334 2 11.3334V5.66671C2 3.66671 3 2.33337 5.33333 2.33337H10.6667C13 2.33337 14 3.66671 14 5.66671Z" stroke="#292D32" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
+                      />
               </div>
               
-              {/* Mobile Schedule Button */}
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 mt-4">
               <button 
-                className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px]"
+                        className="flex-1 bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[10px] py-2 text-white text-sm font-medium"
                 onClick={handleScheduleMessage}
               >
-                {t('schedule')}
+                        {t('Schedule')}
               </button>
               <button 
-                className="w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white rounded-[60px] py-2.5 font-semibold text-[14px] mt-4"
+                        className="flex-1 bg-[#F3F7F3] rounded-[10px] py-2 text-[#1E1E1E] text-sm font-medium"
                 onClick={handleSendNow}
               >
-                {t('send')}
+                        {t('Send Now')}
               </button>
             </div>
-            
-            {/* Mobile Messages List */}
-            <div className="bg-white rounded-[25px] border border-[#F3F7F3] mb-4">
-              {messages.map((message, index) => (
-                <div key={message.id} className={`p-4 ${index !== messages.length - 1 ? 'border-b border-[#E2ECE2]' : ''}`}>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="font-medium text-[14px] text-[#636363]">{message.recipient}</div>
-                    <div className="text-[12px] text-[#636363] capitalize">{message.type}</div>
+                  </div>
                   </div>
                   
-                  <div className="flex justify-between items-center mb-2">
+                {/* Messages History */}
+                <div>
+                  <h3 className="text-[16px] font-semibold text-[#1E1E1E] mb-3">{t('Recent Messages')}</h3>
+                  <div className="space-y-3">
+                    {messages.slice(0, 5).map((message) => (
+                      <div 
+                        key={message.id} 
+                        className="bg-[#F9F9F9] rounded-[10px] p-3 flex justify-between items-center"
+                      >
+                        <div>
+                          <div className="font-medium text-[14px]">{message.recipient}</div>
                     <div className="text-[12px] text-[#636363]">{message.message}</div>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        </div>
+                        <div className="text-right">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
                       message.status === 'sent' 
-                        ? 'bg-[#EBF9EB] text-[#368C48] border-[1.5px] border-[#B7DFBA]' 
+                              ? 'bg-[#E6F7EC] text-[#13A753] border-[1.5px] border-[#13A753]'
                         : 'bg-[#FFFAE1] text-[#9F7918] border-[1.5px] border-[#F8DA84]'
                     }`}>
                       {message.status === 'sent' ? t('sent') : t('schedule')}
                     </span>
+                          <div className="text-[10px] text-[#636363] mt-1">{message.timestamp}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div className="text-[12px] text-[#636363]">{message.timestamp}</div>
                 </div>
-              ))}
             </div>
-            
-            {/* Pagination Indicator */}
-            <div className="w-full bg-[#D9D9D9] h-[10px] rounded-[80px] relative mt-6">
-              <div className="absolute left-0 top-0 h-full w-[48%] bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[80px]"></div>
             </div>
           </div>
         </div>

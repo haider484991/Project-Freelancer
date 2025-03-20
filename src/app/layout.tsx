@@ -1,6 +1,9 @@
 import '@/styles/globals.css'
 import type { Metadata } from 'next'
 import { Providers } from '@/store/provider'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'FITTrack - Fitness & Nutrition Tracking',
@@ -14,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <Providers>
           {children}
         </Providers>

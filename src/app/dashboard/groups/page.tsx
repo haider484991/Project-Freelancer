@@ -20,10 +20,27 @@ import { useTranslation } from 'react-i18next'
 export default function CoachingGroupsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { groups, addGroup, updateGroup, deleteGroup, availableClients } = useAppContext()
   const { t, i18n } = useTranslation()
   const [isRtl, setIsRtl] = useState(false)
   
-  // Check if current language is RTL
+  // Modal states
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
+  const [showEditGroupModal, setShowEditGroupModal] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>(groups)
+  
+  // Dropdown states
+  const [isWeekSelectorOpen, setIsWeekSelectorOpen] = useState(false)
+  const [isCheckInSelectorOpen, setIsCheckInSelectorOpen] = useState(false)
+  const [selectedWeek, setSelectedWeek] = useState('Week 1')
+  const [selectedTemplate, setSelectedTemplate] = useState('All Templates')
+  const [selectedClient, setSelectedClient] = useState('All Clients')
+  
+  // Check if language is RTL
   useEffect(() => {
     const rtlLanguages = ['he', 'ar']
     setIsRtl(rtlLanguages.includes(i18n.language))
@@ -32,70 +49,75 @@ export default function CoachingGroupsPage() {
     document.documentElement.dir = rtlLanguages.includes(i18n.language) ? 'rtl' : 'ltr'
   }, [i18n.language])
 
-  // Search and filter states
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedWeek, setSelectedWeek] = useState('Week 2')
-  const [isWeekSelectorOpen, setIsWeekSelectorOpen] = useState(false)
-  const [selectedCheckIn, setSelectedCheckIn] = useState('Weekly Check-In')
-  const [isCheckInSelectorOpen, setIsCheckInSelectorOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState('All Templates')
-  const [selectedClient, setSelectedClient] = useState('All Clients')
-  
-  // Modal states
-  const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false)
-  const [isEditGroupModalOpen, setIsEditGroupModalOpen] = useState(false)
-  const [selectedGroup, setSelectedGroup] = useState<any>(null)
-  
-  // Get data and functions from context
-  const { groups, addGroup, updateGroup, deleteGroup, availableClients } = useAppContext();
+  // Filter groups when search query changes
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredGroups(groups)
+    } else {
+      const filtered = groups.filter(group =>
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredGroups(filtered)
+    }
+  }, [searchQuery, groups])
   
   // Handle create group
-  const handleCreateGroup = (group: any) => {
+  const handleCreateGroup = (group: Group) => {
     console.log('Creating group:', group)
-    addGroup(group);
-    setIsCreateGroupModalOpen(false)
+    addGroup(group)
+    setShowCreateGroupModal(false)
   }
   
   // Handle edit group
-  const handleEditGroup = (group: any) => {
-    console.log('Editing group:', group)
-    updateGroup(group);
-    setIsEditGroupModalOpen(false)
+  const handleEditGroup = (groupId: string) => {
+    const group = groups.find(g => g.id === groupId)
+    if (group) {
+      setSelectedGroup(group)
+      setShowEditGroupModal(true)
+    }
   }
   
-  // Handle view/edit group
-  const handleViewGroup = (group: any) => {
-    setSelectedGroup(group)
-    setIsEditGroupModalOpen(true)
+  // Handle view group
+  const handleViewGroup = (groupId: string) => {
+    const group = groups.find(g => g.id === groupId)
+    if (group) {
+      console.log('Viewing group:', group)
+    }
   }
   
   // Handle delete group
-  const handleDeleteGroup = (group: any) => {
-    console.log('Deleting group:', group)
-    deleteGroup(group.id);
+  const handleDeleteGroup = (groupId: string) => {
+    if (window.confirm(t('groups.confirmDelete'))) {
+      deleteGroup(groupId)
+    }
   }
   
   // Handle export groups
   const handleExportGroups = () => {
     try {
-      // Format the data for CSV export
-      const dataToExport = groups.map(group => ({
-        "Group Name": group.name,
-        "Members": group.members,
-        "Dietary Goal": group.dietaryGoal,
-        "Created At": group.createdAt
+      // Format data for export
+      const exportData = groups.map(group => ({
+        id: group.id,
+        name: group.name,
+        members: Array.isArray(group.members) ? group.members.length : 0,
+        created: new Date().toISOString().split('T')[0], // Sample date
+        status: 'Active'
       }));
       
       // Convert to CSV
-      const csvContent = convertToCSV(dataToExport);
+      const csvData = convertToCSV(exportData);
       
-      // Create a Blob and download
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      // Create download link
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
       link.setAttribute('download', `groups_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       
       console.log('Groups exported successfully');
     } catch (error) {
@@ -115,7 +137,7 @@ export default function CoachingGroupsPage() {
   };
   
   // Helper function to convert JSON to CSV
-  const convertToCSV = (objArray: any[]) => {
+  const convertToCSV = (objArray: Record<string, any>[]) => {
     const array = [
       Object.keys(objArray[0]),
       ...objArray.map(item => Object.values(item))
@@ -130,21 +152,21 @@ export default function CoachingGroupsPage() {
 
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-  }
+    setSearchQuery(e.target.value);
+  };
   
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
-      setIsWeekSelectorOpen(false)
-      setIsCheckInSelectorOpen(false)
-    }
+      setIsWeekSelectorOpen(false);
+      setIsCheckInSelectorOpen(false);
+    };
     
-    document.addEventListener('click', handleClickOutside)
+    document.addEventListener('click', handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className={`min-h-screen bg-[#1E1E1E] relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
@@ -255,7 +277,7 @@ export default function CoachingGroupsPage() {
                   aria-label={t('common.search')}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.5 9.58329 1.5C5.21104 1.5 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.66663 9.58329 1.66663C5.21104 1.66663 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
@@ -314,7 +336,7 @@ export default function CoachingGroupsPage() {
                     type="text" 
                     placeholder={t('search_group')} 
                     className="flex-1 bg-transparent border-none outline-none text-[#545454]"
-                    value={searchTerm}
+                    value={searchQuery}
                     onChange={handleSearch}
                   />
                 </div>
@@ -348,7 +370,7 @@ export default function CoachingGroupsPage() {
                 {/* Create Group Button */}
                 <button 
                   className="flex items-center gap-3 px-5 py-3 rounded-[60px] bg-[#F3F7F3] border border-[#13A753]/20"
-                  onClick={() => setIsCreateGroupModalOpen(true)}
+                  onClick={() => setShowCreateGroupModal(true)}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 12H16" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -406,7 +428,7 @@ export default function CoachingGroupsPage() {
               <GroupsTable 
                 onViewGroup={handleViewGroup}
                 onDeleteGroup={handleDeleteGroup}
-                searchTerm={searchTerm}
+                searchTerm={searchQuery}
               />
             </div>
             
@@ -415,7 +437,7 @@ export default function CoachingGroupsPage() {
                 isMobile={true}
                 onViewGroup={handleViewGroup}
                 onDeleteGroup={handleDeleteGroup}
-                searchTerm={searchTerm}
+                searchTerm={searchQuery}
               />
             </div>
           </div>
@@ -424,7 +446,7 @@ export default function CoachingGroupsPage() {
       
       {/* Mobile Layout */}
       <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
-        {/* Background blur elements - adjusted size and position */}
+        {/* Background blur elements and grid lines */}
         <div className="absolute w-[418px] h-[633px] top-[-404px] right-[199px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[287px] z-0"></div>
         <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-271px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[324px] z-0"></div>
         
@@ -442,164 +464,176 @@ export default function CoachingGroupsPage() {
           </div>
         </div>
         
-        {/* Mobile Content */}
-        <div className="p-4 relative z-10">
-          {/* White Background Container */}
-          <div className="bg-white rounded-[25px] p-4 mx-3 min-h-[892px]">
             {/* Mobile Header */}
-            <div className="flex justify-between items-center mb-8 pt-2">
+        <header className="flex items-center justify-between bg-white p-4 relative z-10">
+          <div className="flex items-center gap-3">
               <button 
-                className="w-[38px] h-[38px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3.375 7H14.625" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3.375 2.5H14.625" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3.375 11.5H14.625" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              className="w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? t('common.closeMenu') : t('common.openMenu')}
+            >
+              <svg width="18" height="14" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 1H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              
-              <div className="flex items-center gap-2">
-                {/* Search Button */}
-                <button className="w-[38px] h-[38px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.625 15.75C12.56 15.75 15.75 12.56 15.75 8.625C15.75 4.68997 12.56 1.5 8.625 1.5C4.68997 1.5 1.5 4.68997 1.5 8.625C1.5 12.56 4.68997 15.75 8.625 15.75Z" stroke="#2B180A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.5 16.5L15 15" stroke="#2B180A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <h1 className="font-michael text-primary text-[24px] uppercase tracking-[0.04em] leading-[100%] font-bold">
+              FITTrack
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              className="w-[40px] h-[40px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('Notifications clicked')
+              }}
+              aria-label={t('common.notifications')}
+            >
+              <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
+                <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
+                <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
+                <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
                   </svg>
-                </button>
-                
-                {/* Notification Button */}
-                <button className="text-white">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 6L6 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[10px] font-bold">
+              <div className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[8px] font-bold">
                     7
                   </div>
                 </button>
-                
-                {/* Profile */}
-                <div className="flex items-center gap-2">
                   <ProfileAvatar 
                     src="/images/profile.jpg" 
-                    alt="Profile"
-                    size={38}
+              alt="Alex Dube"
+              size={40}
                   />
-                  <div className="flex flex-col">
-                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">{t('profile_name')}</span>
-                    <span className="text-[14px] text-[#636363] capitalize">{t('admin')}</span>
                   </div>
-                </div>
-              </div>
+        </header>
+        
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 bg-[#1E1E1E] z-50 overflow-auto">
+            <div className="p-4">
+              <button 
+                className="w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#3DD559] mb-6"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label={t('common.closeMenu')}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1L13 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M13 1L1 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <Sidebar isMobile={true} />
             </div>
-            
-            {/* Page Title */}
-            <div className="mb-6">
-              <h2 className="text-[20px] font-bold text-[#1E1E1E] ml-[2px]">{t('coaching_groups_management')}</h2>
-            </div>
-            
-            {/* Mobile Search and Filters Container */}
-            <div className="bg-[#F3F7F3] rounded-[25px] p-3 mb-4">
-              {/* Mobile Search */}
-              <div className="mb-3">
-                <div className="flex items-center gap-2 px-4 py-3 rounded-[43px] bg-[rgba(16,106,2,0.1)]">
-                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.625 15.75C12.56 15.75 15.75 12.56 15.75 8.625C15.75 4.68997 12.56 1.5 8.625 1.5C4.68997 1.5 1.5 4.68997 1.5 8.625C1.5 12.56 4.68997 15.75 8.625 15.75Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+          </div>
+        )}
+        
+        {/* Mobile Content */}
+        <div className="p-4 relative z-10">
+          <div className="bg-white rounded-[20px] p-4">
+            {/* Groups Management Content for Mobile */}
+            <div className="mb-4">
+              <h2 className="text-[20px] font-bold text-[#1E1E1E] mb-4">{t('Groups')}</h2>
+              
+              <div className="space-y-4">
+                {/* Search and Buttons */}
+                <div className="flex flex-col gap-3">
+                  <div className="relative">
                   <input 
                     type="text" 
-                    placeholder={t('search_group')} 
-                    className="flex-1 bg-transparent border-none outline-none text-[#545454] text-[12px]"
-                    value={searchTerm}
+                      placeholder={t('Search groups...')}
+                      className="w-full bg-[#F9F9F9] rounded-[10px] py-2 px-4 pl-10 text-[14px] focus:outline-none"
+                      value={searchQuery}
                     onChange={handleSearch}
                   />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.66671 14C11.1645 14 14 11.1645 14 7.66671C14 4.16887 11.1645 1.33337 7.66671 1.33337C4.16887 1.33337 1.33337 4.16887 1.33337 7.66671C1.33337 11.1645 4.16887 14 7.66671 14Z" stroke="#1E1E1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M14.6667 14.6667L13.3334 13.3334" stroke="#1E1E1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                 </div>
               </div>
               
-              {/* Mobile Selectors */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="w-full relative z-30">
-                  <WeekSelector 
-                    selectedWeek={selectedWeek} 
-                    onWeekChange={setSelectedWeek} 
-                  />
+                  <div className="flex gap-2">
+                    <button 
+                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[10px] py-2 text-white"
+                      onClick={() => setShowCreateGroupModal(true)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 3.33337V12.6667" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M3.33337 8H12.6667" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span className="text-sm font-medium">{t('Create Group')}</span>
+                    </button>
+                    
+                    <button 
+                      className="flex items-center justify-center w-[40px] h-[40px] bg-[#F9F9F9] rounded-[10px]"
+                      onClick={handleExportGroups}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.75 9.75V14.25H4.59375V9.75H3.75V14.25C3.75 15.075 4.42509 15.75 4.59375 15.75H12.75C13.575 15.75 14.25 15.075 14.25 14.25V9.75H12.75ZM12 9L10.935 7.93481L9.75 9.11981V3.75H8.25V9.11981L7.065 7.93481L6 9L9 12L12 9Z" fill="#1E1E1E"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 
-                <div className="w-full relative z-30">
-                  <TemplateSelector 
-                    selectedTemplate={selectedTemplate} 
-                    onTemplateChange={setSelectedTemplate} 
-                  />
+                {/* Groups List */}
+                <div className="space-y-3">
+                  {groups.map(group => (
+                    <div 
+                      key={group.id}
+                      className="bg-[#F9F9F9] rounded-[15px] p-4"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-b from-[#13A753] to-[#1E2120] flex items-center justify-center text-white font-bold text-lg">
+                            {group.name.charAt(0)}
                 </div>
-                
-                <div className="w-full relative z-30">
-                  <ClientSelector 
-                    selectedClient={selectedClient} 
-                    onClientChange={setSelectedClient} 
-                  />
+                          <div>
+                            <h3 className="text-[16px] font-bold text-[#1E1E1E]">{group.name}</h3>
+                            <p className="text-[12px] text-[#636363]">{group.members.length} {t('members')}</p>
                 </div>
               </div>
               
-              {/* Mobile Action Buttons */}
-              <div className="flex flex-wrap justify-between gap-2">              
-                {/* Create Group Button */}
+                        <div className="flex items-center gap-2">
                 <button 
-                  className="flex items-center gap-2 px-4 py-2 rounded-[60px] bg-[#F3F7F3] border border-[#13A753]/20"
-                  onClick={() => setIsCreateGroupModalOpen(true)}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 12H16" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 16V8" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#F3F3F3]"
+                            onClick={() => handleEditGroup(group.id)}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M9.16671 13.3334H14" stroke="#1E1E1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M11.8067 2.69336C12.0767 2.42336 12.4267 2.27336 12.7933 2.27336C12.9739 2.27336 13.1525 2.30933 13.3192 2.37935C13.4859 2.44938 13.6374 2.55202 13.7667 2.68136C13.896 2.81069 13.9986 2.96222 14.0687 3.12891C14.1387 3.29559 14.1747 3.4742 14.1747 3.65469C14.1747 3.83518 14.1387 4.0138 14.0687 4.18048C14.0489 4.22386 14.0271 4.26656 14.0033 4.30845C13.9795 4.35034 13.9538 4.39126 13.9267 4.43102L5.14005 13.2177L2 14.0001L2.78671 10.8734L11.8067 2.69336Z" stroke="#1E1E1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span className="text-[#13A753] font-semibold text-[12px]">{t('create_group')}</span>
                 </button>
                 
-                {/* Export Button */}
-                <button className="flex items-center gap-2 px-4 py-2 rounded-[60px] bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 15.0001V3.62012" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <button 
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FDECEC]"
+                            onClick={() => handleDeleteGroup(group.id)}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M14 3.98665C11.78 3.76665 9.54667 3.65332 7.32 3.65332C6 3.65332 4.68 3.71999 3.36 3.85332L2 3.98665" stroke="#FF3B30" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M5.66663 3.31331L5.81329 2.43997C5.91996 1.80664 5.99996 1.33331 7.12663 1.33331H8.87329C9.99996 1.33331 10.0866 1.83331 10.1866 2.44664L10.3333 3.31331" stroke="#FF3B30" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span className="font-semibold text-[12px]">{t('export')}</span>
                 </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             
-            {/* Mobile Groups List */}
-            <div className="bg-white rounded-[25px] border border-[#F3F7F3] mb-4">
-              <div className="flex justify-between items-center mb-3">
-                <h2 className="text-[18px] font-bold text-[#1E1E1E]">{t('groups')}</h2>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsCreateGroupModalOpen(true);
-                  }}
-                  className="flex items-center gap-1 bg-[#13A753] text-white px-3 py-2 rounded-full text-sm"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 12H16" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 16V8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span>{t('add_group')}</span>
-                </button>
-              </div>
-              
+            {/* Groups Table */}
+            <div className="mt-4">
               <GroupsTable 
+                groups={filteredGroups}
+                onEdit={handleEditGroup}
+                onView={handleViewGroup}
+                onDelete={handleDeleteGroup}
                 isMobile={true}
-                onViewGroup={handleViewGroup}
-                onDeleteGroup={handleDeleteGroup}
-                searchTerm={searchTerm}
               />
-            </div>
-            
-            {/* Pagination Indicator */}
-            <div className="w-full bg-[#D9D9D9] h-[10px] rounded-[80px] relative mt-6">
-              <div className="absolute left-0 top-0 h-full w-[48%] bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[80px]"></div>
             </div>
           </div>
         </div>
@@ -607,15 +641,15 @@ export default function CoachingGroupsPage() {
       
       {/* Modals */}
       <CreateGroupModal
-        isOpen={isCreateGroupModalOpen}
-        onClose={() => setIsCreateGroupModalOpen(false)}
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
         onCreateGroup={handleCreateGroup}
         availableClients={availableClients}
       />
       
       <EditGroupModal
-        isOpen={isEditGroupModalOpen}
-        onClose={() => setIsEditGroupModalOpen(false)}
+        isOpen={showEditGroupModal}
+        onClose={() => setShowEditGroupModal(false)}
         onEditGroup={handleEditGroup}
         group={selectedGroup}
         availableClients={availableClients}

@@ -20,24 +20,27 @@ const resources = {
   }
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: 'en', // Default language
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false // React already escapes by default
-    },
-    react: {
-      useSuspense: false
-    },
-    // Disable features that are not compatible with SSR
-    detection: {
-      order: ['path', 'cookie', 'navigator'],
-    },
-    // Don't initialize if we're on the server
-    initImmediate: isBrowser,
-  });
+// Only initialize i18n if it hasn't been initialized yet
+if (!i18n.isInitialized) {
+  i18n
+    .use(initReactI18next)
+    .init({
+      resources,
+      lng: 'en', // Default language
+      fallbackLng: 'en',
+      interpolation: {
+        escapeValue: false // React already escapes by default
+      },
+      react: {
+        useSuspense: false
+      },
+      // Disable features that are not compatible with SSR
+      detection: {
+        order: ['path', 'cookie', 'navigator'],
+      },
+      // Don't initialize if we're on the server
+      initImmediate: isBrowser,
+    });
+}
 
 export default i18n;
