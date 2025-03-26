@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAppContext } from '@/context/AppContext'
-import DataPageLayout from './components/DataPageLayout'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ClientFilterDropdown from './components/ClientFilterDropdown'
 import WeekSelector from './components/WeekSelector'
 import DataImportExport from './components/DataImportExport'
@@ -11,20 +11,105 @@ import ClientOverviewChart from './components/ClientOverviewChart'
 import CaloricTrendsChart from './components/CaloricTrendsChart'
 import ComplianceRateWidget from './components/ComplianceRateWidget'
 import InactiveClientsWidget from './components/InactiveClientsWidget'
+import { traineesApi, reportingsApi } from '@/services/fitTrackApi'
+import { DEBUG_MODE } from '@/utils/config'
+
+// Define API response types
+interface ApiTrainee {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  group_id: string;
+  target_calories: string;
+  target_weight: string;
+  gender: string;
+  is_active: string;
+  [key: string]: unknown;
+}
+
+interface ApiReporting {
+  id: string;
+  trainee_id: string;
+  report_date: string;
+  weight: string;
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+  [key: string]: unknown;
+}
+
+interface ActivityLog {
+  id: string;
+  type: string;
+  filename: string;
+  status: string;
+  date: string;
+}
+
+// Define WeeklyData interface to include avgCalories
+interface WeeklyData {
+  week: string;
+  active: number;
+  inactive: number;
+  avgCalories?: number;
+}
 
 const DataManagementPage: React.FC = () => {
   const [selectedWeek, setSelectedWeek] = useState('Week 1')
   const [selectedClientFilter, setSelectedClientFilter] = useState('All Clients')
-  // Use the context instead of mock data
-  const { clients } = useAppContext()
+  // Use the context as fallback
+  const { clients: contextClients } = useAppContext()
+  
+  // API data states
+  const [apiTrainees, setApiTrainees] = useState<ApiTrainee[]>([])
+  const [apiReportings, setApiReportings] = useState<ApiReporting[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   // Data activity history
-  const [dataActivities, setDataActivities] = useState([
+  const [dataActivities, setDataActivities] = useState<ActivityLog[]>([
     { id: '1', type: 'Import', filename: 'clients_may_2023.csv', status: 'success', date: '2023-05-15' },
     { id: '2', type: 'Export', filename: 'workouts_apr_2023.xlsx', status: 'success', date: '2023-04-28' },
     { id: '3', type: 'Import', filename: 'nutrition_plans.csv', status: 'failed', date: '2023-04-15' },
     { id: '4', type: 'Export', filename: 'client_reports.pdf', status: 'pending', date: '2023-05-20' }
   ])
+
+  // Fetch data from the API
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        // Fetch trainees
+        const traineesResponse = await traineesApi.list()
+        if (traineesResponse.data && traineesResponse.data.trainees) {
+          setApiTrainees(traineesResponse.data.trainees)
+          if (DEBUG_MODE) {
+            console.log('Fetched trainees:', traineesResponse.data.trainees)
+          }
+        }
+
+        // Fetch reportings
+        const reportingsResponse = await reportingsApi.list()
+        if (reportingsResponse.data && reportingsResponse.data.reportings) {
+          setApiReportings(reportingsResponse.data.reportings)
+          if (DEBUG_MODE) {
+            console.log('Fetched reportings:', reportingsResponse.data.reportings)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError('Failed to load data. Using cached data instead.')
+        // Continue with cached data if available
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   // Function to handle client filter change
   const handleClientFilterChange = (filter: string) => {
@@ -35,6 +120,17 @@ const DataManagementPage: React.FC = () => {
   const handleWeekChange = (week: string) => {
     setSelectedWeek(week)
   }
+
+  // Use API data or fall back to context
+  const clients = apiTrainees.length > 0 
+    ? apiTrainees.map(trainee => ({
+        id: trainee.id,
+        name: trainee.name,
+        image: '/images/profile.jpg',
+        status: trainee.is_active === '1' ? 'active' : 'inactive',
+        compliance: 'compliant' // Default since API doesn't provide this
+      }))
+    : contextClients
 
   // Derived data for statistics
   const activeClients = clients.filter(client => client.status === 'active')
@@ -49,176 +145,422 @@ const DataManagementPage: React.FC = () => {
     ? Math.round((clients.filter(client => client.compliance === 'compliant').length / clients.length) * 100)
     : 0
 
-  // Data for charts
-  const weeklyData = [
-    { week: 'Week 1', active: activeClients.length, inactive: inactiveClients.length },
-    { week: 'Week 2', active: Math.round(activeClients.length * 0.9), inactive: Math.round(inactiveClients.length * 1.1) },
-    { week: 'Week 3', active: Math.round(activeClients.length * 1.1), inactive: Math.round(inactiveClients.length * 0.9) },
-    { week: 'Week 4', active: Math.round(activeClients.length * 1.2), inactive: Math.round(inactiveClients.length * 0.8) }
-  ]
+  // Generate weekly data from reportings if available
+  const weeklyData: WeeklyData[] = apiReportings.length > 0 
+    ? [
+        { 
+          week: 'Week 1', 
+          active: activeClients.length, 
+          inactive: inactiveClients.length,
+          // Add average values from reportings
+          avgCalories: Math.round(apiReportings.reduce((sum, rep) => sum + parseInt(rep.calories || '0'), 0) / apiReportings.length)
+        },
+        { 
+          week: 'Week 2', 
+          active: Math.round(activeClients.length * 0.9), 
+          inactive: Math.round(inactiveClients.length * 1.1),
+          avgCalories: Math.round(apiReportings.reduce((sum, rep) => sum + parseInt(rep.calories || '0'), 0) / apiReportings.length * 0.95)
+        },
+        { 
+          week: 'Week 3', 
+          active: Math.round(activeClients.length * 1.1), 
+          inactive: Math.round(inactiveClients.length * 0.9),
+          avgCalories: Math.round(apiReportings.reduce((sum, rep) => sum + parseInt(rep.calories || '0'), 0) / apiReportings.length * 0.9)
+        },
+        { 
+          week: 'Week 4', 
+          active: Math.round(activeClients.length * 1.2), 
+          inactive: Math.round(inactiveClients.length * 0.8),
+          avgCalories: Math.round(apiReportings.reduce((sum, rep) => sum + parseInt(rep.calories || '0'), 0) / apiReportings.length * 0.85)
+        }
+      ]
+    : [
+        { week: 'Week 1', active: activeClients.length, inactive: inactiveClients.length },
+        { week: 'Week 2', active: Math.round(activeClients.length * 0.9), inactive: Math.round(inactiveClients.length * 1.1) },
+        { week: 'Week 3', active: Math.round(activeClients.length * 1.1), inactive: Math.round(inactiveClients.length * 0.9) },
+        { week: 'Week 4', active: Math.round(activeClients.length * 1.2), inactive: Math.round(inactiveClients.length * 0.8) }
+      ]
 
-  // Caloric data
-  const caloricData = [
-    { week: 'Week 1', calories: 1800 },
-    { week: 'Week 2', calories: 1600 },
-    { week: 'Week 3', calories: 1300 },
-    { week: 'Week 4', calories: 1500 }
-  ]
+  // Caloric data from reportings if available
+  const caloricData = apiReportings.length > 0
+    ? weeklyData.map(week => ({
+        week: week.week,
+        calories: week.avgCalories || 0
+      }))
+    : [
+        { week: 'Week 1', calories: 1800 },
+        { week: 'Week 2', calories: 1600 },
+        { week: 'Week 3', calories: 1300 },
+        { week: 'Week 4', calories: 1500 }
+      ]
 
-  return (
-    <DataPageLayout>
-      {/* Desktop content */}
-      <div className="hidden lg:block">
-        {/* Top filter section */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <ClientFilterDropdown 
-              selectedClientFilter={selectedClientFilter}
-              onFilterChange={handleClientFilterChange}
+  // Handle data export
+  const handleExportData = async () => {
+    try {
+      setLoading(true)
+      
+      // Add a new activity log
+      const newActivity = {
+        id: (dataActivities.length + 1).toString(),
+        type: 'Export',
+        filename: `data_export_${new Date().toISOString().split('T')[0]}.csv`,
+        status: 'success',
+        date: new Date().toISOString().split('T')[0]
+      }
+      
+      setDataActivities([newActivity, ...dataActivities])
+      
+      // Simulate a delay for export operation
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Get actual data from API
+      const exportData = {
+        clients: apiTrainees,
+        reports: apiReportings,
+        selectedWeek,
+        selectedClientFilter
+      }
+      
+      console.log('Exporting data:', exportData)
+      
+    } catch (err) {
+      console.error('Error exporting data:', err)
+      // Add failed log
+      const failedLog = {
+        id: (dataActivities.length + 1).toString(),
+        type: 'Export',
+        filename: `data_export_${new Date().toISOString().split('T')[0]}.csv`,
+        status: 'failed',
+        date: new Date().toISOString().split('T')[0]
+      }
+      setDataActivities([failedLog, ...dataActivities])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading && !clients.length) {
+    return (
+      <div className="min-h-screen bg-[#1E1E1E] flex items-center justify-center">
+        <div className="text-white">Loading data...</div>
+      </div>
+    )
+  }
+
+  // Show error message if any
+  if (error) {
+    console.warn('Error loading data:', error)
+  }
+
+  // Define page icon for data management page
+  const dataPageIcon = (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 12.9799V11.0199C2 10.0799 2.85 9.20994 3.9 9.20994C5.71 9.20994 6.45 7.93994 5.54 6.36994C5.02 5.46994 5.33 4.29994 6.24 3.77994L8.21 2.53994C8.76 2.21994 9.78 2.21994 10.33 2.53994L12.3 3.77994C13.21 4.29994 13.52 5.46994 13 6.36994C12.09 7.93994 12.83 9.20994 14.64 9.20994C15.69 9.20994 16.54 10.0699 16.54 11.0199V12.9799C16.54 13.9199 15.69 14.7799 14.64 14.7799C12.83 14.7799 12.09 16.0599 13 17.6299C13.52 18.5399 13.21 19.6999 12.3 20.2199L10.33 21.4599C9.78 21.7799 8.76 21.7799 8.21 21.4599L6.24 20.2199C5.33 19.6999 5.02 18.5299 5.54 17.6299C6.45 16.0599 5.71 14.7799 3.9 14.7799C2.85 14.7799 2 13.9199 2 12.9799Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.25 12C9.25 12.83 9.92 13.5 10.75 13.5C11.58 13.5 12.25 12.83 12.25 12C12.25 11.17 11.58 10.5 10.75 10.5C9.92 10.5 9.25 11.17 9.25 12Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+
+  // Desktop content layout
+  const desktopContent = (
+    <>
+      {/* Control Panel */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <ClientFilterDropdown
+            selectedClientFilter={selectedClientFilter}
+            onFilterChange={handleClientFilterChange}
+          />
+          <WeekSelector
+            selectedWeek={selectedWeek}
+            onWeekChange={handleWeekChange}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search data..."
+              className="px-4 py-2 pl-10 pr-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#13A753] text-sm"
             />
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 21L16.65 16.65" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
           </div>
-          <button
-            className="flex items-center gap-3 bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[60px] py-3 px-6 text-white"
-            onClick={() => {}} // This will be handled by the DataImportExport component
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.3334 8.6665V12.6665H4.08342V8.6665H3.3334V12.6665C3.3334 13.3998 3.93341 13.9998 4.08342 13.9998H11.3334C12.0667 13.9998 12.6667 13.3998 12.6667 12.6665V8.6665H11.3334ZM10.6667 7.99984L9.72008 7.05317L8.66675 8.1065V3.33317H7.33341V8.1065L6.28008 7.05317L5.33341 7.99984L8.00008 10.6665L10.6667 7.99984Z" fill="white" />
+          <button className="px-4 py-2 bg-[#13A753] hover:bg-[#0F8A44] text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14.9998 19.92L8.47984 13.4C7.70984 12.63 7.70984 11.37 8.47984 10.6L14.9998 4.08" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="text-white text-sm font-semibold">Export</span>
+            <span>Filter</span>
           </button>
         </div>
+      </div>
 
-        {/* Main content grid */}
-        <div className="grid grid-cols-3 gap-6">
-          {/* Left column - charts */}
-          <div className="col-span-2">
-            <ClientOverviewChart 
-              weeklyData={weeklyData} 
-              selectedWeek={selectedWeek} 
-            />
-            
-            <CaloricTrendsChart
-              caloricData={caloricData}
-              selectedWeek={selectedWeek}
-              onWeekChange={handleWeekChange}
-            />
-            
-            <DataImportExport 
-              dataActivities={dataActivities}
-              setDataActivities={setDataActivities}
-            />
-            
-            <DataActivityHistory 
-              dataActivities={dataActivities} 
-            />
+      <DataImportExport 
+        dataActivities={dataActivities}
+        setDataActivities={setDataActivities}
+      />
+
+      {/* Stats Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Total Clients</p>
+            <h3 className="text-2xl font-bold">{clients.length}</h3>
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              12% from last week
+            </p>
           </div>
-          
-          {/* Right column - widgets */}
-          <div className="col-span-1">
-            <ComplianceRateWidget 
-              complianceRate={complianceRate}
-              selectedWeek={selectedWeek}
-            />
-            
-            <InactiveClientsWidget 
-              inactiveClients={inactiveClients}
-            />
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 7.16C17.94 7.15 17.87 7.15 17.81 7.16C16.43 7.11 15.33 5.98 15.33 4.58C15.33 3.15 16.48 2 17.91 2C19.34 2 20.49 3.16 20.49 4.58C20.48 5.98 19.38 7.11 18 7.16Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M16.9699 14.44C18.3399 14.67 19.8499 14.43 20.9099 13.72C22.3199 12.78 22.3199 11.24 20.9099 10.3C19.8399 9.59004 18.3099 9.35003 16.9399 9.59003" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5.96998 7.16C6.02998 7.15 6.09998 7.15 6.15998 7.16C7.53998 7.11 8.63998 5.98 8.63998 4.58C8.63998 3.15 7.48998 2 6.05998 2C4.62998 2 3.47998 3.16 3.47998 4.58C3.48998 5.98 4.58998 7.11 5.96998 7.16Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6.9999 14.44C5.6299 14.67 4.1199 14.43 3.0599 13.72C1.6499 12.78 1.6499 11.24 3.0599 10.3C4.1299 9.59004 5.6599 9.35003 7.0299 9.59003" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 14.63C11.94 14.62 11.87 14.62 11.81 14.63C10.43 14.58 9.32996 13.45 9.32996 12.05C9.32996 10.62 10.48 9.46997 11.91 9.46997C13.34 9.46997 14.49 10.63 14.49 12.05C14.48 13.45 13.38 14.59 12 14.63Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9.08997 17.78C7.67997 18.72 7.67997 20.26 9.08997 21.2C10.69 22.27 13.31 22.27 14.91 21.2C16.32 20.26 16.32 18.72 14.91 17.78C13.32 16.72 10.69 16.72 9.08997 17.78Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Active Clients</p>
+            <h3 className="text-2xl font-bold">{activeClients.length}</h3>
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              8% from last week
+            </p>
+          </div>
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M20.5899 22C20.5899 18.13 16.7399 15 11.9999 15C7.25991 15 3.40991 18.13 3.40991 22" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Compliance Rate</p>
+            <h3 className="text-2xl font-bold">{complianceRate}%</h3>
+            <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              3% from last week
+            </p>
+          </div>
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14.55 21.67C18.84 20.54 22 16.64 22 12C22 6.48 17.56 2 12 2C5.33 2 2 7.56 2 7.56M2 7.56V3M2 7.56H4.01H6.44" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2 12C2 17.52 6.48 22 12 22" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 3"/>
+            </svg>
           </div>
         </div>
       </div>
 
-      {/* Mobile content */}
+      {/* Data Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Chart Widgets */}
+        <div className="lg:col-span-2 space-y-8">
+          <ClientOverviewChart 
+            weeklyData={weeklyData} 
+            selectedWeek={selectedWeek}
+          />
+          <CaloricTrendsChart 
+            caloricData={caloricData}
+            selectedWeek={selectedWeek}
+            onWeekChange={handleWeekChange}
+          />
+        </div>
+
+        {/* Metrics & Activity Widgets */}
+        <div className="space-y-8">
+          <ComplianceRateWidget 
+            complianceRate={complianceRate}
+            selectedWeek={selectedWeek}
+          />
+          <InactiveClientsWidget 
+            inactiveClients={inactiveClients}
+          />
+          <DataActivityHistory 
+            dataActivities={dataActivities}
+          />
+        </div>
+      </div>
+    </>
+  )
+
+  // Mobile content layout - optimized for smaller screens
+  const mobileContent = (
+    <>
+      {/* Mobile Control Panel */}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
+          <div className="flex items-center gap-2">
+            <button className="p-2 bg-[#F3F7F3] rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 6.5H16" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 6.5H2" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 10C11.933 10 13.5 8.433 13.5 6.5C13.5 4.567 11.933 3 10 3C8.067 3 6.5 4.567 6.5 6.5C6.5 8.433 8.067 10 10 10Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22 17.5H18" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8 17.5H2" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 21C15.933 21 17.5 19.433 17.5 17.5C17.5 15.567 15.933 14 14 14C12.067 14 10.5 15.567 10.5 17.5C10.5 19.433 12.067 21 14 21Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button className="p-2 bg-[#F3F7F3] rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 21L16.65 16.65" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <ClientFilterDropdown
+            selectedClientFilter={selectedClientFilter}
+            onFilterChange={handleClientFilterChange}
+          />
+          <WeekSelector
+            selectedWeek={selectedWeek}
+            onWeekChange={handleWeekChange}
+          />
+        </div>
+      </div>
+      
+      {/* Mobile Stats Overview Cards */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 7.16C17.94 7.15 17.87 7.15 17.81 7.16C16.43 7.11 15.33 5.98 15.33 4.58C15.33 3.15 16.48 2 17.91 2C19.34 2 20.49 3.16 20.49 4.58C20.48 5.98 19.38 7.11 18 7.16Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.9699 14.44C18.3399 14.67 19.8499 14.43 20.9099 13.72C22.3199 12.78 22.3199 11.24 20.9099 10.3C19.8399 9.59004 18.3099 9.35003 16.9399 9.59003" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M5.96998 7.16C6.02998 7.15 6.09998 7.15 6.15998 7.16C7.53998 7.11 8.63998 5.98 8.63998 4.58C8.63998 3.15 7.48998 2 6.05998 2C4.62998 2 3.47998 3.16 3.47998 4.58C3.48998 5.98 4.58998 7.11 5.96998 7.16Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6.9999 14.44C5.6299 14.67 4.1199 14.43 3.0599 13.72C1.6499 12.78 1.6499 11.24 3.0599 10.3C4.1299 9.59004 5.6599 9.35003 7.0299 9.59003" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 14.63C11.94 14.62 11.87 14.62 11.81 14.63C10.43 14.58 9.32996 13.45 9.32996 12.05C9.32996 10.62 10.48 9.46997 11.91 9.46997C13.34 9.46997 14.49 10.63 14.49 12.05C14.48 13.45 13.38 14.59 12 14.63Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9.08997 17.78C7.67997 18.72 7.67997 20.26 9.08997 21.2C10.69 22.27 13.31 22.27 14.91 21.2C16.32 20.26 16.32 18.72 14.91 17.78C13.32 16.72 10.69 16.72 9.08997 17.78Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-xs text-gray-500">Total Clients</p>
+          </div>
+          <h3 className="text-xl font-bold">{clients.length}</h3>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.5899 22C20.5899 18.13 16.7399 15 11.9999 15C7.25991 15 3.40991 18.13 3.40991 22" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-xs text-gray-500">Active Clients</p>
+          </div>
+          <h3 className="text-xl font-bold">{activeClients.length}</h3>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#F45C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.5899 22C20.5899 18.13 16.7399 15 11.9999 15C7.25991 15 3.40991 18.13 3.40991 22" stroke="#F45C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18 2L6 14" stroke="#F45C5C" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <p className="text-xs text-gray-500">Inactive Clients</p>
+          </div>
+          <h3 className="text-xl font-bold">{inactiveClients.length}</h3>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14.55 21.67C18.84 20.54 22 16.64 22 12C22 6.48 17.56 2 12 2C5.33 2 2 7.56 2 7.56M2 7.56V3M2 7.56H4.01H6.44" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12C2 17.52 6.48 22 12 22" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 3"/>
+              </svg>
+            </div>
+            <p className="text-xs text-gray-500">Compliance Rate</p>
+          </div>
+          <h3 className="text-xl font-bold">{complianceRate}%</h3>
+        </div>
+      </div>
+
+      {/* Mobile Import/Export */}
+      <div className="mb-6">
+        <DataImportExport 
+          dataActivities={dataActivities}
+          setDataActivities={setDataActivities}
+        />
+      </div>
+
+      {/* Mobile Charts */}
+      <div className="space-y-6">
+        <ClientOverviewChart 
+          weeklyData={weeklyData} 
+          selectedWeek={selectedWeek}
+          isMobile
+        />
+        <CaloricTrendsChart 
+          caloricData={caloricData}
+          selectedWeek={selectedWeek}
+          onWeekChange={handleWeekChange}
+          isMobile
+        />
+        <ComplianceRateWidget 
+          complianceRate={complianceRate}
+          selectedWeek={selectedWeek}
+          isMobile
+        />
+        <InactiveClientsWidget 
+          inactiveClients={inactiveClients}
+          isMobile
+        />
+        <DataActivityHistory 
+          dataActivities={dataActivities}
+          isMobile
+        />
+      </div>
+    </>
+  )
+
+  return (
+    <DashboardLayout
+      pageTitle="Data Analytics"
+      pageIcon={dataPageIcon}
+      profileName="Alex Dube"
+      profileRole="admin"
+      notificationCount={3}
+    >
+      {/* Error message if any */}
+      {error && (
+        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+
+      {/* Desktop View */}
+      <div className="hidden lg:block">
+        {desktopContent}
+      </div>
+
+      {/* Mobile View */}
       <div className="lg:hidden">
-        <div className="mb-5">
-          <h2 className="text-xl font-bold mb-4">Data Management</h2>
-          <div className="flex justify-between items-center">
-            <ClientFilterDropdown 
-              selectedClientFilter={selectedClientFilter}
-              onFilterChange={handleClientFilterChange}
-              isMobile={true}
-            />
-            <WeekSelector 
-              selectedWeek={selectedWeek}
-              onWeekChange={handleWeekChange}
-              isMobile={true}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          {/* Client Overview */}
-          <div className="bg-[#F9F9F9] rounded-[15px] p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-[16px] font-semibold text-[#1E1E1E]">Client Overview</h3>
-            </div>
-            <ClientOverviewChart 
-              weeklyData={weeklyData} 
-              selectedWeek={selectedWeek}
-              isMobile={true}
-            />
-
-            {/* Legend */}
-            <div className="flex items-center gap-4 mt-3 justify-center">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-b from-[#13A753] to-[#1E2120]"></div>
-                <span className="text-[12px] text-[#2B180A]">Active</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-[#F45C5C]"></div>
-                <span className="text-[12px] text-[#2B180A]">Inactive</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Caloric Trends */}
-          <div className="bg-[#F9F9F9] rounded-[15px] p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-[16px] font-semibold text-[#1E1E1E]">Caloric Trends</h3>
-            </div>
-            <CaloricTrendsChart
-              caloricData={caloricData}
-              selectedWeek={selectedWeek}
-              onWeekChange={handleWeekChange}
-              isMobile={true}
-            />
-          </div>
-
-          {/* Compliance Rate */}
-          <div className="bg-[#F9F9F9] rounded-[15px] p-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-[16px] font-semibold text-[#1E1E1E]">Compliance Rate</h3>
-            </div>
-            <ComplianceRateWidget 
-              complianceRate={complianceRate}
-              selectedWeek={selectedWeek}
-              isMobile={true}
-            />
-            <div className="bg-[#DAEEDA] w-full py-2 rounded-[10px] text-center mt-3">
-              <p className="text-[12px] text-[#636363]">For {selectedWeek}</p>
-            </div>
-          </div>
-
-          {/* Inactive Clients */}
-          <div className="bg-[#F9F9F9] rounded-[15px] p-4">
-            <h3 className="text-[16px] font-semibold text-[#1E1E1E] mb-3">Inactive Clients</h3>
-            <InactiveClientsWidget 
-              inactiveClients={inactiveClients}
-              isMobile={true}
-            />
-          </div>
-
-          {/* Import/Export Data - Only buttons visible on mobile */}
-          <div className="flex flex-col gap-3">
-            <button className="w-full py-3 bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[15px] text-white font-medium text-sm">
-              Import Data
-            </button>
-            <button className="w-full py-3 bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-[15px] text-white font-medium text-sm">
-              Export Data
-            </button>
-          </div>
-        </div>
+        {mobileContent}
       </div>
-    </DataPageLayout>
+    </DashboardLayout>
   )
 }
 

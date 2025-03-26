@@ -1,10 +1,17 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { useAppContext } from '@/context/AppContext'
 import { useMemo } from 'react'
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: {
+    name: string;
+    value: number;
+  }[];
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-2 shadow-md rounded-md">
@@ -16,10 +23,17 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function ClientDistributionChart() {
-  const { clients, groups } = useAppContext()
-  
-  // Calculate client distribution based on groups
+interface GroupData {
+  name: string;
+  trainees_count: number;
+}
+
+interface ClientDistributionChartProps {
+  groupsData: GroupData[];
+}
+
+export default function ClientDistributionChart({ groupsData }: ClientDistributionChartProps) {
+  // Convert API group data to chart format
   const clientDistribution = useMemo(() => {
     // Default colors for different group types
     const colors = {
@@ -30,27 +44,8 @@ export default function ClientDistributionChart() {
       'Other': '#8ED1FC'
     }
     
-    // Count clients in each group
-    const groupCounts: Record<string, number> = {}
-    let totalClients = 0
-    
-    clients.forEach(client => {
-      // In a real app, clients would have a groupId field
-      // This is a simplified example
-      const clientGroups = groups.filter(group => 
-        // This would be replaced with actual logic to match clients to groups
-        group.name.toLowerCase().includes(client.name.split(' ')[0].toLowerCase())
-      )
-      
-      if (clientGroups.length > 0) {
-        const groupName = clientGroups[0].name
-        groupCounts[groupName] = (groupCounts[groupName] || 0) + 1
-        totalClients++
-      }
-    })
-    
-    // If no real data is available, use some default groups
-    if (totalClients === 0) {
+    // If groupsData is empty, use default data
+    if (!groupsData || groupsData.length === 0) {
       return [
         { name: 'Weight Loss', value: 25, color: '#13A753' },
         { name: 'Muscle Gain', value: 10, color: '#106A02' },
@@ -59,13 +54,29 @@ export default function ClientDistributionChart() {
       ]
     }
     
-    // Convert counts to percentages
-    return Object.entries(groupCounts).map(([name, count]) => ({
-      name,
-      value: Math.round((count / totalClients) * 100),
-      color: (colors as any)[name] || '#8ED1FC' // Use default color if not found
-    }))
-  }, [clients, groups])
+    // Calculate total trainees
+    const totalTrainees = groupsData.reduce((sum, group) => sum + group.trainees_count, 0);
+    
+    // Convert API data to chart format
+    return groupsData.map((group, index) => {
+      // Calculate percentage
+      const percentage = totalTrainees > 0 
+        ? Math.round((group.trainees_count / totalTrainees) * 100)
+        : 0;
+        
+      // Assign a color based on index or predefined colors
+      const colorKeys = Object.keys(colors);
+      const color = index < colorKeys.length 
+        ? (colors as Record<string, string>)[colorKeys[index]]
+        : `hsl(${index * 50 % 360}, 70%, 50%)`;
+      
+      return {
+        name: group.name,
+        value: percentage,
+        color
+      };
+    });
+  }, [groupsData]);
 
   return (
     <div className="bg-[rgba(231,240,230,0.5)] rounded-[20px] p-8">
@@ -86,7 +97,7 @@ export default function ClientDistributionChart() {
               outerRadius={80}
               paddingAngle={0}
               dataKey="value"
-              label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+              label={({ cx, cy, midAngle, outerRadius, percent }) => {
                 const RADIAN = Math.PI / 180;
                 const radius = outerRadius + 20;
                 const x = cx + radius * Math.cos(-midAngle * RADIAN);

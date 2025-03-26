@@ -1,0 +1,474 @@
+{
+	"info": {
+		"_postman_id": "8a7b9f1e-1a2b-4c3d-9d0e-f1e2d3c4b5a6",
+		"name": "FitTrack API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "dashboard - get",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"dashboard\",\n  \"act\": \"get\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Groups",
+			"item": [
+				{
+					"name": "groups - del",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"groups\",\n  \"act\": \"del\",\n  \"id\": \"2\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "groups - get",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"groups\",\n  \"act\": \"get\",\n  \"id\": \"2\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "groups - list",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"groups\",\n  \"act\": \"list\",\n  \"search\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "groups - set",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"groups\",\n  \"act\": \"set\",\n  \"name\": \"מתקדמים\",\n  \"dietary_guidelines\": \"דיאטת כסאח\",\n  \"weekly_menu\": \"חסה והרבה מים\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "login - logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"login\",\n  \"act\": \"logout\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "login - otp",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"login\",\n  \"act\": \"otp\",\n  \"phone\": \"0524455266\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "login - verify",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"login\",\n  \"act\": \"verify\",\n  \"code\": \"215335\",\n  \"phone\": \"0524455266\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reportings",
+			"item": [
+				{
+					"name": "reportings - get",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"reportings\",\n  \"act\": \"get\",\n  \"id\": \"8\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "reportings - list",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"reportings\",\n  \"act\": \"list\",\n  \"search\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Settings",
+			"item": [
+				{
+					"name": "settings - get",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"settings\",\n  \"act\": \"get\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Trainees",
+			"item": [
+				{
+					"name": "trainees - del",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"trainees\",\n  \"act\": \"del\",\n  \"id\": \"4\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "trainees - get",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"trainees\",\n  \"act\": \"get\",\n  \"id\": \"3\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "trainees - list",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"trainees\",\n  \"act\": \"list\",\n  \"search\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "trainees - set",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mdl\": \"trainees\",\n  \"act\": \"set\",\n  \"name\": \"ליאת הסופר\",\n  \"email\": \"liat@ha.com\",\n  \"phone\": \"0548787874\",\n  \"group_id\": \"3\",\n  \"target_calories\": \"2222\",\n  \"target_weight\": \"111\",\n  \"gender\": \"2\",\n  \"is_active\": \"0\"\n}"
+						},
+						"url": {
+							"raw": "https://app.fit-track.net/api/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"fit-track",
+								"net"
+							],
+							"path": [
+								"api",
+								""
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

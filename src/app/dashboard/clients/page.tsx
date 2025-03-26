@@ -1,537 +1,719 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Sidebar from '@/components/dashboard/Sidebar'
-import ClientTable from '@/components/dashboard/ClientTable'
-import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { useState, useEffect, useMemo } from 'react'
+import ClientTable, { Client } from '@/components/dashboard/ClientTable'
 import { AddClientModal, ClientDetailsModal } from '@/components/dashboard/ClientPopups'
 import { useAppContext } from '@/context/AppContext'
 import { useTranslation } from 'react-i18next'
+import { traineesApi } from '@/services/fitTrackApi'
+import { groupsApi } from '@/services/fitTrackApi'
+import { DEBUG_MODE } from '@/utils/config'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
+
+// Define types for API responses
+interface ApiTrainee {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  group_id: string;
+  target_calories: string;
+  target_weight: string;
+  gender: string;
+  is_active: string;
+  [key: string]: unknown;
+}
+
+interface ApiGroup {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+// Extended Client type to include API data
+interface ExtendedClient extends Client {
+  apiData?: ApiTrainee;
+}
 
 export default function ClientManagementPage() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { t, i18n } = useTranslation()
-  const [isRtl, setIsRtl] = useState(false)
+  const { t } = useTranslation()
+  const { addClient, updateClient, deleteClient, toggleClientPush } = useAppContext()
   
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar']
-    setIsRtl(rtlLanguages.includes(i18n.language))
-  }, [i18n.language])
-  
-  // Search state
+  const [apiTrainees, setApiTrainees] = useState<ApiTrainee[]>([])
+  const [apiGroups, setApiGroups] = useState<ApiGroup[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  
-  // Modal states
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false)
   const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] = useState(false)
-  const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [selectedClient, setSelectedClient] = useState<ExtendedClient | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   
-  // Get data and functions from context
-  const { clients, addClient, updateClient, toggleClientPush } = useAppContext();
+  // Get data and functions from context - keep only what's needed
+  const { clients: contextClients } = useAppContext();
   
-  // Handle add client
-  const handleAddClient = (client: any) => {
-    console.log('Adding client:', client)
-    
-    // Add client with additional properties
-    const newClient = {
-      ...client,
-      image: '/images/profile.jpg',
-      goalsMet: 75,
-      status: 'active',
-      compliance: 'compliant'
+  // Fetch trainees from API
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        // Fetch trainees
+        const traineesResponse = await traineesApi.list()
+        if (traineesResponse.data && traineesResponse.data.trainees) {
+          setApiTrainees(traineesResponse.data.trainees)
+          
+          // Fetch groups to map group_id to group names
+          const groupsResponse = await groupsApi.list()
+          if (groupsResponse.data && groupsResponse.data.groups) {
+            setApiGroups(groupsResponse.data.groups)
+          }
+          
+          if (DEBUG_MODE) {
+            console.log('Fetched trainees:', traineesResponse.data.trainees)
+            console.log('Fetched groups:', groupsResponse.data.groups)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching trainees:', err)
+        setError('Failed to load trainees')
+        // We'll fall back to context clients
+        setApiTrainees([])
+      } finally {
+        setIsLoading(false)
+      }
     }
     
-    addClient(newClient);
-    setIsAddClientModalOpen(false)
+    fetchData()
+  }, [])
+  
+  // Convert API trainees to Client format and merge with context
+  const clientsList = useMemo(() => {
+    if (apiTrainees.length > 0) {
+      // Find the corresponding group name for a group_id
+      const getGroupName = (groupId: string) => {
+        const group = apiGroups.find(g => g.id === groupId)
+        return group ? group.name : 'Unknown Group'
+      }
+      
+      // Map API trainees to Client format
+      return apiTrainees.map(trainee => ({
+        id: trainee.id,
+        name: trainee.name,
+        image: '/images/profile.jpg', // Default image
+        group: getGroupName(trainee.group_id),
+        goalsMet: 75, // Default value as API doesn't provide this
+        dietaryGoal: `${trainee.target_calories} calories / ${trainee.target_weight} kg`,
+        status: trainee.is_active === '1' ? 'active' : 'inactive',
+        compliance: 'compliant', // Default value as API doesn't provide this
+        pushEnabled: true, // Default value as API doesn't provide this
+        // Store original API data for updates
+        apiData: trainee
+      } as ExtendedClient))
+    }
+    
+    // Fall back to context clients if no API data
+    return contextClients
+  }, [apiTrainees, apiGroups, contextClients])
+  
+  // Handle add client
+  const handleAddClient = async (client: Partial<Client>) => {
+    try {
+      setIsLoading(true)
+      
+      // Prepare trainee data for API
+      const traineeData = {
+        name: client.name || '',
+        email: 'client@example.com', // Default values as these might not be in the Client type
+        phone: '123456789',
+        group_id: '1', // Default to first group
+        target_calories: '2000',
+        target_weight: '70',
+        gender: '1', // Default to male
+        is_active: '1' // Set as active by default
+      }
+      
+      // Call API to create trainee
+      const response = await traineesApi.set(traineeData)
+      
+      if (response.data && response.data.success) {
+        // Refresh trainees list
+        const refreshResponse = await traineesApi.list()
+        if (refreshResponse.data && refreshResponse.data.trainees) {
+          setApiTrainees(refreshResponse.data.trainees)
+        }
+        
+        // Also update context for fallback
+        const newClient = {
+          ...client,
+          id: response.data.trainee_id || Math.random().toString(36).substring(7),
+          image: '/images/profile.jpg',
+          goalsMet: 75,
+          status: 'active' as const,
+          compliance: 'compliant' as const
+        } as Client;
+        
+        addClient(newClient)
+      }
+    } catch (err) {
+      console.error('Error adding client:', err)
+      
+      // Fall back to context only
+      const newClient = {
+        ...client,
+        id: Math.random().toString(36).substring(7),
+        image: '/images/profile.jpg',
+        goalsMet: 75,
+        status: 'active' as const,
+        compliance: 'compliant' as const
+      } as Client;
+      
+      addClient(newClient)
+    } finally {
+      setIsLoading(false)
+      setIsAddClientModalOpen(false)
+    }
   }
   
   // Handle client details
-  const handleViewClient = (client: any) => {
-    setSelectedClient(client)
+  const handleViewClient = (client: Client) => {
+    setSelectedClient(client as ExtendedClient)
     setIsClientDetailsModalOpen(true)
   }
   
-  // Handle push notification toggle
-  const handleTogglePush = (clientId: string, enabled: boolean) => {
-    console.log(`Toggle push for client ${clientId} to ${enabled}`)
-    toggleClientPush(clientId, enabled);
-  }
-  
-  // Handle export clients
-  const handleExportClients = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    console.log('Exporting clients data')
-    
+  // Handle update client
+  const handleUpdateClient = async (client: ExtendedClient) => {
     try {
-      // Format data for export
-      const exportData = clients.map(client => ({
-        id: client.id,
-        name: client.name,
-        group: client.group,
-        dietaryGoal: client.dietaryGoal,
-        goalsMet: client.goalsMet,
-        status: client.status,
-        compliance: client.compliance,
-        pushEnabled: client.pushEnabled
-      }))
+      setIsLoading(true)
       
-      // Convert to CSV format
-      const headers = Object.keys(exportData[0]).join(',')
-      const csvRows = exportData.map(row => 
-        Object.values(row).map(value => 
-          typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value
-        ).join(',')
-      )
-      const csvData = [headers, ...csvRows].join('\n')
+      // Get the original API data
+      const originalData = client.apiData
       
-      // Create download link
-      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.setAttribute('href', url)
-      link.setAttribute('download', 'clients-data.csv')
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      // Clean up the URL object
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 100);
-    } catch (error) {
-      console.error('Error exporting clients:', error)
-      // Fallback to JSON if CSV conversion fails
-      try {
-        const dataStr = JSON.stringify(clients, null, 2)
-        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+      if (originalData) {
+        // Prepare trainee data for API
+        const traineeData = {
+          id: client.id,
+          name: client.name,
+          email: originalData.email,
+          phone: originalData.phone,
+          group_id: originalData.group_id,
+          target_calories: originalData.target_calories,
+          target_weight: originalData.target_weight,
+          gender: originalData.gender,
+          is_active: client.status === 'active' ? '1' : '0'
+        }
         
-        const exportFileDefaultName = 'clients-data.json'
-        const linkElement = document.createElement('a')
-        linkElement.setAttribute('href', dataUri)
-        linkElement.setAttribute('download', exportFileDefaultName)
-        document.body.appendChild(linkElement)
-        linkElement.click()
-        document.body.removeChild(linkElement)
-      } catch (jsonError) {
-        console.error('JSON export failed:', jsonError)
-        alert('Export failed. Please try again.')
+        // Call API to update trainee
+        const response = await traineesApi.set(traineeData)
+        
+        if (response.data && response.data.success) {
+          // Refresh trainees list
+          const refreshResponse = await traineesApi.list()
+          if (refreshResponse.data && refreshResponse.data.trainees) {
+            setApiTrainees(refreshResponse.data.trainees)
+          }
+        }
       }
+      
+      // Also update context for fallback
+      updateClient(client)
+    } catch (err) {
+      console.error('Error updating client:', err)
+      // Fall back to context only
+      updateClient(client)
+    } finally {
+      setIsLoading(false)
+      setIsClientDetailsModalOpen(false)
     }
   }
   
-  // Handle scheduling
-  const handleSchedule = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    console.log('Schedule button clicked')
-    
-    // This is a placeholder for the scheduling functionality
-    // In a real app, this would open a scheduling modal or navigate to a scheduling page
-    alert('Schedule functionality will be implemented soon. This button works!')
+  // Handle toggle push notifications
+  const handleTogglePush = (clientId: string, enabled: boolean) => {
+    toggleClientPush(clientId, enabled)
   }
   
-  return (
-    <div className={`min-h-screen bg-[#1E1E1E] relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
-      {/* Background grid lines */}
-      <div className="absolute inset-0 z-0 opacity-20">
-        <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={`col-${i}`} className={`border-r border-white/12 h-full ${i >= 6 ? 'hidden lg:block' : ''}`}></div>
-          ))}
+  // Handle delete client
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      setIsLoading(true)
+      
+      // Call API to delete trainee
+      await traineesApi.delete(clientId)
+      
+      // Refresh trainees list
+      const refreshResponse = await traineesApi.list()
+      if (refreshResponse.data && refreshResponse.data.trainees) {
+        setApiTrainees(refreshResponse.data.trainees)
+      }
+      
+      // Also call deleteClient from context
+      deleteClient(clientId)
+    } catch (err) {
+      console.error('Error deleting client:', err)
+      // Still attempt to delete from context
+      deleteClient(clientId)
+    } finally {
+      setIsLoading(false)
+      setIsClientDetailsModalOpen(false)
+    }
+  }
+  
+  // Handle export clients (example function)
+  const handleExportClients = (e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log('Exporting clients:', clientsList)
+    // Implement export logic
+  }
+  
+  // Handle schedule (example function)
+  const handleSchedule = (e: React.MouseEvent) => {
+    e.preventDefault()
+    console.log('Opening schedule')
+    // Implement schedule logic
+  }
+  
+  // Client page icon
+  const clientPageIcon = (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10.0495 2.53L4.02953 6.46C2.09953 7.72 2.09953 10.54 4.02953 11.8L10.0495 15.73C11.1295 16.44 12.9095 16.44 13.9895 15.73L19.9795 11.8C21.8995 10.54 21.8995 7.73 19.9795 6.47L13.9895 2.54C12.9095 1.82 11.1295 1.82 10.0495 2.53Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M5.6293 13.08L5.6193 17.77C5.6193 19.04 6.6093 20.4 7.7993 20.8L10.9893 21.86C11.5393 22.04 12.4493 22.04 13.0093 21.86L16.1993 20.8C17.3893 20.4 18.3793 19.04 18.3793 17.77V13.13" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21.4004 15V9" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+  
+  // CSS animations for the client page
+  const animations = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes grow {
+      from { transform: scale(0.9); }
+      to { transform: scale(1); }
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(19, 167, 83, 0.2); }
+      70% { box-shadow: 0 0 0 10px rgba(19, 167, 83, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(19, 167, 83, 0); }
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    .animate-slide-in {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    
+    .animate-grow {
+      animation: grow 0.2s ease-out forwards;
+    }
+    
+    .animate-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    .staggered-item:nth-child(1) { animation-delay: 0.05s; }
+    .staggered-item:nth-child(2) { animation-delay: 0.1s; }
+    .staggered-item:nth-child(3) { animation-delay: 0.15s; }
+    .staggered-item:nth-child(4) { animation-delay: 0.2s; }
+    .staggered-item:nth-child(5) { animation-delay: 0.25s; }
+  `;
+
+  // Desktop content
+  const desktopContent = (
+    <>
+      <style jsx>{animations}</style>
+      
+      {/* Client summary cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 animate-fade-in">
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#13A753]/10 p-3 rounded-full">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#13A753"/>
+                <path d="M16.3598 3.08C16.7398 3.02 17.1298 3 17.5098 3C19.9898 3 21.9998 5.01 21.9998 7.5C21.9998 9.99 19.9898 12 17.5098 12C16.2598 12 15.1198 11.5 14.2998 10.68" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 17C2 14.79 3.79 13 6 13H12C14.21 13 16 14.79 16 17V20C16 20.55 15.55 21 15 21H3C2.45 21 2 20.55 2 20V17Z" fill="#13A753" fillOpacity="0.6"/>
+                <path d="M17.5 21H20.5C21.05 21 21.5 20.55 21.5 20V17C21.5 14.79 19.71 13 17.5 13C16.53 13 15.63 13.33 14.96 13.88" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-2xl font-bold text-gray-800">4</h3>
+              <p className="text-gray-500 truncate max-w-[150px]">Total</p>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-rows-6 lg:grid-rows-12 w-full absolute top-0 left-0 h-full">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={`row-${i}`} className={`border-b border-white/12 w-full ${i >= 6 ? 'hidden lg:block' : ''}`}></div>
-          ))}
+        
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-50 p-3 rounded-full">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-2xl font-bold text-gray-800">3</h3>
+              <p className="text-gray-500 truncate max-w-[150px]">Active</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center gap-4">
+            <div className="bg-amber-50 p-3 rounded-full">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-2xl font-bold text-gray-800">1</h3>
+              <p className="text-gray-500 truncate max-w-[150px]">Inactive</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center gap-4">
+            <div className="bg-purple-50 p-3 rounded-full">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15.6947 13.7H15.7037" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15.6947 16.7H15.7037" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.9955 13.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.9955 16.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.29431 13.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.29431 16.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-2xl font-bold text-gray-800">4</h3>
+              <p className="text-gray-500 truncate max-w-[150px]">Compliant</p>
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Background blur elements */}
-      <div className="absolute w-[418px] h-[633px] top-[-363px] right-[639px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[287px] hidden lg:block"></div>
-      <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-84px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[324px] hidden lg:block"></div>
-      
-      {/* Mobile background blur elements */}
-      <div className="absolute w-[300px] h-[300px] top-[-150px] right-[-150px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[150px] lg:hidden block"></div>
-      <div className="absolute w-[300px] h-[300px] bottom-[-150px] left-[-150px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[150px] lg:hidden block"></div>
-      
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-          <div 
-            className="w-[80%] max-w-[300px] h-full bg-[#1E1E1E] p-5 animate-slide-in" 
-            style={{ boxShadow: '5px 0 15px rgba(0,0,0,0.2)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-3">
-                <ProfileAvatar 
-                  src="/images/profile.jpg" 
-                  alt="Alex Dube"
-                  size={40}
-                />
-                <div>
-                  <h2 className="text-white font-semibold">{t('clientManagementPage.header')}</h2>
-                  <p className="text-white/60 text-sm">{t('clientManagementPage.subheader')}</p>
-                </div>
-              </div>
-              <button 
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setIsMobileMenuOpen(false)
-                }}
-                className="text-white/60"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            
-            <Sidebar isMobile={true} />
+      {/* Error message if any */}
+      {error && (
+        <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-sm animate-fade-in">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span className="font-medium">{error}</span>
           </div>
         </div>
       )}
       
-      {/* Desktop Layout */}
-      <div className="relative w-full min-h-screen z-10 hidden lg:flex">
-        {/* Sidebar */}
-        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
-          <Sidebar />
-        </div>
-        
-        {/* Main Content */}
-        <div className={`transition-all duration-300 ease-in-out flex-1 ${isSidebarOpen ? (isRtl ? 'mr-[304px]' : 'ml-[304px]') : (isRtl ? 'mr-0' : 'ml-0')} p-5`}>
-          <div className="bg-white rounded-[35px] p-8">
-            {/* Header */}
-            <header className="flex justify-between items-center mb-[36px]">
-              <div className="flex items-center gap-4">
-                {/* Toggle Sidebar Button */}
-                <button 
-                  className="w-[45px] h-[45px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setIsSidebarOpen(!isSidebarOpen)
-                  }}
-                  aria-label={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-                >
-                  <svg width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M1 1H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                
-                <div className="flex items-center gap-3">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#636363"/>
-                    <path d="M16.5 11C18.1569 11 19.5 9.65685 19.5 8C19.5 6.34315 18.1569 5 16.5 5C14.8431 5 13.5 6.34315 13.5 8C13.5 9.65685 14.8431 11 16.5 11Z" fill="#636363"/>
-                    <path d="M9 13C6.33 13 1 14.34 1 17V19H17V17C17 14.34 11.67 13 9 13Z" fill="#636363"/>
-                    <path d="M16.5 13C15.71 13 14.73 13.16 13.69 13.44C14.76 14.45 15.5 15.74 15.5 17V19H23V17C23 14.34 18.67 13 16.5 13Z" fill="#636363"/>
-                  </svg>
-                  
-                  <h2 className="text-[25px] font-bold text-[#1E1E1E]">{t('clientManagementPage.header')}</h2>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                {/* Search Button */}
-                <button 
-                  className="w-[45px] h-[45px] flex items-center justify-center rounded-full bg-[rgba(16,106,2,0.1)]"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    console.log('Search clicked')
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.58329 17.5C13.9555 17.5 17.5 13.9555 17.5 9.58329C17.5 5.21104 13.9555 1.5 9.58329 1.5C5.21104 1.5 1.5 5.21104 1.5 9.58329C1.5 13.9555 5.21104 17.5 9.58329 17.5Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                
-                {/* Language Switcher */}
-                <div className="hidden md:block">
-                  <LanguageSwitcher />
-                </div>
-                
-                {/* Notification Button */}
-                <button 
-                  className="w-[40px] h-[40px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    console.log('Notifications clicked')
-                  }}
-                  aria-label={t('common.notifications')}
-                >
-                  <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
-                    <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
-                    <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
-                    <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
-                  </svg>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[8px] font-bold">
-                    7
-                  </div>
-                </button>
-                
-                {/* Profile */}
-                <div className="flex items-center gap-[6px]">
-                  <ProfileAvatar 
-                    src="/images/profile.jpg" 
-                    alt="Alex Dube"
-                    size={45}
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-[16px] font-semibold text-[#201D1D] capitalize">{t('clientManagementPage.welcome')}</span>
-                    <span className="text-[14px] text-[#636363] capitalize">{t('clientManagementPage.subheader')}</span>
-                  </div>
-                </div>
-              </div>
-            </header>
-            
-            <div className="flex justify-between items-center mb-6">
-              <div className="w-full md:w-auto max-w-[463px]">
-                <div className="flex items-center gap-3 px-6 py-3 rounded-[43px] bg-[rgba(16,106,2,0.1)]">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.625 15.75C12.56 15.75 15.75 12.56 15.75 8.625C15.75 4.68997 12.56 1.5 8.625 1.5C4.68997 1.5 1.5 4.68997 1.5 8.625C1.5 12.56 4.68997 15.75 8.625 15.75Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <input 
-                    type="text" 
-                    placeholder={t('clientManagementPage.searchPlaceholder')} 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-[#545454]"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setIsAddClientModalOpen(true)
-                  }}
-                  className="bg-[#F3F7F3] border border-[#13A753]/20 text-[#13A753] py-2.5 px-5 rounded-full flex items-center gap-2"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 12H16" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 16V8" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className="font-semibold">{t('clientManagementPage.addClient')}</span>
-                </button>
-                
-                <button 
-                  className="flex items-center gap-3 px-6 py-3 rounded-[60px] bg-gradient-to-b from-[#13A753] to-[#1E2120] text-white"
-                  onClick={handleExportClients}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 15.0001V3.62012" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className="font-semibold">{t('clientManagementPage.export')}</span>
-                </button>
-                
-                <button 
-                  className="flex items-center gap-3 px-6 py-3 rounded-[60px] bg-[#13A753] text-white"
-                  onClick={handleSchedule}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 2V5" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M16 2V5" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M3.5 9.09H20.5" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M11.9955 13.7H12.0045" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8.29431 13.7H8.30329" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8.29431 16.7H8.30329" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span className="font-semibold">{t('clientManagementPage.schedule')}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Client Table */}
-            <div className="hidden md:block">
-              <ClientTable 
-                onViewClient={handleViewClient}
-                onTogglePush={handleTogglePush}
-                searchTerm={searchTerm}
+      {/* Client management controls */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-6 hover:shadow-lg transition-all duration-300 animate-fade-in">
+        <div className="flex justify-between items-center">
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.5 17.5L12.5001 12.5M14.1667 8.33333C14.1667 11.555 11.555 14.1667 8.33333 14.1667C5.11167 14.1667 2.5 11.555 2.5 8.33333C2.5 5.11167 5.11167 2.5 8.33333 2.5C11.555 2.5 14.1667 5.11167 14.1667 8.33333Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+              <input 
+                type="text" 
+                className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                placeholder={t('clientManagementPage.searchClients')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
+              {searchTerm && (
+                <button 
+                  className="absolute inset-y-0 right-3 flex items-center"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 6L18 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
             </div>
-            
-            <div className="md:hidden">
-              <ClientTable 
-                onViewClient={handleViewClient}
-                onTogglePush={handleTogglePush}
-                isMobile={true}
-                searchTerm={searchTerm}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Mobile Layout */}
-      <div className={`relative w-full min-h-screen z-10 lg:hidden bg-[#1E1E1E] ${isRtl ? 'rtl' : 'ltr'}`}>
-        {/* Background blur elements and grid lines */}
-        {/* ... existing code ... */}
-        
-        {/* Mobile Header */}
-        <header className="flex items-center justify-between bg-white p-4 relative z-10">
-          <div className="flex items-center gap-3">
-            <button 
-              className="w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#3DD559]"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? t('common.closeMenu') : t('common.openMenu')}
-            >
-              <svg width="18" height="14" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 8H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M1 1H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M1 15H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <h1 className="font-michael text-primary text-[24px] uppercase tracking-[0.04em] leading-[100%] font-bold">
-              FITTrack
-            </h1>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex gap-3">
             <button 
-              className="w-[40px] h-[40px] flex items-center justify-center rounded-full bg-[#E7F0E6] relative"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                console.log('Notifications clicked')
-              }}
-              aria-label={t('common.notifications')}
+              onClick={handleExportClients}
+              className="bg-white flex items-center gap-2 py-3 px-5 rounded-xl text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10.5 2.625C7.875 2.625 5.25 5.25 5.25 7.875V10.5L3.5 12.25V14H17.5V12.25L15.75 10.5V7.875C15.75 5.25 13.125 2.625 10.5 2.625Z" fill="#FF0000"/>
-                <path d="M16.5 2.625C14.875 2.625 13.25 5.25 13.25 7.875V10.5L11 12.25V14H21V12.25L19.25 10.5V7.875C19.25 5.25 17.625 2.625 16.5 2.625Z" fill="#FF0000"/>
-                <path d="M10.5 13.7C7.875 13.7 5.25 16.7 5.25 19.7V22H17.5V19.7C17.5 16.7 14.875 13.7 10.5 13.7Z" fill="#FF0000"/>
-                <path d="M16.5 13.7C14.875 13.7 13.25 16.7 13.25 19.7V22H21V19.7C21 16.7 18.625 13.7 16.5 13.7Z" fill="#FF0000"/>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 15.0001V3.62012" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <div className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-[#FF3B30] rounded-full text-white text-[8px] font-bold">
-                7
-              </div>
-            </button>
-            <ProfileAvatar 
-              src="/images/profile.jpg" 
-              alt="Alex Dube"
-              size={32}
-            />
-          </div>
-        </header>
-        
-        {/* Mobile Content */}
-        <div className="p-4">
-          <div className="bg-[#F3F7F3] rounded-[25px] p-3 mb-4">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-[18px] font-bold text-[#1E1E1E]">{t('clientManagementPage.header')}</h2>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setIsAddClientModalOpen(true)
-                }}
-                className="bg-[#13A753] hover:bg-[#0D8A40] transition-colors text-white py-1.5 px-3 rounded-full flex items-center gap-1.5 text-sm"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 5V19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>{t('clientManagementPage.addClient')}</span>
-              </button>
-            </div>
-            
-            <div className="mb-3">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-[43px] bg-white">
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8.625 15.75C12.56 15.75 15.75 12.56 15.75 8.625C15.75 4.68997 12.56 1.5 8.625 1.5C4.68997 1.5 1.5 4.68997 1.5 8.625C1.5 12.56 4.68997 15.75 8.625 15.75Z" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M16.5 16.5L15 15" stroke="#292D32" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <input 
-                  type="text" 
-                  placeholder={t('clientManagementPage.searchPlaceholder')} 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-[#545454] text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile buttons */}
-          <div className="flex justify-between items-center mb-3">
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleExportClients(e)
-              }}
-              className="bg-[#13A753] text-white py-1.5 px-3 rounded-full flex items-center gap-1.5 text-sm"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16.44 8.9C20.04 9.21 21.51 11.06 21.51 15.11V15.24C21.51 19.71 19.72 21.5 15.25 21.5H8.74C4.27 21.5 2.48 19.71 2.48 15.24V15.11C2.48 11.09 3.93 9.24 7.47 8.91" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 15V3.62" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15.35 5.85L12 2.5L8.65 5.85" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span>{t('clientManagementPage.export')}</span>
+              <span className="font-medium">{t('clientManagementPage.export')}</span>
             </button>
             
             <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleSchedule(e)
-              }}
-              className="bg-[#13A753] text-white py-1.5 px-3 rounded-full flex items-center gap-1.5 text-sm"
+              onClick={handleSchedule}
+              className="bg-white flex items-center gap-2 py-3 px-5 rounded-xl text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2V5" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 2V5" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.5 9.09H20.5" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24.5 27.5V29.5C24.5 30.5 23.5 31.5 22.5 31.5H14.5C13.5 31.5 12.5 30.5 12.5 29.5V14.5C12.5 13.5 13.5 12.5 14.5 12.5H22.5C23.5 12.5 24.5 13.5 24.5 14.5V16.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M27.5 16.5H29.5C30.5 16.5 31.5 17.5 31.5 18.5V27.5C31.5 28.5 30.5 29.5 29.5 29.5H27.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M24.5 22H31.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M24.5 19.25V24.75" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span>{t('clientManagementPage.schedule')}</span>
+              <span className="font-medium">{t('clientManagementPage.schedule')}</span>
+            </button>
+            
+            <button
+              onClick={() => setIsAddClientModalOpen(true)}
+              className="bg-[#13A753] text-white flex items-center gap-2 py-3 px-5 rounded-xl hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 12H18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 18V6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="font-medium">{t('clientManagementPage.addClient')}</span>
             </button>
           </div>
-
-          {/* Mobile Client Table */}
-          <ClientTable 
-            onViewClient={handleViewClient}
-            onTogglePush={handleTogglePush}
-            isMobile={true}
-            searchTerm={searchTerm}
-          />
         </div>
       </div>
       
-      {/* Popups */}
-      <AddClientModal 
-        isOpen={isAddClientModalOpen}
-        onClose={() => setIsAddClientModalOpen(false)}
-        onAddClient={handleAddClient}
-      />
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in">
+        <ClientTable
+          searchTerm={searchTerm}
+          onViewClient={handleViewClient}
+          onTogglePush={handleTogglePush}
+          isMobile={false}
+        />
+      </div>
+    </>
+  )
+
+  // Mobile content 
+  const mobileContent = (
+    <>
+      <style jsx>{animations}</style>
       
-      <ClientDetailsModal
-        isOpen={isClientDetailsModalOpen}
-        onClose={() => setIsClientDetailsModalOpen(false)}
-        client={selectedClient}
-      />
-    </div>
+      {/* Error message if any */}
+      {error && (
+        <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-sm animate-fade-in">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span className="font-medium">{error}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Client summary cards - mobile scrollable */}
+      <div className="flex overflow-x-auto gap-3 pb-2 mb-5 hide-scrollbar">
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="bg-[#13A753]/10 p-2 rounded-full">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#13A753"/>
+                <path d="M2 17C2 14.79 3.79 13 6 13H12C14.21 13 16 14.79 16 17V20C16 20.55 15.55 21 15 21H3C2.45 21 2 20.55 2 20V17Z" fill="#13A753" fillOpacity="0.6"/>
+              </svg>
+            </div>
+            <span className="text-xs text-gray-500 truncate max-w-[90px]">Total</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800">4</h3>
+        </div>
+        
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="bg-blue-50 p-2 rounded-full">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="text-xs text-gray-500 truncate max-w-[90px]">Active</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800">3</h3>
+        </div>
+        
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="bg-amber-50 p-2 rounded-full">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="text-xs text-gray-500 truncate max-w-[90px]">Inactive</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800">1</h3>
+        </div>
+        
+        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="bg-purple-50 p-2 rounded-full">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="text-xs text-gray-500 truncate max-w-[90px]">Compliant</span>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800">4</h3>
+        </div>
+      </div>
+      
+      {/* Mobile search */}
+      <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 mb-4 animate-fade-in">
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.5 17.5L12.5001 12.5M14.1667 8.33333C14.1667 11.555 11.555 14.1667 8.33333 14.1667C5.11167 14.1667 2.5 11.555 2.5 8.33333C2.5 5.11167 5.11167 2.5 8.33333 2.5C11.555 2.5 14.1667 5.11167 14.1667 8.33333Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
+          <input 
+            type="text" 
+            className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200"
+            placeholder={t('clientManagementPage.searchClients')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button 
+              className="absolute inset-y-0 right-3 flex items-center"
+              onClick={() => setSearchTerm('')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 6L18 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* Mobile actions */}
+      <div className="flex gap-2 mb-5 animate-fade-in">
+        <button
+          onClick={() => setIsAddClientModalOpen(true)}
+          className="flex-1 bg-[#13A753] text-white flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-medium hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12H18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 18V6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>{t('clientManagementPage.addClient')}</span>
+        </button>
+        
+        <button 
+          onClick={handleExportClients}
+          className="flex-1 bg-white flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-gray-700 text-sm font-medium border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 15.0001V3.62012" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>{t('clientManagementPage.export')}</span>
+        </button>
+      </div>
+      
+      {/* Mobile client table */}
+      <div className="animate-fade-in">
+        <ClientTable
+          searchTerm={searchTerm}
+          onViewClient={handleViewClient}
+          onTogglePush={handleTogglePush}
+          isMobile={true}
+        />
+      </div>
+    </>
+  )
+
+  // Add custom CSS for mobile styling
+  const mobileStyles = `
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  `;
+
+  return (
+    <DashboardLayout
+      pageTitle={t('clientManagementPage.title')}
+      pageIcon={clientPageIcon}
+    >
+      <style jsx global>{mobileStyles}</style>
+      
+      {/* Loading indicator */}
+      {isLoading && clientsList.length === 0 && (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#13A753]"></div>
+        </div>
+      )}
+      
+      {/* Desktop View */}
+      <div className="hidden lg:block">
+        {!isLoading && desktopContent}
+      </div>
+
+      {/* Mobile View */}
+      <div className="lg:hidden">
+        {!isLoading && mobileContent}
+      </div>
+      
+      {/* Modals */}
+      {isAddClientModalOpen && (
+        <AddClientModal
+          isOpen={true}
+          onClose={() => setIsAddClientModalOpen(false)}
+          onAddClient={handleAddClient}
+        />
+      )}
+      
+      {selectedClient && isClientDetailsModalOpen && (
+        <>
+          <ClientDetailsModal
+            isOpen={true}
+            onClose={() => setIsClientDetailsModalOpen(false)}
+            client={{
+              name: selectedClient.name,
+              group: selectedClient.group || '',
+              dietaryGoal: selectedClient.dietaryGoal || '',
+              image: selectedClient.image
+            }}
+          />
+          <div className="fixed bottom-5 left-0 right-0 flex justify-center z-50">
+            <div className="bg-white rounded-full shadow-lg p-2 flex gap-2">
+              <button 
+                onClick={() => handleUpdateClient(selectedClient)}
+                className="bg-blue-500 text-white px-4 py-2 rounded-full"
+              >
+                {t('clientManagementPage.update')}
+              </button>
+              <button 
+                onClick={() => handleDeleteClient(selectedClient.id)}
+                className="bg-red-500 text-white px-4 py-2 rounded-full"
+              >
+                {t('clientManagementPage.delete')}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </DashboardLayout>
   )
 }

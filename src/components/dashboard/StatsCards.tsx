@@ -1,16 +1,15 @@
 'use client'
 
-import { useAppContext } from '@/context/AppContext'
+interface StatsCardsProps {
+  totalClients: number;
+  inactiveClients: number;
+}
 
-export default function StatsCards() {
-  const { clients } = useAppContext()
-  
-  // Calculate statistics from real client data
-  const activeClients = clients.filter(client => client.status === 'active').length
+export default function StatsCards({ totalClients, inactiveClients }: StatsCardsProps) {
+  // Use provided totalClients instead of calculating from context
+  const activeClients = totalClients - inactiveClients
   const averageCaloricIntake = '2200 klc' // This would be calculated from actual client data
-  const goalStatus = clients.length > 0 ? 
-    Math.round((clients.filter(client => client.goalsMet !== undefined && client.goalsMet > 70).length / clients.length) * 100) + '%' : 
-    'No Data'
+  const goalStatus = '80%' // This would be calculated from actual client data
   const proteinIntake = '150 g' // This would be calculated from actual client data
 
   const statsData = [
