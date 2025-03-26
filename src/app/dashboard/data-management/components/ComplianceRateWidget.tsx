@@ -29,7 +29,6 @@ const ComplianceRateWidget: React.FC<ComplianceRateWidgetProps> = ({
       
       const animateValue = (timestamp: number) => {
         const runtime = timestamp - startTime
-        const progress = Math.min(runtime / duration, 1)
         
         start = Math.min(start + increment, end)
         setAnimatedRate(Math.floor(start))

@@ -14,7 +14,7 @@ const nextConfig = {
   i18n: {
     locales: ['en', 'he'],
     defaultLocale: 'en',
-    localeDetection: true,
+    localeDetection: false,
   },
   images: {
     domains: ['app.fit-track.net'],

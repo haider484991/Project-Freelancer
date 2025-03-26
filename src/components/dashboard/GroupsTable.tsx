@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useAppContext } from '@/context/AppContext';
-import { useTranslation } from 'react-i18next';
+'use client'
+
+import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 // Define the Group type
 export interface Group {
@@ -28,9 +28,6 @@ export default function GroupsTable({
   onDeleteGroup = () => {},
   searchTerm = ''
 }: GroupsTableProps) {
-  // Get groups from context
-  const { groups } = useAppContext();
-  
   // Get translations
   const { t, i18n } = useTranslation();
 

@@ -142,11 +142,11 @@ export default function ClientManagementPage() {
         }
         
         // Also update context for fallback
-        const newClient = {
-          ...client,
+    const newClient = {
+      ...client,
           id: response.data.trainee_id || Math.random().toString(36).substring(7),
-          image: '/images/profile.jpg',
-          goalsMet: 75,
+      image: '/images/profile.jpg',
+      goalsMet: 75,
           status: 'active' as const,
           compliance: 'compliant' as const
         } as Client;
@@ -169,7 +169,7 @@ export default function ClientManagementPage() {
       addClient(newClient)
     } finally {
       setIsLoading(false)
-      setIsAddClientModalOpen(false)
+    setIsAddClientModalOpen(false)
     }
   }
   
@@ -346,16 +346,16 @@ export default function ClientManagementPage() {
               <h3 className="text-2xl font-bold text-gray-800">4</h3>
               <p className="text-gray-500 truncate max-w-[150px]">Total</p>
             </div>
-          </div>
-        </div>
+                </div>
+              </div>
         
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
           <div className="flex items-center gap-4">
             <div className="bg-blue-50 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                </svg>
             </div>
             <div className="min-w-0">
               <h3 className="text-2xl font-bold text-gray-800">3</h3>
@@ -381,9 +381,9 @@ export default function ClientManagementPage() {
         </div>
         
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
             <div className="bg-purple-50 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
@@ -394,26 +394,26 @@ export default function ClientManagementPage() {
                 <path d="M11.9955 16.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M8.29431 13.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M8.29431 16.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                  </svg>
             </div>
             <div className="min-w-0">
               <h3 className="text-2xl font-bold text-gray-800">4</h3>
               <p className="text-gray-500 truncate max-w-[150px]">Compliant</p>
             </div>
           </div>
-        </div>
-      </div>
-      
+                </div>
+              </div>
+              
       {/* Error message if any */}
       {error && (
         <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-sm animate-fade-in">
           <div className="flex items-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+                  </svg>
             <span className="font-medium">{error}</span>
           </div>
-        </div>
+                </div>
       )}
       
       {/* Client management controls */}
@@ -444,23 +444,23 @@ export default function ClientManagementPage() {
                   </svg>
                 </button>
               )}
-            </div>
-          </div>
-          
+                </div>
+              </div>
+              
           <div className="flex gap-3">
-            <button 
+                <button
               onClick={handleExportClients}
               className="bg-white flex items-center gap-2 py-3 px-5 rounded-xl text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M12 15.0001V3.62012" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                  </svg>
               <span className="font-medium">{t('clientManagementPage.export')}</span>
-            </button>
-            
-            <button
+                </button>
+                
+                <button 
               onClick={handleSchedule}
               className="bg-white flex items-center gap-2 py-3 px-5 rounded-xl text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
             >
@@ -469,32 +469,32 @@ export default function ClientManagementPage() {
                 <path d="M27.5 16.5H29.5C30.5 16.5 31.5 17.5 31.5 18.5V27.5C31.5 28.5 30.5 29.5 29.5 29.5H27.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M24.5 22H31.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M24.5 19.25V24.75" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                  </svg>
               <span className="font-medium">{t('clientManagementPage.schedule')}</span>
-            </button>
-            
-            <button
+                </button>
+                
+                <button 
               onClick={() => setIsAddClientModalOpen(true)}
               className="bg-[#13A753] text-white flex items-center gap-2 py-3 px-5 rounded-xl hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M6 12H18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M12 18V6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                  </svg>
               <span className="font-medium">{t('clientManagementPage.addClient')}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      
+                </button>
+              </div>
+            </div>
+            </div>
+            
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in">
-        <ClientTable
+              <ClientTable 
           searchTerm={searchTerm}
-          onViewClient={handleViewClient}
-          onTogglePush={handleTogglePush}
+                onViewClient={handleViewClient}
+                onTogglePush={handleTogglePush}
           isMobile={false}
-        />
-      </div>
+              />
+            </div>
     </>
   )
 
@@ -541,8 +541,8 @@ export default function ClientManagementPage() {
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Active</span>
           </div>
           <h3 className="text-xl font-bold text-gray-800">3</h3>
-        </div>
-        
+          </div>
+          
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
           <div className="flex items-center gap-2 mb-1">
             <div className="bg-amber-50 p-2 rounded-full">
@@ -551,7 +551,7 @@ export default function ClientManagementPage() {
                 <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-            </div>
+              </div>
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Inactive</span>
           </div>
           <h3 className="text-xl font-bold text-gray-800">1</h3>
@@ -565,31 +565,31 @@ export default function ClientManagementPage() {
                 <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                </svg>
             </div>
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Compliant</span>
           </div>
           <h3 className="text-xl font-bold text-gray-800">4</h3>
         </div>
-      </div>
-      
+            </div>
+            
       {/* Mobile search */}
       <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 mb-4 animate-fade-in">
         <div className="relative">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.5 17.5L12.5001 12.5M14.1667 8.33333C14.1667 11.555 11.555 14.1667 8.33333 14.1667C5.11167 14.1667 2.5 11.555 2.5 8.33333C2.5 5.11167 5.11167 2.5 8.33333 2.5C11.555 2.5 14.1667 5.11167 14.1667 8.33333Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+                </svg>
           </span>
-          <input 
-            type="text" 
+                <input 
+                  type="text" 
             className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200"
             placeholder={t('clientManagementPage.searchClients')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchTerm && (
-            <button 
+            <button
               className="absolute inset-y-0 right-3 flex items-center"
               onClick={() => setSearchTerm('')}
             >
@@ -613,9 +613,9 @@ export default function ClientManagementPage() {
             <path d="M12 18V6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>{t('clientManagementPage.addClient')}</span>
-        </button>
-        
-        <button 
+            </button>
+            
+            <button
           onClick={handleExportClients}
           className="flex-1 bg-white flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-gray-700 text-sm font-medium border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
         >
@@ -623,18 +623,18 @@ export default function ClientManagementPage() {
             <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 15.0001V3.62012" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+              </svg>
           <span>{t('clientManagementPage.export')}</span>
-        </button>
-      </div>
-      
+            </button>
+          </div>
+
       {/* Mobile client table */}
       <div className="animate-fade-in">
-        <ClientTable
+          <ClientTable 
           searchTerm={searchTerm}
-          onViewClient={handleViewClient}
-          onTogglePush={handleTogglePush}
-          isMobile={true}
+            onViewClient={handleViewClient}
+            onTogglePush={handleTogglePush}
+            isMobile={true}
         />
       </div>
     </>
@@ -677,18 +677,18 @@ export default function ClientManagementPage() {
       
       {/* Modals */}
       {isAddClientModalOpen && (
-        <AddClientModal
+      <AddClientModal 
           isOpen={true}
-          onClose={() => setIsAddClientModalOpen(false)}
-          onAddClient={handleAddClient}
-        />
+        onClose={() => setIsAddClientModalOpen(false)}
+        onAddClient={handleAddClient}
+      />
       )}
       
       {selectedClient && isClientDetailsModalOpen && (
         <>
-          <ClientDetailsModal
+      <ClientDetailsModal
             isOpen={true}
-            onClose={() => setIsClientDetailsModalOpen(false)}
+        onClose={() => setIsClientDetailsModalOpen(false)}
             client={{
               name: selectedClient.name,
               group: selectedClient.group || '',
@@ -711,7 +711,7 @@ export default function ClientManagementPage() {
                 {t('clientManagementPage.delete')}
               </button>
             </div>
-          </div>
+    </div>
         </>
       )}
     </DashboardLayout>

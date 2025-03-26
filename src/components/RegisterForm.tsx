@@ -48,7 +48,7 @@ const RegisterForm: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const resultAction = await dispatch(
+      await dispatch(
         registerUser({
           name: data.name,
           email: data.email,
@@ -64,8 +64,9 @@ const RegisterForm: React.FC = () => {
       setTimeout(() => {
         router.push('/login');
       }, 2000);
-    } catch (err) {
-      // Error is handled by the thunk and stored in the Redux state
+    } catch (error) {
+      console.error('Registration error:', error);
+      setRegistrationSuccess(false);
     }
   };
 

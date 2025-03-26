@@ -143,12 +143,12 @@ export default function CoachingGroupsPage() {
     // Filter groups based on search query
     const filtered = searchQuery
       ? groupsToDisplay.filter(group => 
-          group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (group.dietary && group.dietary.toLowerCase().includes(searchQuery.toLowerCase()))
-        )
+      )
       : groupsToDisplay
     
-    setFilteredGroups(filtered)
+      setFilteredGroups(filtered)
   }, [apiGroups, contextGroups, searchQuery])
   
   // Handle create group
@@ -200,7 +200,7 @@ export default function CoachingGroupsPage() {
       })
     } finally {
       setLoading(false)
-      setShowCreateGroupModal(false)
+    setShowCreateGroupModal(false)
     }
   }
   
@@ -369,7 +369,7 @@ export default function CoachingGroupsPage() {
   
   // Display loading state
   if (loading && filteredGroups.length === 0) {
-    return (
+  return (
       <DashboardLayout
         pageTitle={t('groupsPage.header')}
         pageIcon={groupsPageIcon}
@@ -382,7 +382,7 @@ export default function CoachingGroupsPage() {
               <div className="absolute inset-3 rounded-full border-2 border-t-[#13A753]/40 border-r-[#13A753]/40 border-b-transparent border-l-transparent animate-spin" style={{ animationDirection: 'reverse' }}></div>
             </div>
             <p className="mt-6 text-gray-600 font-medium">{t('groupsPage.loading')}</p>
-          </div>
+        </div>
         </div>
       </DashboardLayout>
     )
@@ -404,8 +404,8 @@ export default function CoachingGroupsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               <span className="font-medium">{error}</span>
-            </div>
-          </div>
+                </div>
+              </div>
         )}
         
         {successMessage && (
@@ -413,16 +413,16 @@ export default function CoachingGroupsPage() {
             <div className="flex items-center">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
+                </svg>
               <span className="font-medium">{successMessage}</span>
-            </div>
           </div>
-        )}
+        </div>
+      )}
         
         {/* Header Section with Stats and Actions */}
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8 hover:shadow-lg transition-all duration-300">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
               <div className="bg-[#13A753]/10 rounded-full w-16 h-16 flex items-center justify-center">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#13A753"/>
@@ -431,7 +431,7 @@ export default function CoachingGroupsPage() {
                   <path d="M16 10.75H20" stroke="#13A753" strokeWidth="2" strokeLinecap="round"/>
                   <path d="M20 15.25H24" stroke="#13A753" strokeWidth="2" strokeLinecap="round"/>
                   <path d="M18 19.75H20" stroke="#13A753" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+                  </svg>
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">{filteredGroups.length}</h2>
@@ -446,10 +446,10 @@ export default function CoachingGroupsPage() {
                     <path d="M17.5 17.5L12.5001 12.5M14.1667 8.33333C14.1667 11.555 11.555 14.1667 8.33333 14.1667C5.11167 14.1667 2.5 11.555 2.5 8.33333C2.5 5.11167 5.11167 2.5 8.33333 2.5C11.555 2.5 14.1667 5.11167 14.1667 8.33333Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </span>
-                <input 
-                  type="text" 
+                  <input 
+                    type="text" 
                   placeholder={t('groupsPage.searchPlaceholder')} 
-                  value={searchQuery}
+                    value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 />
@@ -466,16 +466,16 @@ export default function CoachingGroupsPage() {
                 )}
               </div>
               
-              <button
-                onClick={() => setShowCreateGroupModal(true)}
+                <button 
+                  onClick={() => setShowCreateGroupModal(true)}
                 className="w-full md:w-auto bg-[#13A753] text-white flex items-center justify-center gap-2 py-3 px-6 rounded-xl hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 5V19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                  </svg>
                 <span className="font-medium">{t('groupsPage.createGroup')}</span>
-              </button>
+                </button>
             </div>
           </div>
         </div>
@@ -508,22 +508,22 @@ export default function CoachingGroupsPage() {
                           <span className="bg-[#13A753] bg-opacity-10 text-[#13A753] text-sm font-medium px-3 py-1 rounded-full">
                             {group.members}
                           </span>
-                        </div>
+          </div>
                       </td>
                       <td className="py-4 px-6 text-gray-600">{group.dietary || group.dietaryGoal || t('groupsPage.notSet')}</td>
                       <td className="py-4 px-6 text-gray-600">{new Date(group.createdAt).toLocaleDateString()}</td>
                       <td className="py-4 px-6">
                         <div className="flex gap-2">
-                          <button 
+              <button 
                             className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                             onClick={() => handleEditGroup(group)}
                             aria-label={t('groupsPage.editGroup')}
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M13.26 3.6L5.05 12.05C4.74 12.37 4.44 13 4.38 13.43L4.01 16.98C3.88 18.11 4.69 18.9 5.82 18.73L9.36 18.23C9.79 18.16 10.42 17.84 10.73 17.51L18.94 9.06C20.28 7.68 20.91 6.05 18.94 4.13C16.98 2.22 14.6 2.22 13.26 3.6Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                          <button 
+                </svg>
+              </button>
+            <button 
                             className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                             onClick={() => {
                               if (window.confirm(t('groupsPage.confirmDelete', { name: group.name }))) {
@@ -536,9 +536,9 @@ export default function CoachingGroupsPage() {
                               <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                               <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                               <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                        </div>
+                </svg>
+              </button>
+            </div>
                       </td>
                     </tr>
                   ))
@@ -570,8 +570,8 @@ export default function CoachingGroupsPage() {
                       <span className="bg-[#13A753] bg-opacity-10 text-[#13A753] text-sm font-medium px-2 py-0.5 rounded-full">
                         {group.members} {t('groupsPage.members')}
                       </span>
-                    </div>
-                  </div>
+                </div>
+              </div>
                   <div className="flex gap-2">
                     <button 
                       className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
@@ -607,7 +607,7 @@ export default function CoachingGroupsPage() {
                   <div className="bg-gray-50 p-3 rounded-xl">
                     <span className="text-gray-500 block mb-1">{t('groupsPage.created')}:</span>
                     <p className="font-medium text-gray-700">{new Date(group.createdAt).toLocaleDateString()}</p>
-                  </div>
+                </div>
                 </div>
               </div>
             ))
@@ -619,7 +619,7 @@ export default function CoachingGroupsPage() {
                   <path d="M3 22V17C3 16.02 3.4 15.13 4.07 14.5C4.74 13.88 5.62 13.5 6.56 13.5H11.43C12.37 13.5 13.26 13.88 13.93 14.5C14.6 15.13 15 16.02 15 17V22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M16 6.25H24" strokeWidth="1.5" strokeLinecap="round"/>
                   <path d="M16 10.75H20" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                  </svg>
               </div>
               <p className="text-gray-500 mb-4">
                 {searchQuery ? t('groupsPage.noSearchResults') : t('groupsPage.noGroups')}
@@ -636,27 +636,27 @@ export default function CoachingGroupsPage() {
               </button>
             </div>
           )}
-        </div>
-        
+      </div>
+      
         {/* Create Group Modal */}
-        <CreateGroupModal
-          isOpen={showCreateGroupModal}
-          onClose={() => setShowCreateGroupModal(false)}
-          onCreateGroup={handleCreateGroup}
+      <CreateGroupModal
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
+        onCreateGroup={handleCreateGroup}
           availableClients={[]}
-        />
-        
+      />
+      
         {/* Edit Group Modal */}
         {selectedGroup && (
-          <EditGroupModal
-            isOpen={showEditGroupModal}
-            onClose={() => setShowEditGroupModal(false)}
+      <EditGroupModal
+        isOpen={showEditGroupModal}
+        onClose={() => setShowEditGroupModal(false)}
             onEditGroup={handleSaveEditedGroup}
-            group={selectedGroup}
+        group={selectedGroup}
             availableClients={[]}
-          />
+      />
         )}
-      </div>
+    </div>
     </DashboardLayout>
   )
 }

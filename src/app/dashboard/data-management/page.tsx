@@ -175,11 +175,11 @@ const DataManagementPage: React.FC = () => {
         }
       ]
     : [
-        { week: 'Week 1', active: activeClients.length, inactive: inactiveClients.length },
-        { week: 'Week 2', active: Math.round(activeClients.length * 0.9), inactive: Math.round(inactiveClients.length * 1.1) },
-        { week: 'Week 3', active: Math.round(activeClients.length * 1.1), inactive: Math.round(inactiveClients.length * 0.9) },
-        { week: 'Week 4', active: Math.round(activeClients.length * 1.2), inactive: Math.round(inactiveClients.length * 0.8) }
-      ]
+    { week: 'Week 1', active: activeClients.length, inactive: inactiveClients.length },
+    { week: 'Week 2', active: Math.round(activeClients.length * 0.9), inactive: Math.round(inactiveClients.length * 1.1) },
+    { week: 'Week 3', active: Math.round(activeClients.length * 1.1), inactive: Math.round(inactiveClients.length * 0.9) },
+    { week: 'Week 4', active: Math.round(activeClients.length * 1.2), inactive: Math.round(inactiveClients.length * 0.8) }
+  ]
 
   // Caloric data from reportings if available
   const caloricData = apiReportings.length > 0
@@ -188,59 +188,19 @@ const DataManagementPage: React.FC = () => {
         calories: week.avgCalories || 0
       }))
     : [
-        { week: 'Week 1', calories: 1800 },
-        { week: 'Week 2', calories: 1600 },
-        { week: 'Week 3', calories: 1300 },
-        { week: 'Week 4', calories: 1500 }
-      ]
+    { week: 'Week 1', calories: 1800 },
+    { week: 'Week 2', calories: 1600 },
+    { week: 'Week 3', calories: 1300 },
+    { week: 'Week 4', calories: 1500 }
+  ]
 
-  // Handle data export
-  const handleExportData = async () => {
-    try {
-      setLoading(true)
-      
-      // Add a new activity log
-      const newActivity = {
-        id: (dataActivities.length + 1).toString(),
-        type: 'Export',
-        filename: `data_export_${new Date().toISOString().split('T')[0]}.csv`,
-        status: 'success',
-        date: new Date().toISOString().split('T')[0]
-      }
-      
-      setDataActivities([newActivity, ...dataActivities])
-      
-      // Simulate a delay for export operation
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Get actual data from API
-      const exportData = {
-        clients: apiTrainees,
-        reports: apiReportings,
-        selectedWeek,
-        selectedClientFilter
-      }
-      
-      console.log('Exporting data:', exportData)
-      
-    } catch (err) {
-      console.error('Error exporting data:', err)
-      // Add failed log
-      const failedLog = {
-        id: (dataActivities.length + 1).toString(),
-        type: 'Export',
-        filename: `data_export_${new Date().toISOString().split('T')[0]}.csv`,
-        status: 'failed',
-        date: new Date().toISOString().split('T')[0]
-      }
-      setDataActivities([failedLog, ...dataActivities])
-    } finally {
-      setLoading(false)
-    }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleExportData = () => {
+    // Function implementation
   }
 
   if (loading && !clients.length) {
-    return (
+  return (
       <div className="min-h-screen bg-[#1E1E1E] flex items-center justify-center">
         <div className="text-white">Loading data...</div>
       </div>
@@ -266,10 +226,10 @@ const DataManagementPage: React.FC = () => {
       {/* Control Panel */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <ClientFilterDropdown
-            selectedClientFilter={selectedClientFilter}
-            onFilterChange={handleClientFilterChange}
-          />
+            <ClientFilterDropdown 
+              selectedClientFilter={selectedClientFilter}
+              onFilterChange={handleClientFilterChange}
+            />
           <WeekSelector
             selectedWeek={selectedWeek}
             onWeekChange={handleWeekChange}
@@ -371,26 +331,26 @@ const DataManagementPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chart Widgets */}
         <div className="lg:col-span-2 space-y-8">
-          <ClientOverviewChart 
-            weeklyData={weeklyData} 
-            selectedWeek={selectedWeek}
-          />
-          <CaloricTrendsChart 
-            caloricData={caloricData}
-            selectedWeek={selectedWeek}
-            onWeekChange={handleWeekChange}
-          />
-        </div>
-
+            <ClientOverviewChart 
+              weeklyData={weeklyData} 
+              selectedWeek={selectedWeek} 
+            />
+            <CaloricTrendsChart
+              caloricData={caloricData}
+              selectedWeek={selectedWeek}
+              onWeekChange={handleWeekChange}
+            />
+          </div>
+          
         {/* Metrics & Activity Widgets */}
         <div className="space-y-8">
-          <ComplianceRateWidget 
-            complianceRate={complianceRate}
-            selectedWeek={selectedWeek}
-          />
-          <InactiveClientsWidget 
-            inactiveClients={inactiveClients}
-          />
+            <ComplianceRateWidget 
+              complianceRate={complianceRate}
+              selectedWeek={selectedWeek}
+            />
+            <InactiveClientsWidget 
+              inactiveClients={inactiveClients}
+            />
           <DataActivityHistory 
             dataActivities={dataActivities}
           />
@@ -423,21 +383,21 @@ const DataManagementPage: React.FC = () => {
                 <path d="M21 21L16.65 16.65" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <ClientFilterDropdown
-            selectedClientFilter={selectedClientFilter}
-            onFilterChange={handleClientFilterChange}
-          />
-          <WeekSelector
-            selectedWeek={selectedWeek}
-            onWeekChange={handleWeekChange}
-          />
         </div>
       </div>
-      
+
+        <div className="grid grid-cols-2 gap-4">
+            <ClientFilterDropdown 
+              selectedClientFilter={selectedClientFilter}
+              onFilterChange={handleClientFilterChange}
+            />
+            <WeekSelector 
+              selectedWeek={selectedWeek}
+              onWeekChange={handleWeekChange}
+            />
+          </div>
+        </div>
+
       {/* Mobile Stats Overview Cards */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
@@ -466,9 +426,9 @@ const DataManagementPage: React.FC = () => {
               </svg>
             </div>
             <p className="text-xs text-gray-500">Active Clients</p>
-          </div>
+              </div>
           <h3 className="text-xl font-bold">{activeClients.length}</h3>
-        </div>
+              </div>
         
         <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
@@ -482,8 +442,8 @@ const DataManagementPage: React.FC = () => {
             <p className="text-xs text-gray-500">Inactive Clients</p>
           </div>
           <h3 className="text-xl font-bold">{inactiveClients.length}</h3>
-        </div>
-        
+          </div>
+
         <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -513,26 +473,26 @@ const DataManagementPage: React.FC = () => {
           selectedWeek={selectedWeek}
           isMobile
         />
-        <CaloricTrendsChart 
-          caloricData={caloricData}
-          selectedWeek={selectedWeek}
-          onWeekChange={handleWeekChange}
+            <CaloricTrendsChart
+              caloricData={caloricData}
+              selectedWeek={selectedWeek}
+              onWeekChange={handleWeekChange}
           isMobile
         />
-        <ComplianceRateWidget 
-          complianceRate={complianceRate}
-          selectedWeek={selectedWeek}
+            <ComplianceRateWidget 
+              complianceRate={complianceRate}
+              selectedWeek={selectedWeek}
           isMobile
         />
-        <InactiveClientsWidget 
-          inactiveClients={inactiveClients}
+            <InactiveClientsWidget 
+              inactiveClients={inactiveClients}
           isMobile
         />
         <DataActivityHistory 
           dataActivities={dataActivities}
           isMobile
-        />
-      </div>
+            />
+          </div>
     </>
   )
 

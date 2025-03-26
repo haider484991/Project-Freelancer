@@ -152,7 +152,7 @@ export default function DashboardPage() {
 
   // Display loading state with improved UI
   if (loading) {
-    return (
+  return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#13A753] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -233,15 +233,15 @@ export default function DashboardPage() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                  </svg>
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">{activeClientsCount}</h3>
               <p className="text-gray-500">{t('dashboard.activeClients')}</p>
             </div>
-          </div>
-        </div>
-        
+              </div>
+                </div>
+                
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-delay-3">
           <div className="flex items-center gap-4">
             <div className="bg-amber-50 p-3 rounded-full">
@@ -249,14 +249,14 @@ export default function DashboardPage() {
                 <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
+                  </svg>
+                  </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-800">{inactiveClientsCount}</h3>
               <p className="text-gray-500">{t('dashboard.inactiveClients')}</p>
-            </div>
-          </div>
-        </div>
+                  </div>
+                </div>
+              </div>
         
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-delay-4">
           <div className="flex items-center gap-4">
@@ -444,8 +444,8 @@ export default function DashboardPage() {
             <span className="text-xs text-gray-500">{t('dashboard.activeClients')}</span>
           </div>
           <h3 className="text-xl font-bold text-gray-800">{activeClientsCount}</h3>
-        </div>
-        
+          </div>
+          
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[160px] animate-fade-in staggered-delay-3">
           <div className="flex items-center gap-3 mb-1">
             <div className="bg-amber-50 p-2 rounded-full">
@@ -454,7 +454,7 @@ export default function DashboardPage() {
                 <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-            </div>
+              </div>
             <span className="text-xs text-gray-500">{t('dashboard.inactiveClients')}</span>
           </div>
           <h3 className="text-xl font-bold text-gray-800">{inactiveClientsCount}</h3>
@@ -468,7 +468,7 @@ export default function DashboardPage() {
                 <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+                </svg>
             </div>
             <span className="text-xs text-gray-500">{t('dashboard.complianceRate')}</span>
           </div>
@@ -576,7 +576,7 @@ export default function DashboardPage() {
         <button className="flex-1 border border-gray-200 bg-white text-gray-700 font-medium text-sm py-3 px-4 rounded-xl">
           Export Reports
         </button>
-      </div>
+        </div>
     </>
   )
 
@@ -606,7 +606,7 @@ export default function DashboardPage() {
       {/* Mobile View */}
       <div className="lg:hidden">
         {mobileContent}
-      </div>
+    </div>
     </DashboardLayout>
   )
 }

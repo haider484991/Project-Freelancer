@@ -2,14 +2,30 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
-const data = [
+type ChartData = {
+  name: string;
+  value: number;
+  color: string;
+};
+
+const data: ChartData[] = [
   { name: 'Weight Loss', value: 25, color: '#13A753' },
   { name: 'Muscle Gain', value: 10, color: '#106A02' },
   { name: 'Maintenance', value: 60, color: '#42C501' },
   { name: 'Vegan', value: 5, color: '#A5FF79' }
 ]
 
-const CustomTooltip = ({ active, payload }: any) => {
+// Define a proper type for tooltip props
+type TooltipProps = {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: ChartData;
+  }>;
+};
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-2 shadow-md rounded-md">
@@ -42,7 +58,19 @@ export default function MobileClientDistributionChart() {
                 outerRadius={60}
                 paddingAngle={0}
                 dataKey="value"
-                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                label={({
+                  cx,
+                  cy,
+                  midAngle,
+                  outerRadius,
+                  percent,
+                }: {
+                  cx: number;
+                  cy: number;
+                  midAngle: number;
+                  outerRadius: number;
+                  percent: number;
+                }) => {
                   const RADIAN = Math.PI / 180;
                   const radius = outerRadius + 15;
                   const x = cx + radius * Math.cos(-midAngle * RADIAN);

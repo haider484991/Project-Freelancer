@@ -11,10 +11,12 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Mock API service - mimics the same interface as the real API
 export const mockLoginApi = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   requestOtp: async (phone: string) => {
     await delay(500); // Simulate network delay
     return { data: { success: true, message: 'OTP sent successfully' } };
   },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifyOtp: async (phone: string, code: string) => {
     await delay(500);
     return { data: { success: true, token: 'mock_token_12345' } };
@@ -32,12 +34,22 @@ export const mockDashboardApi = {
   }
 };
 
+// Define types for the settings data
+interface SettingsData {
+  [key: string]: unknown;
+}
+
+interface PasswordData {
+  current_password: string;
+  new_password: string;
+}
+
 export const mockSettingsApi = {
   get: async () => {
     await delay(600);
     return { data: mockSettingsData };
   },
-  set: async (settingsData: any) => {
+  set: async (settingsData: SettingsData) => {
     await delay(800);
     
     // Simulate saving settings
@@ -52,7 +64,7 @@ export const mockSettingsApi = {
       }
     };
   },
-  changePassword: async (passwordData: any) => {
+  changePassword: async (passwordData: PasswordData) => {
     await delay(700);
     
     // Simple validation
@@ -107,6 +119,15 @@ export const mockReportingsApi = {
   }
 };
 
+// Define interfaces for group data
+interface GroupData {
+  id?: string;
+  name: string;
+  dietary_guidelines?: string;
+  weekly_menu?: string;
+  [key: string]: unknown;
+}
+
 export const mockGroupsApi = {
   list: async (search = '') => {
     await delay(600);
@@ -137,7 +158,7 @@ export const mockGroupsApi = {
       }
     };
   },
-  set: async (groupData: any) => {
+  set: async (groupData: GroupData) => {
     await delay(800);
     
     if (groupData.id) {
@@ -228,6 +249,7 @@ export const mockTraineesApi = {
     }
   },
   delete: async (id: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     await delay(700);
     
     return { 
@@ -239,11 +261,14 @@ export const mockTraineesApi = {
   }
 };
 
-export default {
-  login: mockLoginApi,
-  dashboard: mockDashboardApi,
-  settings: mockSettingsApi,
-  reportings: mockReportingsApi,
-  groups: mockGroupsApi,
-  trainees: mockTraineesApi
-}; 
+// Fix the anonymous default export
+const mockApiService = {
+  loginApi: mockLoginApi,
+  dashboardApi: mockDashboardApi,
+  settingsApi: mockSettingsApi,
+  reportingsApi: mockReportingsApi,
+  groupsApi: mockGroupsApi,
+  traineesApi: mockTraineesApi
+};
+
+export default mockApiService; 

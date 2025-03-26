@@ -47,22 +47,22 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
   // Handle import data
   const handleImportData = () => {
     if (!selectedFile) return
-    
+
     setIsImporting(true)
     
     // Simulate API call
     setTimeout(() => {
-      // Add to activities
-      const newActivity = {
-        id: Date.now().toString(),
-        type: 'Import',
-        filename: selectedFile.name,
-        status: 'success',
-        date: new Date().toISOString().split('T')[0]
-      }
-      
-      setDataActivities([newActivity, ...dataActivities])
-      setSelectedFile(null)
+    // Add to activities
+    const newActivity = {
+      id: Date.now().toString(),
+      type: 'Import',
+      filename: selectedFile.name,
+      status: 'success',
+      date: new Date().toISOString().split('T')[0]
+    }
+
+    setDataActivities([newActivity, ...dataActivities])
+    setSelectedFile(null)
       setIsImporting(false)
       setSuccessMessage('Data imported successfully!')
       
@@ -74,21 +74,21 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
   // Handle export data
   const handleExportData = () => {
     if (!exportDataType) return
-    
+
     setIsExporting(true)
     
     // Simulate API call
     setTimeout(() => {
-      // Add to activities
-      const newActivity = {
-        id: Date.now().toString(),
-        type: 'Export',
-        filename: `${exportDataType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`,
-        status: 'success',
-        date: new Date().toISOString().split('T')[0]
-      }
-      
-      setDataActivities([newActivity, ...dataActivities])
+    // Add to activities
+    const newActivity = {
+      id: Date.now().toString(),
+      type: 'Export',
+      filename: `${exportDataType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`,
+      status: 'success',
+      date: new Date().toISOString().split('T')[0]
+    }
+
+    setDataActivities([newActivity, ...dataActivities])
       setIsExporting(false)
       setSuccessMessage(`${exportDataType} data exported as ${exportFormat.toUpperCase()}!`)
       
@@ -98,7 +98,7 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
   }
 
   if (isMobile) {
-    return (
+  return (
       <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 space-y-4">
         {successMessage && (
           <div className="bg-green-50 text-green-700 px-3 py-2 rounded-lg text-sm mb-4 flex items-center justify-between">
@@ -149,32 +149,32 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
             
             <div className="flex justify-between items-center">
               <div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  className="hidden"
-                  accept=".csv,.xlsx,.json"
-                />
-                <button
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".csv,.xlsx,.json"
+            />
+            <button
                   className="bg-white rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 border border-gray-200"
-                  onClick={handleImportClick}
-                >
+              onClick={handleImportClick}
+            >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 17H15" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M12 6V13" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M12 13L15 10" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M12 13L9 10" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+              </svg>
                   {selectedFile ? truncateFilename(selectedFile.name, 15) : t('Select File')}
-                </button>
-              </div>
+            </button>
+            </div>
               
-              <button
+            <button
                 className={`px-3 py-2 text-sm flex items-center gap-2 rounded-lg ${
                   isImporting ? 'bg-gray-200 text-gray-500' : 'bg-[#13A753] text-white hover:bg-[#0F8A44]'
                 } transition-colors`}
-                onClick={handleImportData}
+              onClick={handleImportData}
                 disabled={!selectedFile || isImporting}
               >
                 {isImporting ? (
@@ -191,9 +191,9 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
                     {t('Import')}
                   </>
                 )}
-              </button>
-            </div>
+            </button>
           </div>
+        </div>
           
           {/* Export Section */}
           <div className="bg-[#F3F7F3] rounded-xl p-4">
@@ -206,8 +206,8 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
                 <path d="M9 10L12 13" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-            </div>
-            
+      </div>
+
             <div className="flex gap-2 mb-3">
               <select
                 className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"
@@ -224,7 +224,7 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
               <select
                 className="w-1/3 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700"
                 value={exportFormat}
-                onChange={e => setExportFormat(e.target.value)}
+                      onChange={e => setExportFormat(e.target.value)}
               >
                 <option value="csv">CSV</option>
                 <option value="xlsx">XLSX</option>
@@ -253,7 +253,7 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
                     <path d="M22 2V9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M11 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22H15C20 22 22 20 22 15V13" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  {t('Export Data')}
+              {t('Export Data')}
                 </>
               )}
             </button>

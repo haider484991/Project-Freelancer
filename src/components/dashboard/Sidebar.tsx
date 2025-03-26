@@ -146,8 +146,8 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
 
       {/* Language Switcher */}
       <div className={`mt-[36px] ${isRtl ? 'mr-auto' : 'ml-auto'}`}>
-        <LanguageSwitcher />
-      </div>
+          <LanguageSwitcher />
+        </div>
 
       {/* Logout Button */}
       <div className="mt-[36px]">

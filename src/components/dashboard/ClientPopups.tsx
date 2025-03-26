@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Modal from '../Modal';
 import { useTranslation } from 'react-i18next';
@@ -24,14 +24,7 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
   
   const goals = ['Weight Loss', 'Muscle Gain', 'Vegan', 'Maintenance'];
   
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
+  const { t } = useTranslation();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,15 +156,8 @@ interface ClientDetailsModalProps {
 }
 
 export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsModalProps) {
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
+  const { t } = useTranslation();
   const [activeWeek, setActiveWeek] = useState(1);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
   
   if (!client) return null;
   
@@ -309,14 +295,7 @@ export function CreateGroupModal({
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
+  const { t } = useTranslation();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -512,14 +491,7 @@ export function EditGroupModal({
   const [mealPlan, setMealPlan] = useState(group?.mealPlan || '');
   const [searchTerm, setSearchTerm] = useState('');
   
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
+  const { t } = useTranslation();
   
   // Update state when group prop changes
   React.useEffect(() => {
@@ -699,14 +671,7 @@ interface WeekSelectorProps {
 }
 
 export function WeekSelector({ selectedWeek, onWeekChange }: WeekSelectorProps) {
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
+  const { t } = useTranslation();
 
   const weeks = [
     { id: 'Week 1', label: t('week_1') },
@@ -716,7 +681,7 @@ export function WeekSelector({ selectedWeek, onWeekChange }: WeekSelectorProps) 
   ];
 
   return (
-    <div className={`flex items-center gap-2 ${isRtl ? 'rtl' : 'ltr'}`}>
+    <div className="flex items-center gap-2">
       <div className="relative">
         <select
           value={selectedWeek}
@@ -748,14 +713,7 @@ interface TemplateSelectorProps {
 }
 
 export function TemplateSelector({ selectedTemplate, onTemplateChange }: TemplateSelectorProps) {
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
+  const { t } = useTranslation();
 
   const templates = [
     { id: 'Template 1', label: t('template_1') },
@@ -765,7 +723,7 @@ export function TemplateSelector({ selectedTemplate, onTemplateChange }: Templat
   ];
 
   return (
-    <div className={`flex items-center gap-2 ${isRtl ? 'rtl' : 'ltr'}`}>
+    <div className="flex items-center gap-2">
       <div className="relative">
         <select
           value={selectedTemplate}
@@ -797,14 +755,7 @@ interface ClientSelectorProps {
 }
 
 export function ClientSelector({ selectedClient, onClientChange }: ClientSelectorProps) {
-  const { t, i18n } = useTranslation();
-  const [isRtl, setIsRtl] = useState(false);
-  
-  // Check if current language is RTL
-  useEffect(() => {
-    const rtlLanguages = ['he', 'ar'];
-    setIsRtl(rtlLanguages.includes(i18n.language));
-  }, [i18n.language]);
+  const { t } = useTranslation();
 
   const clients = [
     { id: 'Client 1', label: t('client_1') },
@@ -814,7 +765,7 @@ export function ClientSelector({ selectedClient, onClientChange }: ClientSelecto
   ];
 
   return (
-    <div className={`flex items-center gap-2 ${isRtl ? 'rtl' : 'ltr'}`}>
+    <div className="flex items-center gap-2">
       <div className="relative">
         <select
           value={selectedClient}

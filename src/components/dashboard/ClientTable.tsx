@@ -1,10 +1,10 @@
 'use client'
 
-import Image from 'next/image'
+import React from 'react'
 import { useState, useEffect } from 'react'
-import ProfileAvatar from './ProfileAvatar'
-import { useAppContext } from '@/context/AppContext'
 import { useTranslation } from 'react-i18next'
+import Image from 'next/image'
+import { useAppContext } from '@/context/AppContext'
 
 // Define the Client type
 export interface Client {

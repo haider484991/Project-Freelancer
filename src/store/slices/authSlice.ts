@@ -23,6 +23,18 @@ const initialState: AuthState = {
   error: null,
 };
 
+interface LoginError {
+  message: string;
+  status?: number;
+  [key: string]: unknown;
+}
+
+interface RegisterError {
+  message: string;
+  status?: number;
+  [key: string]: unknown;
+}
+
 export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
@@ -36,8 +48,8 @@ export const login = createAsyncThunk(
       localStorage.setItem('token', response.data.token);
       
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+    } catch (error: unknown) {
+      return rejectWithValue(error as LoginError);
     }
   }
 );
@@ -53,8 +65,8 @@ export const register = createAsyncThunk(
       });
       
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    } catch (error: unknown) {
+      return rejectWithValue(error as RegisterError);
     }
   }
 );
