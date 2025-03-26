@@ -13,9 +13,10 @@ interface DataActivity {
 
 interface DataActivityHistoryProps {
   dataActivities: DataActivity[]
+  isMobile?: boolean
 }
 
-const DataActivityHistory: React.FC<DataActivityHistoryProps> = ({ dataActivities }) => {
+const DataActivityHistory: React.FC<DataActivityHistoryProps> = ({ dataActivities, isMobile }) => {
   const { t } = useTranslation()
 
   return (
