@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { mockGroupsData } from '@/services/mockData'
 
 // Define the Group type
 export interface Group {
@@ -31,8 +32,19 @@ export default function GroupsTable({
   // Get translations
   const { t, i18n } = useTranslation();
 
+  // Mock groups for display
+  const mockGroups: Group[] = mockGroupsData.groups.map(group => ({
+    id: group.id,
+    name: group.name,
+    members: Math.floor(Math.random() * 15) + 5, // Random number of members between 5-20
+    dietaryGoal: group.dietary_guidelines,
+    createdAt: `2023-${Math.floor(Math.random() * 12) + 1}-${Math.floor(Math.random() * 28) + 1}`, // Random date
+    dietary: group.dietary_guidelines,
+    mealPlan: group.weekly_menu
+  }));
+
   // Filter groups based on search term
-  const filteredGroups = groups.filter(group => 
+  const filteredGroups = mockGroups.filter(group => 
     searchTerm ? group.name.toLowerCase().includes(searchTerm.toLowerCase()) : true
   );
   
