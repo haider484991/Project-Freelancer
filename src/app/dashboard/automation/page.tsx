@@ -184,9 +184,16 @@ export default function WhatsAppAutomationPage() {
     let recipientName = ''
     
     if (type === 'individual') {
-      const client = clients.find(c => c.id === id) as Client | undefined
-      if (client) {
-        recipientName = client.name
+      // First check the API clients
+      const apiClient = apiClients.find(c => c.id === id)
+      if (apiClient) {
+        recipientName = apiClient.name
+      } else {
+        // Fall back to context clients
+        const contextClient = clients.find(c => c.id === id) as Client | undefined
+        if (contextClient) {
+          recipientName = contextClient.name
+        }
       }
     } else {
       const group = groups.find(g => g.id === id) as Group | undefined
@@ -365,11 +372,17 @@ export default function WhatsAppAutomationPage() {
             >
               <option value="">{t('automation.selectRecipient')}</option>
               <optgroup label={t('automation.individuals')}>
-                {clients.map(client => (
-                  <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
-                    {client.name}
-                  </option>
-                ))}
+                {apiClients.length > 0 
+                  ? apiClients.map(client => (
+                      <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
+                        {client.name}
+                      </option>
+                    ))
+                  : clients.map(client => (
+                      <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
+                        {client.name}
+                      </option>
+                    ))}
               </optgroup>
               <optgroup label={t('automation.groups')}>
                 {groups.map(group => (
@@ -648,11 +661,17 @@ export default function WhatsAppAutomationPage() {
           >
             <option value="">{t('automation.selectRecipient')}</option>
             <optgroup label={t('automation.individuals')}>
-              {clients.map(client => (
-                <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
-                  {client.name}
-                </option>
-              ))}
+              {apiClients.length > 0 
+                ? apiClients.map(client => (
+                    <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
+                      {client.name}
+                    </option>
+                  ))
+                : clients.map(client => (
+                    <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
+                      {client.name}
+                    </option>
+                  ))}
             </optgroup>
             <optgroup label={t('automation.groups')}>
               {groups.map(group => (

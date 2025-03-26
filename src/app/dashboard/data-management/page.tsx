@@ -76,9 +76,9 @@ const DataManagementPage: React.FC = () => {
     { id: '4', type: 'Export', filename: 'client_reports.pdf', status: 'pending', date: '2023-05-20' }
   ])
 
-  // Fetch data from the API
+  // Fetch data from the API with retry mechanism
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (retryCount = 0) => {
       setLoading(true)
       setError(null)
       try {
@@ -89,6 +89,8 @@ const DataManagementPage: React.FC = () => {
           if (DEBUG_MODE) {
             console.log('Fetched trainees:', traineesResponse.data.trainees)
           }
+        } else if (DEBUG_MODE) {
+          console.warn('No trainees data in API response:', traineesResponse)
         }
 
         // Fetch reportings
@@ -98,11 +100,19 @@ const DataManagementPage: React.FC = () => {
           if (DEBUG_MODE) {
             console.log('Fetched reportings:', reportingsResponse.data.reportings)
           }
+        } else if (DEBUG_MODE) {
+          console.warn('No reportings data in API response:', reportingsResponse)
         }
       } catch (err) {
         console.error('Error fetching data:', err)
         setError('Failed to load data. Using cached data instead.')
-        // Continue with cached data if available
+        
+        // Retry up to 3 times with increasing delay
+        if (retryCount < 3) {
+          setTimeout(() => {
+            fetchData(retryCount + 1)
+          }, 1000 * (retryCount + 1)) // 1s, 2s, 3s delays
+        }
       } finally {
         setLoading(false)
       }
@@ -194,9 +204,87 @@ const DataManagementPage: React.FC = () => {
     { week: 'Week 4', calories: 1500 }
   ]
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Handle data import
+  const handleDataImport = async (file: File) => {
+    // Create a new activity log entry for the import
+    const newActivity: ActivityLog = {
+      id: Date.now().toString(),
+      type: 'Import',
+      filename: file.name,
+      status: 'pending',
+      date: new Date().toISOString().split('T')[0]
+    }
+    
+    // Add the new activity to the log
+    setDataActivities(prev => [newActivity, ...prev])
+    
+    // Simulate successful import after 2 seconds
+    setTimeout(() => {
+      setDataActivities(prev => 
+        prev.map(activity => 
+          activity.id === newActivity.id 
+            ? {...activity, status: 'success'} 
+            : activity
+        )
+      )
+      
+      // Refresh data from API after successful import
+      fetchData()
+    }, 2000)
+  }
+  
+  // Function to fetch data (reused in handleDataImport)
+  const fetchData = async () => {
+    try {
+      // Fetch trainees
+      const traineesResponse = await traineesApi.list()
+      if (traineesResponse.data && traineesResponse.data.trainees) {
+        setApiTrainees(traineesResponse.data.trainees)
+      }
+
+      // Fetch reportings
+      const reportingsResponse = await reportingsApi.list()
+      if (reportingsResponse.data && reportingsResponse.data.reportings) {
+        setApiReportings(reportingsResponse.data.reportings)
+      }
+    } catch (err) {
+      console.error('Error refreshing data:', err)
+    }
+  }
+  
+  // Handle data export function
   const handleExportData = () => {
-    // Function implementation
+    // Create a new activity log entry for the export
+    const newActivity: ActivityLog = {
+      id: Date.now().toString(),
+      type: 'Export',
+      filename: `data_export_${new Date().toISOString().split('T')[0]}.csv`,
+      status: 'pending',
+      date: new Date().toISOString().split('T')[0]
+    }
+    
+    // Add the new activity to the log
+    setDataActivities(prev => [newActivity, ...prev])
+    
+    // Simulate successful export after 1.5 seconds
+    setTimeout(() => {
+      setDataActivities(prev => 
+        prev.map(activity => 
+          activity.id === newActivity.id 
+            ? {...activity, status: 'success'} 
+            : activity
+        )
+      )
+      
+      // In a real implementation, we would create and download a CSV file here
+      // For now, we'll just log the data
+      if (DEBUG_MODE) {
+        console.log('Exporting data:', {
+          clients: apiTrainees.length > 0 ? apiTrainees : contextClients,
+          reportings: apiReportings
+        })
+      }
+    }, 1500)
   }
 
   if (loading && !clients.length) {
@@ -261,6 +349,8 @@ const DataManagementPage: React.FC = () => {
       <DataImportExport 
         dataActivities={dataActivities}
         setDataActivities={setDataActivities}
+        onImport={handleDataImport}
+        onExport={handleExportData}
       />
 
       {/* Stats Overview Cards */}
@@ -463,6 +553,8 @@ const DataManagementPage: React.FC = () => {
         <DataImportExport 
           dataActivities={dataActivities}
           setDataActivities={setDataActivities}
+          onImport={handleDataImport}
+          onExport={handleExportData}
         />
       </div>
 

@@ -18,7 +18,8 @@ interface AddClientModalProps {
 
 export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalProps) {
   const [name, setName] = useState('');
-  const [dietaryGoal, setDietaryGoal] = useState('');
+  const [calories, setCalories] = useState('');
+  const [targetWeight, setTargetWeight] = useState('');
   const [group, setGroup] = useState('');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   
@@ -28,18 +29,24 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Format dietaryGoal to include both calories and target weight
+    const dietaryGoal = `${calories} calories / ${targetWeight} kg`;
+    
     onAddClient({
       name,
       dietaryGoal,
       group,
     });
+    
     resetForm();
     onClose();
   };
   
   const resetForm = () => {
     setName('');
-    setDietaryGoal('');
+    setCalories('');
+    setTargetWeight('');
     setGroup('');
     setSelectedGoals([]);
   };
@@ -70,13 +77,24 @@ export function AddClientModal({ isOpen, onClose, onAddClient }: AddClientModalP
             />
           </div>
           
-          {/* Order/Cost */}
+          {/* Target Calories */}
           <div>
             <input
               type="text"
-              placeholder={t('order_cost')}
-              value={dietaryGoal}
-              onChange={(e) => setDietaryGoal(e.target.value)}
+              placeholder={t('target_calories')}
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+          
+          {/* Target Weight */}
+          <div>
+            <input
+              type="text"
+              placeholder={t('target_weight_kg')}
+              value={targetWeight}
+              onChange={(e) => setTargetWeight(e.target.value)}
               className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>

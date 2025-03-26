@@ -117,44 +117,37 @@ export default function ClientManagementPage() {
   // Handle add client
   const handleAddClient = async (client: Partial<Client>) => {
     try {
-      setIsLoading(true)
-      
+      setIsLoading(true);
+
+      // Find the group ID based on the selected group name
+      const selectedGroup = apiGroups.find(g => g.name === client.group);
+      const groupId = selectedGroup ? selectedGroup.id : '1'; // Default to first group if not found
+
       // Prepare trainee data for API
       const traineeData = {
         name: client.name || '',
-        email: 'client@example.com', // Default values as these might not be in the Client type
-        phone: '123456789',
-        group_id: '1', // Default to first group
-        target_calories: '2000',
-        target_weight: '70',
+        email: 'client@example.com', // Default email
+        phone: '123456789', // Default phone
+        group_id: groupId,
+        target_calories: client.dietaryGoal?.split(' ')[0] || '2000', // Try to extract calories value
+        target_weight: client.dietaryGoal?.split(' ')[3] || '70', // Try to extract weight value
         gender: '1', // Default to male
         is_active: '1' // Set as active by default
-      }
-      
+      };
+
       // Call API to create trainee
-      const response = await traineesApi.set(traineeData)
-      
+      const response = await traineesApi.set(traineeData);
+
       if (response.data && response.data.success) {
         // Refresh trainees list
-        const refreshResponse = await traineesApi.list()
+        const refreshResponse = await traineesApi.list();
         if (refreshResponse.data && refreshResponse.data.trainees) {
-          setApiTrainees(refreshResponse.data.trainees)
+          setApiTrainees(refreshResponse.data.trainees);
         }
-        
-        // Also update context for fallback
-    const newClient = {
-      ...client,
-          id: response.data.trainee_id || Math.random().toString(36).substring(7),
-      image: '/images/profile.jpg',
-      goalsMet: 75,
-          status: 'active' as const,
-          compliance: 'compliant' as const
-        } as Client;
-        
-        addClient(newClient)
       }
     } catch (err) {
-      console.error('Error adding client:', err)
+      console.error('Error adding client:', err);
+      setError('Failed to add client. Using local data instead.');
       
       // Fall back to context only
       const newClient = {
@@ -166,12 +159,12 @@ export default function ClientManagementPage() {
         compliance: 'compliant' as const
       } as Client;
       
-      addClient(newClient)
+      addClient(newClient);
     } finally {
-      setIsLoading(false)
-    setIsAddClientModalOpen(false)
+      setIsLoading(false);
+      setIsAddClientModalOpen(false);
     }
-  }
+  };
   
   // Handle client details
   const handleViewClient = (client: Client) => {
@@ -182,48 +175,61 @@ export default function ClientManagementPage() {
   // Handle update client
   const handleUpdateClient = async (client: ExtendedClient) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       
       // Get the original API data
-      const originalData = client.apiData
+      const originalData = client.apiData;
       
       if (originalData) {
+        // Find the group ID based on the group name
+        const selectedGroup = apiGroups.find(g => g.name === client.group);
+        const groupId = selectedGroup ? selectedGroup.id : originalData.group_id;
+
+        // Extract target values from dietaryGoal if available
+        let targetCalories = originalData.target_calories;
+        let targetWeight = originalData.target_weight;
+        
+        if (client.dietaryGoal) {
+          const parts = client.dietaryGoal.split(' ');
+          if (parts.length >= 1) targetCalories = parts[0];
+          if (parts.length >= 4) targetWeight = parts[3];
+        }
+        
         // Prepare trainee data for API
         const traineeData = {
           id: client.id,
           name: client.name,
           email: originalData.email,
           phone: originalData.phone,
-          group_id: originalData.group_id,
-          target_calories: originalData.target_calories,
-          target_weight: originalData.target_weight,
+          group_id: groupId,
+          target_calories: targetCalories,
+          target_weight: targetWeight,
           gender: originalData.gender,
           is_active: client.status === 'active' ? '1' : '0'
-        }
+        };
         
         // Call API to update trainee
-        const response = await traineesApi.set(traineeData)
+        const response = await traineesApi.set(traineeData);
         
         if (response.data && response.data.success) {
           // Refresh trainees list
-          const refreshResponse = await traineesApi.list()
+          const refreshResponse = await traineesApi.list();
           if (refreshResponse.data && refreshResponse.data.trainees) {
-            setApiTrainees(refreshResponse.data.trainees)
+            setApiTrainees(refreshResponse.data.trainees);
           }
         }
+      } else {
+        // Fall back to context
+        updateClient(client as Client);
       }
-      
-      // Also update context for fallback
-      updateClient(client)
     } catch (err) {
-      console.error('Error updating client:', err)
-      // Fall back to context only
-      updateClient(client)
+      console.error('Error updating client:', err);
+      updateClient(client as Client); // Fall back to context
     } finally {
-      setIsLoading(false)
-      setIsClientDetailsModalOpen(false)
+      setIsLoading(false);
+      setIsClientDetailsModalOpen(false);
     }
-  }
+  };
   
   // Handle toggle push notifications
   const handleTogglePush = (clientId: string, enabled: boolean) => {
@@ -233,28 +239,28 @@ export default function ClientManagementPage() {
   // Handle delete client
   const handleDeleteClient = async (clientId: string) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       
       // Call API to delete trainee
-      await traineesApi.delete(clientId)
+      const response = await traineesApi.delete(clientId);
       
-      // Refresh trainees list
-      const refreshResponse = await traineesApi.list()
-      if (refreshResponse.data && refreshResponse.data.trainees) {
-        setApiTrainees(refreshResponse.data.trainees)
+      if (response.data && response.data.success) {
+        // Refresh trainees list
+        const refreshResponse = await traineesApi.list();
+        if (refreshResponse.data && refreshResponse.data.trainees) {
+          setApiTrainees(refreshResponse.data.trainees);
+        }
+        
+        // Also update context
+        deleteClient(clientId);
       }
-      
-      // Also call deleteClient from context
-      deleteClient(clientId)
     } catch (err) {
-      console.error('Error deleting client:', err)
-      // Still attempt to delete from context
-      deleteClient(clientId)
+      console.error('Error deleting client:', err);
+      deleteClient(clientId); // Fall back to context
     } finally {
-      setIsLoading(false)
-      setIsClientDetailsModalOpen(false)
+      setIsLoading(false);
     }
-  }
+  };
   
   // Handle export clients (example function)
   const handleExportClients = (e: React.MouseEvent) => {
@@ -678,7 +684,7 @@ export default function ClientManagementPage() {
       {/* Modals */}
       {isAddClientModalOpen && (
       <AddClientModal 
-          isOpen={true}
+          isOpen={isAddClientModalOpen}
         onClose={() => setIsAddClientModalOpen(false)}
         onAddClient={handleAddClient}
       />

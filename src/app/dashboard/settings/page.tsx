@@ -211,49 +211,35 @@ export default function SettingsPage() {
     }
   }
   
-  // Handle app settings save
+  // Handle save app settings
   const handleSaveAppSettings = async () => {
     try {
       setLoading(true)
       setError(null)
       
-      // Call the settings API to update app settings
-      const response = await settingsApi.set({
+      // Prepare settings data for the API
+      const settingsData = {
         language: appSettings.language,
         theme: appSettings.theme,
         notifications_enabled: appSettings.notifications ? '1' : '0',
         auto_save: appSettings.autoSave ? '1' : '0',
         data_retention: appSettings.dataRetention,
-        dark_mode: appSettings.darkMode ? '1' : '0',
-        // Preserve the other settings
-        company_name: apiSettings?.company_name || profile.name,
-        email: apiSettings?.email || profile.email,
-        phone: apiSettings?.phone || profile.phone,
-        address: apiSettings?.address || '',
-        logo_url: apiSettings?.logo_url || profile.image
-      })
+        dark_mode: appSettings.darkMode ? '1' : '0'
+      }
+      
+      // Call the API to update settings
+      const response = await settingsApi.set(settingsData)
       
       if (response.data && response.data.success) {
-        // Update local state with the response data
-        setApiSettings(prevSettings => ({
-          ...prevSettings!,
-          language: appSettings.language,
-          theme: appSettings.theme,
-          notifications_enabled: appSettings.notifications ? '1' : '0',
-          auto_save: appSettings.autoSave ? '1' : '0',
-          data_retention: appSettings.dataRetention,
-          dark_mode: appSettings.darkMode ? '1' : '0'
-        }))
+        setSuccessMessage('Settings saved successfully!')
         
-        // When language changes, refresh the page to update the UI
-        if (appSettings.language !== localStorage.getItem('language')) {
-          localStorage.setItem('language', appSettings.language)
-          window.location.reload()
+        // Refresh settings
+        const refreshResponse = await settingsApi.get()
+        if (refreshResponse.data && refreshResponse.data.settings) {
+          setApiSettings(refreshResponse.data.settings)
         }
-        
-        setSuccessMessage('Settings updated successfully!')
       } else {
-        setError('Failed to update settings. Please try again.')
+        setError('Failed to save settings. Please try again.')
       }
     } catch (err) {
       console.error('Error saving settings:', err)
@@ -261,8 +247,8 @@ export default function SettingsPage() {
     } finally {
       setLoading(false)
     }
-  }
-
+  };
+  
   // Reset settings to defaults
   const handleResetSettings = () => {
     setAppSettings({

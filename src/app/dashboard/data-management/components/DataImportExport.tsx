@@ -15,12 +15,16 @@ interface DataImportExportProps {
   dataActivities: DataActivity[]
   setDataActivities: (activities: DataActivity[]) => void
   isMobile?: boolean
+  onImport?: (file: File) => void
+  onExport?: () => void
 }
 
 const DataImportExport: React.FC<DataImportExportProps> = ({ 
   dataActivities, 
   setDataActivities,
-  isMobile = false
+  isMobile = false,
+  onImport,
+  onExport
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -50,25 +54,35 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
 
     setIsImporting(true)
     
-    // Simulate API call
-    setTimeout(() => {
-    // Add to activities
-    const newActivity = {
-      id: Date.now().toString(),
-      type: 'Import',
-      filename: selectedFile.name,
-      status: 'success',
-      date: new Date().toISOString().split('T')[0]
-    }
-
-    setDataActivities([newActivity, ...dataActivities])
-    setSelectedFile(null)
-      setIsImporting(false)
-      setSuccessMessage('Data imported successfully!')
+    if (onImport && selectedFile) {
+      onImport(selectedFile);
+      setSelectedFile(null);
+      setIsImporting(false);
+      setSuccessMessage('Data imported successfully!');
       
       // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000)
-    }, 1500)
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } else {
+      // Fallback to original implementation if no onImport prop
+      setTimeout(() => {
+        // Add to activities
+        const newActivity = {
+          id: Date.now().toString(),
+          type: 'Import',
+          filename: selectedFile.name,
+          status: 'success',
+          date: new Date().toISOString().split('T')[0]
+        }
+
+        setDataActivities([newActivity, ...dataActivities])
+        setSelectedFile(null)
+        setIsImporting(false)
+        setSuccessMessage('Data imported successfully!')
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000)
+      }, 1500)
+    }
   }
 
   // Handle export data
@@ -77,24 +91,33 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
 
     setIsExporting(true)
     
-    // Simulate API call
-    setTimeout(() => {
-    // Add to activities
-    const newActivity = {
-      id: Date.now().toString(),
-      type: 'Export',
-      filename: `${exportDataType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`,
-      status: 'success',
-      date: new Date().toISOString().split('T')[0]
-    }
-
-    setDataActivities([newActivity, ...dataActivities])
-      setIsExporting(false)
-      setSuccessMessage(`${exportDataType} data exported as ${exportFormat.toUpperCase()}!`)
+    if (onExport) {
+      onExport();
+      setIsExporting(false);
+      setSuccessMessage(`${exportDataType} data exported as ${exportFormat.toUpperCase()}!`);
       
       // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000)
-    }, 1500)
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } else {
+      // Fallback to original implementation if no onExport prop
+      setTimeout(() => {
+        // Add to activities
+        const newActivity = {
+          id: Date.now().toString(),
+          type: 'Export',
+          filename: `${exportDataType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`,
+          status: 'success',
+          date: new Date().toISOString().split('T')[0]
+        }
+
+        setDataActivities([newActivity, ...dataActivities])
+        setIsExporting(false)
+        setSuccessMessage(`${exportDataType} data exported as ${exportFormat.toUpperCase()}!`)
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000)
+      }, 1500)
+    }
   }
 
   if (isMobile) {

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { groupsApi } from '@/services/fitTrackApi'
 import { DEBUG_MODE } from '@/utils/config'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
+import GroupsTable from '@/components/dashboard/GroupsTable'
 
 // Define group type for API responses
 interface ApiGroup {
@@ -480,163 +481,31 @@ export default function CoachingGroupsPage() {
           </div>
         </div>
         
-        {/* Desktop View */}
-        <div className="hidden md:block bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-full border-collapse">
-              <thead>
-                <tr className="text-left bg-gradient-to-r from-gray-50 to-gray-100">
-                  <th className="py-4 px-6 font-semibold text-gray-700">{t('groupsPage.groupName')}</th>
-                  <th className="py-4 px-6 font-semibold text-gray-700">{t('groupsPage.members')}</th>
-                  <th className="py-4 px-6 font-semibold text-gray-700">{t('groupsPage.dietaryGoal')}</th>
-                  <th className="py-4 px-6 font-semibold text-gray-700">{t('groupsPage.created')}</th>
-                  <th className="py-4 px-6 font-semibold text-gray-700">{t('groupsPage.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredGroups.length > 0 ? (
-                  filteredGroups.map((group, index) => (
-                    <tr 
-                      key={group.id} 
-                      className={`border-t border-gray-100 hover:bg-[#13A753]/5 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
-                    >
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-gray-800">{group.name}</div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <span className="bg-[#13A753] bg-opacity-10 text-[#13A753] text-sm font-medium px-3 py-1 rounded-full">
-                            {group.members}
-                          </span>
-          </div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">{group.dietary || group.dietaryGoal || t('groupsPage.notSet')}</td>
-                      <td className="py-4 px-6 text-gray-600">{new Date(group.createdAt).toLocaleDateString()}</td>
-                      <td className="py-4 px-6">
-                        <div className="flex gap-2">
-              <button 
-                            className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                            onClick={() => handleEditGroup(group)}
-                            aria-label={t('groupsPage.editGroup')}
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M13.26 3.6L5.05 12.05C4.74 12.37 4.44 13 4.38 13.43L4.01 16.98C3.88 18.11 4.69 18.9 5.82 18.73L9.36 18.23C9.79 18.16 10.42 17.84 10.73 17.51L18.94 9.06C20.28 7.68 20.91 6.05 18.94 4.13C16.98 2.22 14.6 2.22 13.26 3.6Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            <button 
-                            className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                            onClick={() => {
-                              if (window.confirm(t('groupsPage.confirmDelete', { name: group.name }))) {
-                                handleDeleteGroup(group.id)
-                              }
-                            }}
-                            aria-label={t('groupsPage.deleteGroup')}
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-500">
-                      {searchQuery ? t('groupsPage.noSearchResults') : t('groupsPage.noGroups')}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* Desktop View - Replace old table with GroupsTable */}
+        <div className="hidden md:block">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg">
+            <GroupsTable 
+              groups={filteredGroups}
+              searchTerm={searchQuery}
+              onViewGroup={handleEditGroup}
+              onDeleteGroup={(group) => handleDeleteGroup(group.id)}
+              isMobile={false}
+            />
           </div>
         </div>
         
-        {/* Mobile View */}
-        <div className="md:hidden space-y-4">
-          {filteredGroups.length > 0 ? (
-            filteredGroups.map((group, index) => (
-              <div 
-                key={group.id} 
-                className="bg-white p-5 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-item animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-medium text-gray-800 text-lg mb-1">{group.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-[#13A753] bg-opacity-10 text-[#13A753] text-sm font-medium px-2 py-0.5 rounded-full">
-                        {group.members} {t('groupsPage.members')}
-                      </span>
-                </div>
-              </div>
-                  <div className="flex gap-2">
-                    <button 
-                      className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                      onClick={() => handleEditGroup(group)}
-                      aria-label={t('groupsPage.editGroup')}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.26 3.6L5.05 12.05C4.74 12.37 4.44 13 4.38 13.43L4.01 16.98C3.88 18.11 4.69 18.9 5.82 18.73L9.36 18.23C9.79 18.16 10.42 17.84 10.73 17.51L18.94 9.06C20.28 7.68 20.91 6.05 18.94 4.13C16.98 2.22 14.6 2.22 13.26 3.6Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                    <button 
-                      className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                      onClick={() => {
-                        if (window.confirm(t('groupsPage.confirmDelete', { name: group.name }))) {
-                          handleDeleteGroup(group.id)
-                        }
-                      }}
-                      aria-label={t('groupsPage.deleteGroup')}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-gray-50 p-3 rounded-xl">
-                    <span className="text-gray-500 block mb-1">{t('groupsPage.dietaryGoal')}:</span>
-                    <p className="font-medium text-gray-700">{group.dietary || group.dietaryGoal || t('groupsPage.notSet')}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-xl">
-                    <span className="text-gray-500 block mb-1">{t('groupsPage.created')}:</span>
-                    <p className="font-medium text-gray-700">{new Date(group.createdAt).toLocaleDateString()}</p>
-                </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100 text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3 22V17C3 16.02 3.4 15.13 4.07 14.5C4.74 13.88 5.62 13.5 6.56 13.5H11.43C12.37 13.5 13.26 13.88 13.93 14.5C14.6 15.13 15 16.02 15 17V22" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M16 6.25H24" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M16 10.75H20" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-              </div>
-              <p className="text-gray-500 mb-4">
-                {searchQuery ? t('groupsPage.noSearchResults') : t('groupsPage.noGroups')}
-              </p>
-              <button
-                onClick={() => setShowCreateGroupModal(true)}
-                className="bg-[#13A753] text-white flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl hover:bg-[#0F8A44] mx-auto transition-all duration-200"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 5V19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="font-medium">{t('groupsPage.createGroup')}</span>
-              </button>
-            </div>
-          )}
-      </div>
+        {/* Mobile View - Replace card view with GroupsTable */}
+        <div className="md:hidden">
+          <div className="animate-fade-in">
+            <GroupsTable 
+              groups={filteredGroups}
+              searchTerm={searchQuery}
+              onViewGroup={handleEditGroup}
+              onDeleteGroup={(group) => handleDeleteGroup(group.id)}
+              isMobile={true}
+            />
+          </div>
+        </div>
       
         {/* Create Group Modal */}
       <CreateGroupModal
