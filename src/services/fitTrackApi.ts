@@ -23,12 +23,21 @@ const fitTrackApi = axios.create({
 // Add request interceptor for logging
 fitTrackApi.interceptors.request.use(
   (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    
+    // Add token to headers if it exists
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     // Log outgoing requests (without sensitive data)
     if (process.env.NODE_ENV !== 'production') {
       console.log('[API Client] Request:', {
         url: config.url,
         method: config.method,
         hasData: !!config.data,
+        hasToken: !!token,
       });
     }
     return config;

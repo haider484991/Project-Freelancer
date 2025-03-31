@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     
     // Get cookies for authentication if present
     const cookies = req.cookies;
-    const authToken = cookies.get('auth_token')?.value;
+    const authToken = cookies.get('auth_token')?.value || req.headers.get('authorization')?.replace('Bearer ', '');
     
     // Headers with conditional authentication
     const headers: HeadersInit = {

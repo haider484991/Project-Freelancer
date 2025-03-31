@@ -55,9 +55,17 @@ export default function LoginForm() {
     }
     
     try {
-      await loginApi.verifyOtp(phone, otp);
-      // For testing, we can proceed without checking token
-      router.push('/dashboard');
+      const response = await loginApi.verifyOtp(phone, otp);
+      const { token } = response.data;
+      
+      if (token) {
+        // Store token in both places for compatibility
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('token', token);
+        router.push('/dashboard');
+      } else {
+        setError('Invalid response from server');
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         const axiosError = err as AxiosError<ApiErrorResponse>;
@@ -72,8 +80,9 @@ export default function LoginForm() {
 
   // Skip login and go directly to dashboard (test mode)
   const handleSkipLogin = () => {
-    // You may add some test token or session storage item here if needed
+    // Set test token in both places for compatibility
     localStorage.setItem('authToken', 'test_token_123');
+    localStorage.setItem('token', 'test_token_123');
     router.push('/dashboard');
   };
 
