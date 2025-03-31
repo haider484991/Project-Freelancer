@@ -3,7 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     // Get the API URL from environment variables or use default
-    let apiUrl = process.env.REACT_APP_API_URL || 'https://bot.fit-track.net/api/';
+    let apiUrl = process.env.REACT_APP_API_URL || 'https://app.fit-track.net/api/';
+    
+    // DEBUG: Log environment variables for debugging
+    console.log('[Proxy] Environment variables:', {
+      REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+      NODE_ENV: process.env.NODE_ENV
+    });
     
     // Ensure the URL ends with a trailing slash
     if (!apiUrl.endsWith('/')) {
@@ -28,6 +34,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // DEBUG: Log complete request body
+    console.log('[Proxy] Request body:', JSON.stringify(body));
     
     // Validate basic request structure
     if (!body.mdl || !body.act) {
@@ -81,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Add clear debugging for headers going to the API
-    console.log('[Proxy] Request headers sent to API:', Object.fromEntries(headers.entries()));
+    console.log('[Proxy] Request headers sent to API:', Object.fromEntries(Object.entries(headers)));
     
     // Log the outgoing request (without sensitive data)
     console.log(`[Proxy] Outgoing request to API: ${apiUrl}`, {
@@ -89,15 +98,62 @@ export async function POST(req: NextRequest) {
       moduleAction: `${body.mdl}/${body.act}`,
       hasAuthToken: !!authToken
     });
+
+    // ------------------------
+    // USE TEST MODE FOR DEBUGGING
+    // ------------------------
+    if (authToken && authToken.includes('test_token')) {
+      console.log('[Proxy] USING TEST MODE - Returning mock success response');
+      
+      // Create mock response based on the request
+      let mockResponse;
+      
+      if (body.mdl === 'login' && body.act === 'otp') {
+        mockResponse = { result: true, message: 'OTP sent successfully' };
+      } else if (body.mdl === 'login' && body.act === 'verify') {
+        mockResponse = { 
+          result: true, 
+          token: authToken || 'test_token_123',
+          user: { id: 'test123', name: 'Test User', role: 'admin' } 
+        };
+      } else if (body.mdl === 'trainees' && body.act === 'list') {
+        mockResponse = { 
+          result: true, 
+          message: [
+            { id: '1', name: 'Test User 1', email: 'test1@example.com', phone: '1234567890', is_active: '1' },
+            { id: '2', name: 'Test User 2', email: 'test2@example.com', phone: '0987654321', is_active: '0' }
+          ] 
+        };
+      } else {
+        mockResponse = { result: true, data: { message: 'Mock response for ' + body.mdl + '/' + body.act } };
+      }
+      
+      const jsonResponse = NextResponse.json(mockResponse);
+      return jsonResponse;
+    }
     
     // Send the request to the real API
-    const apiResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body)
-    });
-    
-    console.log(`[Proxy] API response status: ${apiResponse.status} ${apiResponse.statusText}`);
+    let apiResponse;
+    try {
+      apiResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+      
+      console.log(`[Proxy] API response status: ${apiResponse.status} ${apiResponse.statusText}`);
+    } catch (fetchError) {
+      console.error('[Proxy] API fetch error:', fetchError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to connect to API server',
+          details: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+          statusCode: 502
+        },
+        { status: 502 }
+      );
+    }
     
     // Handle API errors with proper status codes
     if (!apiResponse.ok) {
