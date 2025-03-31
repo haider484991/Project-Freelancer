@@ -1,3 +1,5 @@
+'use client'
+
 import LoginForm from '@/components/LoginForm'
 import Image from 'next/image'
 
@@ -28,7 +30,7 @@ export default function Home() {
       
       {/* Left side - Login container */}
       <div className="w-full lg:w-1/2 flex items-center justify-center z-10 relative">
-        <div className="w-full lg:w-[562.5px] px-[30px] lg:px-[50px] py-[40px] lg:ml-[76px] lg:mt-[90px] max-w-[100%] lg:max-w-none">
+        <div className="w-full lg:w-[562.5px] px-[30px] lg:px-[50px] py-[40px] lg:ml-[76px] lg:mt-[90px] max-w-[100%] lg:max-w-none backdrop-blur-sm bg-black/30 rounded-3xl border border-white/10 shadow-xl">
           <LoginForm />
         </div>
       </div>
@@ -44,6 +46,13 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/40 z-10"></div>
       </div>
+      
+      {/* Global styles for text enhancement */}
+      <style jsx global>{`
+        h1, h2, p, label, span, div {
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+        }
+      `}</style>
     </main>
   )
 } 

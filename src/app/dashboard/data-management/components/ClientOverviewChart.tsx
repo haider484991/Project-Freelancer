@@ -41,27 +41,27 @@ const ClientOverviewChart: React.FC<ClientOverviewChartProps> = ({
           </div>
         </div>
         
-        <div className="mt-4 h-[200px] relative">
-          <div className="flex h-full">
-            {/* Y-Axis Labels */}
-            <div className="flex flex-col justify-between h-full pr-2">
+      <div className="mt-4 h-[200px] relative">
+        <div className="flex h-full">
+          {/* Y-Axis Labels */}
+          <div className="flex flex-col justify-between h-full pr-2">
               <span className="text-[10px] text-gray-500">{maxTotalValue}</span>
               <span className="text-[10px] text-gray-500">{Math.round(maxTotalValue * 0.5)}</span>
               <span className="text-[10px] text-gray-500">0</span>
-            </div>
-            {/* Bar Chart */}
-            <div className="flex-1 relative">
-              {/* Grid Lines */}
-              <div className="absolute inset-0">
-                {[0, 1, 2].map((i) => (
+          </div>
+          {/* Bar Chart */}
+          <div className="flex-1 relative">
+            {/* Grid Lines */}
+            <div className="absolute inset-0">
+              {[0, 1, 2].map((i) => (
                   <div key={`grid-${i}`} className="absolute border-t border-gray-200 w-full" style={{ top: `${i * 50}%` }}></div>
-                ))}
-              </div>
-              {/* Bars */}
-              <div className="flex justify-around h-full items-end">
-                {weeklyData.map((data, i) => (
-                  <div key={`week-${i + 1}`} className="flex items-end space-x-1">
-                    {/* Active clients bar */}
+              ))}
+            </div>
+            {/* Bars */}
+            <div className="flex justify-around h-full items-end">
+              {weeklyData.map((data, i) => (
+                <div key={`week-${i + 1}`} className="flex items-end space-x-1">
+                  {/* Active clients bar */}
                     <div className="w-[22px] group relative">
                       <div
                         className={`w-full bg-gradient-to-b from-[#13A753] to-[#1E2120] rounded-t-md transition-all duration-500 ease-in-out transform hover:opacity-90 hover:-translate-y-1 ${
@@ -73,13 +73,13 @@ const ClientOverviewChart: React.FC<ClientOverviewChartProps> = ({
                           animationDuration: '1s',
                           animationFillMode: 'both'
                         }}
-                      ></div>
+                    ></div>
                       {/* Tooltip */}
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md p-1 w-16 text-center z-10 text-[10px] pointer-events-none">
                         {data.active}
                       </div>
-                    </div>
-                    {/* Inactive clients bar */}
+                  </div>
+                  {/* Inactive clients bar */}
                     <div className="w-[22px] group relative">
                       <div
                         className={`w-full bg-[#F45C5C] rounded-t-md transition-all duration-500 ease-in-out transform hover:opacity-90 hover:-translate-y-1 ${
@@ -91,25 +91,25 @@ const ClientOverviewChart: React.FC<ClientOverviewChartProps> = ({
                           animationDuration: '1s',
                           animationFillMode: 'both'
                         }}
-                      ></div>
+                    ></div>
                       {/* Tooltip */}
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-md p-1 w-16 text-center z-10 text-[10px] pointer-events-none">
                         {data.inactive}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* X-Axis Labels */}
+        {/* X-Axis Labels */}
           <div className="flex justify-around mt-2 text-[10px] text-gray-600">
-            {weeklyData.map((data) => (
+          {weeklyData.map((data) => (
               <span key={data.week} className={`${selectedWeek === data.week ? 'font-bold text-[#13A753]' : ''}`}>
                 {data.week}
               </span>
-            ))}
+          ))}
           </div>
         </div>
       </div>

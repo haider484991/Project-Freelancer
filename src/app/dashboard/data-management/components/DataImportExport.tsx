@@ -65,17 +65,17 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
     } else {
       // Fallback to original implementation if no onImport prop
       setTimeout(() => {
-        // Add to activities
-        const newActivity = {
-          id: Date.now().toString(),
-          type: 'Import',
-          filename: selectedFile.name,
-          status: 'success',
-          date: new Date().toISOString().split('T')[0]
-        }
+    // Add to activities
+    const newActivity = {
+      id: Date.now().toString(),
+      type: 'Import',
+      filename: selectedFile.name,
+      status: 'success',
+      date: new Date().toISOString().split('T')[0]
+    }
 
-        setDataActivities([newActivity, ...dataActivities])
-        setSelectedFile(null)
+    setDataActivities([newActivity, ...dataActivities])
+    setSelectedFile(null)
         setIsImporting(false)
         setSuccessMessage('Data imported successfully!')
         
@@ -101,16 +101,16 @@ const DataImportExport: React.FC<DataImportExportProps> = ({
     } else {
       // Fallback to original implementation if no onExport prop
       setTimeout(() => {
-        // Add to activities
-        const newActivity = {
-          id: Date.now().toString(),
-          type: 'Export',
-          filename: `${exportDataType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`,
-          status: 'success',
-          date: new Date().toISOString().split('T')[0]
-        }
+    // Add to activities
+    const newActivity = {
+      id: Date.now().toString(),
+      type: 'Export',
+      filename: `${exportDataType}_${new Date().toISOString().split('T')[0]}.${exportFormat}`,
+      status: 'success',
+      date: new Date().toISOString().split('T')[0]
+    }
 
-        setDataActivities([newActivity, ...dataActivities])
+    setDataActivities([newActivity, ...dataActivities])
         setIsExporting(false)
         setSuccessMessage(`${exportDataType} data exported as ${exportFormat.toUpperCase()}!`)
         

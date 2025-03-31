@@ -9,6 +9,8 @@ import { traineesApi } from '@/services/fitTrackApi'
 import { groupsApi } from '@/services/fitTrackApi'
 import { DEBUG_MODE } from '@/utils/config'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
+import { parseApiResponse as parseApiResponseRaw } from '@/utils/config'
+import Toast from '@/components/ui/Toast'
 
 // Define types for API responses
 interface ApiTrainee {
@@ -35,9 +37,17 @@ interface ExtendedClient extends Client {
   apiData?: ApiTrainee;
 }
 
+// Type-safe wrapper function
+function parseApiResponse<T>(data: unknown): T[] {
+  return parseApiResponseRaw(data) as T[];
+}
+
+// Toast notification types
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
 export default function ClientManagementPage() {
   const { t } = useTranslation()
-  const { addClient, updateClient, deleteClient, toggleClientPush } = useAppContext()
+  const { addClient, updateClient, deleteClient, togglePushNotification } = useAppContext()
   
   const [apiTrainees, setApiTrainees] = useState<ApiTrainee[]>([])
   const [apiGroups, setApiGroups] = useState<ApiGroup[]>([])
@@ -47,43 +57,78 @@ export default function ClientManagementPage() {
   const [selectedClient, setSelectedClient] = useState<ExtendedClient | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [deleteConfirmationVisible, setDeleteConfirmationVisible] = useState(false)
+  const [toast, setToast] = useState<{
+    visible: boolean;
+    type: ToastType;
+    message: string;
+  }>({
+    visible: false,
+    type: 'info',
+    message: ''
+  })
   
   // Get data and functions from context - keep only what's needed
-  const { clients: contextClients } = useAppContext();
+  const { clients: _contextClients } = useAppContext();
+  
+  // Show toast notification
+  const showToast = (type: ToastType, message: string) => {
+    setToast({
+      visible: true,
+      type,
+      message
+    });
+  };
   
   // Fetch trainees from API
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      try {
-        // Fetch trainees
-        const traineesResponse = await traineesApi.list()
-        if (traineesResponse.data && traineesResponse.data.trainees) {
-          setApiTrainees(traineesResponse.data.trainees)
-          
-          // Fetch groups to map group_id to group names
-          const groupsResponse = await groupsApi.list()
-          if (groupsResponse.data && groupsResponse.data.groups) {
-            setApiGroups(groupsResponse.data.groups)
-          }
-          
-          if (DEBUG_MODE) {
-            console.log('Fetched trainees:', traineesResponse.data.trainees)
-            console.log('Fetched groups:', groupsResponse.data.groups)
-          }
+  const fetchClients = async () => {
+    setIsLoading(true)
+    try {
+      // Fetch trainees
+      const traineesResponse = await traineesApi.list()
+      
+      // Log the actual response structure for debugging
+      console.log('API Response:', traineesResponse);
+      
+      // Parse trainees using our type-safe wrapper function
+      const trainees = parseApiResponse<ApiTrainee>(traineesResponse.data);
+      
+      // If we found trainees, use them
+      if (trainees.length > 0) {
+        setApiTrainees(trainees);
+        
+        // Fetch groups to map group_id to group names
+        const groupsResponse = await groupsApi.list();
+        
+        // Parse groups using our type-safe wrapper function
+        const groups = parseApiResponse<ApiGroup>(groupsResponse.data);
+        
+        if (groups.length > 0) {
+          setApiGroups(groups);
         }
-      } catch (err) {
-        console.error('Error fetching trainees:', err)
-        setError('Failed to load trainees')
-        // We'll fall back to context clients
-        setApiTrainees([])
-      } finally {
-        setIsLoading(false)
+        
+        if (DEBUG_MODE) {
+          console.log('Processed trainees:', trainees);
+          console.log('Processed groups:', groups);
+        }
+      } else {
+        console.warn('Could not extract trainees from response:', traineesResponse.data);
+        throw new Error('Unable to extract trainee data from API response');
       }
+    } catch (err) {
+      console.error('Error fetching trainees:', err);
+      setError('Failed to load client data from API. Please check your connection and try again.');
+      // We'll no longer fall back to context clients
+      setApiTrainees([]);
+    } finally {
+      setIsLoading(false);
     }
-    
-    fetchData()
-  }, [])
+  };
+  
+  // Initial data fetch
+  useEffect(() => {
+    fetchClients();
+  }, []);
   
   // Convert API trainees to Client format and merge with context
   const clientsList = useMemo(() => {
@@ -105,17 +150,28 @@ export default function ClientManagementPage() {
         status: trainee.is_active === '1' ? 'active' : 'inactive',
         compliance: 'compliant', // Default value as API doesn't provide this
         pushEnabled: true, // Default value as API doesn't provide this
+        email: trainee.email,
+        phone: trainee.phone,
+        gender: trainee.gender === '1' ? 'male' : 'female',
         // Store original API data for updates
         apiData: trainee
       } as ExtendedClient))
     }
     
-    // Fall back to context clients if no API data
-    return contextClients
-  }, [apiTrainees, apiGroups, contextClients])
+    // Return empty array instead of falling back to context clients
+    return []
+  }, [apiTrainees, apiGroups])
   
   // Handle add client
-  const handleAddClient = async (client: Partial<Client>) => {
+  const handleAddClient = async (client: {
+    name: string;
+    dietaryGoal: string;
+    group: string;
+    status: 'active' | 'inactive';
+    email: string;
+    phone: string;
+    gender: string;
+  }) => {
     try {
       setIsLoading(true);
 
@@ -126,24 +182,36 @@ export default function ClientManagementPage() {
       // Prepare trainee data for API
       const traineeData = {
         name: client.name || '',
-        email: 'client@example.com', // Default email
-        phone: '123456789', // Default phone
+        email: client.email || 'client@example.com', // Use provided email or default
+        phone: client.phone || '123456789', // Use provided phone or default
         group_id: groupId,
-        target_calories: client.dietaryGoal?.split(' ')[0] || '2000', // Try to extract calories value
-        target_weight: client.dietaryGoal?.split(' ')[3] || '70', // Try to extract weight value
-        gender: '1', // Default to male
-        is_active: '1' // Set as active by default
+        target_calories: (client.dietaryGoal?.split(' ')[0] || '2000').trim(), // Extract calories and ensure it's trimmed
+        target_weight: (client.dietaryGoal?.split(' ')[3] || '70').trim(), // Extract weight and ensure it's trimmed
+        gender: client.gender || 'male', // Use provided gender or default to male
+        is_active: client.status === 'inactive' ? '0' : '1' // Set active status based on client status
       };
+
+      if (DEBUG_MODE) {
+        console.log('Adding client with data:', traineeData);
+      }
 
       // Call API to create trainee
       const response = await traineesApi.set(traineeData);
 
+      if (DEBUG_MODE) {
+        console.log('API response for adding client:', response);
+      }
+
       if (response.data && response.data.success) {
         // Refresh trainees list
         const refreshResponse = await traineesApi.list();
-        if (refreshResponse.data && refreshResponse.data.trainees) {
-          setApiTrainees(refreshResponse.data.trainees);
+        // Use our type-safe wrapper function
+        const refreshedTrainees = parseApiResponse<ApiTrainee>(refreshResponse.data);
+        if (refreshedTrainees.length > 0) {
+          setApiTrainees(refreshedTrainees);
         }
+      } else {
+        throw new Error('API returned unsuccessful response: ' + JSON.stringify(response.data));
       }
     } catch (err) {
       console.error('Error adding client:', err);
@@ -172,93 +240,100 @@ export default function ClientManagementPage() {
     setIsClientDetailsModalOpen(true)
   }
   
-  // Handle update client
-  const handleUpdateClient = async (client: ExtendedClient) => {
+  // Handle toggle push notification
+  const handleTogglePush = async (clientId: string, enabled: boolean) => {
+    try {
+      setIsLoading(true);
+      await togglePushNotification(clientId, enabled);
+      
+      // Show success toast
+      showToast('success', t('clientManagementPage.pushNotificationsUpdated'));
+    } catch (error) {
+      console.error('Error toggling push notification:', error);
+      showToast('error', t('clientManagementPage.errorTogglePush'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Handle edit client submission
+  const handleEditClient = async (updatedClient: ExtendedClient) => {
     try {
       setIsLoading(true);
       
-      // Get the original API data
-      const originalData = client.apiData;
+      // Find the original API data
+      const originalData = updatedClient.apiData;
       
       if (originalData) {
         // Find the group ID based on the group name
-        const selectedGroup = apiGroups.find(g => g.name === client.group);
+        const selectedGroup = apiGroups.find(g => g.name === updatedClient.group);
         const groupId = selectedGroup ? selectedGroup.id : originalData.group_id;
 
         // Extract target values from dietaryGoal if available
         let targetCalories = originalData.target_calories;
         let targetWeight = originalData.target_weight;
         
-        if (client.dietaryGoal) {
-          const parts = client.dietaryGoal.split(' ');
+        if (updatedClient.dietaryGoal) {
+          const parts = updatedClient.dietaryGoal.split(' ');
           if (parts.length >= 1) targetCalories = parts[0];
           if (parts.length >= 4) targetWeight = parts[3];
         }
-        
-        // Prepare trainee data for API
+
+        // Prepare trainee data for API - ensure all fields are strings
         const traineeData = {
-          id: client.id,
-          name: client.name,
-          email: originalData.email,
-          phone: originalData.phone,
+          id: originalData.id,
+          name: updatedClient.name,
+          email: updatedClient.email || '',
+          phone: updatedClient.phone || '',
           group_id: groupId,
-          target_calories: targetCalories,
-          target_weight: targetWeight,
-          gender: originalData.gender,
-          is_active: client.status === 'active' ? '1' : '0'
+          target_calories: String(targetCalories || '0'),
+          target_weight: String(targetWeight || '0'),
+          gender: updatedClient.gender === 'male' ? '1' : '2',
+          is_active: updatedClient.status === 'active' ? '1' : '0'
         };
         
-        // Call API to update trainee
-        const response = await traineesApi.set(traineeData);
+        // Call API to update the trainee
+        await traineesApi.set(traineeData);
         
-        if (response.data && response.data.success) {
-          // Refresh trainees list
-          const refreshResponse = await traineesApi.list();
-          if (refreshResponse.data && refreshResponse.data.trainees) {
-            setApiTrainees(refreshResponse.data.trainees);
-          }
-        }
-      } else {
-        // Fall back to context
-        updateClient(client as Client);
+        // Update client in context with the ID and updated client data
+        updateClient(updatedClient.id, updatedClient);
+        
+        // Refresh table data
+        await fetchClients();
+        showToast('success', t('clientManagementPage.clientUpdated'));
       }
-    } catch (err) {
-      console.error('Error updating client:', err);
-      updateClient(client as Client); // Fall back to context
+    } catch (error) {
+      console.error('Error updating client:', error);
+      showToast('error', t('clientManagementPage.errorUpdatingClient'));
+      throw error;
     } finally {
       setIsLoading(false);
-      setIsClientDetailsModalOpen(false);
     }
   };
   
-  // Handle toggle push notifications
-  const handleTogglePush = (clientId: string, enabled: boolean) => {
-    toggleClientPush(clientId, enabled)
-  }
-  
   // Handle delete client
-  const handleDeleteClient = async (clientId: string) => {
+  const handleDeleteClient = async (client: ExtendedClient) => {
     try {
       setIsLoading(true);
       
-      // Call API to delete trainee
-      const response = await traineesApi.delete(clientId);
-      
-      if (response.data && response.data.success) {
-        // Refresh trainees list
-        const refreshResponse = await traineesApi.list();
-        if (refreshResponse.data && refreshResponse.data.trainees) {
-          setApiTrainees(refreshResponse.data.trainees);
-        }
+      // Ensure we have the API data
+      if (client.apiData && client.apiData.id) {
+        // Call API to delete the trainee
+        await traineesApi.delete(client.apiData.id);
         
-        // Also update context
-        deleteClient(clientId);
+        // Delete from context
+        deleteClient(client.id);
+        
+        // Refresh client list
+        await fetchClients();
+        showToast('success', t('clientManagementPage.clientDeleted'));
       }
-    } catch (err) {
-      console.error('Error deleting client:', err);
-      deleteClient(clientId); // Fall back to context
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      showToast('error', t('clientManagementPage.errorDeletingClient'));
     } finally {
       setIsLoading(false);
+      setDeleteConfirmationVisible(false);
     }
   };
   
@@ -349,7 +424,7 @@ export default function ClientManagementPage() {
               </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">4</h3>
+              <h3 className="text-2xl font-bold text-gray-800">{clientsList.length}</h3>
               <p className="text-gray-500 truncate max-w-[150px]">Total</p>
             </div>
                 </div>
@@ -364,7 +439,7 @@ export default function ClientManagementPage() {
                 </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">3</h3>
+              <h3 className="text-2xl font-bold text-gray-800">{clientsList.filter(client => client.status === 'active').length}</h3>
               <p className="text-gray-500 truncate max-w-[150px]">Active</p>
             </div>
           </div>
@@ -380,7 +455,7 @@ export default function ClientManagementPage() {
               </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">1</h3>
+              <h3 className="text-2xl font-bold text-gray-800">{clientsList.filter(client => client.status === 'inactive').length}</h3>
               <p className="text-gray-500 truncate max-w-[150px]">Inactive</p>
             </div>
           </div>
@@ -403,7 +478,7 @@ export default function ClientManagementPage() {
                   </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">4</h3>
+              <h3 className="text-2xl font-bold text-gray-800">{clientsList.filter(client => client.compliance === 'compliant').length}</h3>
               <p className="text-gray-500 truncate max-w-[150px]">Compliant</p>
             </div>
           </div>
@@ -499,6 +574,7 @@ export default function ClientManagementPage() {
                 onViewClient={handleViewClient}
                 onTogglePush={handleTogglePush}
           isMobile={false}
+          clients={clientsList}
               />
             </div>
     </>
@@ -533,7 +609,7 @@ export default function ClientManagementPage() {
             </div>
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Total</span>
           </div>
-          <h3 className="text-xl font-bold text-gray-800">4</h3>
+          <h3 className="text-xl font-bold text-gray-800">{clientsList.length}</h3>
         </div>
         
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
@@ -546,7 +622,7 @@ export default function ClientManagementPage() {
             </div>
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Active</span>
           </div>
-          <h3 className="text-xl font-bold text-gray-800">3</h3>
+          <h3 className="text-xl font-bold text-gray-800">{clientsList.filter(client => client.status === 'active').length}</h3>
           </div>
           
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
@@ -560,7 +636,7 @@ export default function ClientManagementPage() {
               </div>
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Inactive</span>
           </div>
-          <h3 className="text-xl font-bold text-gray-800">1</h3>
+          <h3 className="text-xl font-bold text-gray-800">{clientsList.filter(client => client.status === 'inactive').length}</h3>
         </div>
         
         <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[130px] animate-fade-in staggered-item">
@@ -575,7 +651,7 @@ export default function ClientManagementPage() {
             </div>
             <span className="text-xs text-gray-500 truncate max-w-[90px]">Compliant</span>
           </div>
-          <h3 className="text-xl font-bold text-gray-800">4</h3>
+          <h3 className="text-xl font-bold text-gray-800">{clientsList.filter(client => client.compliance === 'compliant').length}</h3>
         </div>
             </div>
             
@@ -641,6 +717,7 @@ export default function ClientManagementPage() {
             onViewClient={handleViewClient}
             onTogglePush={handleTogglePush}
             isMobile={true}
+            clients={clientsList}
         />
       </div>
     </>
@@ -664,6 +741,16 @@ export default function ClientManagementPage() {
     >
       <style jsx global>{mobileStyles}</style>
       
+      {/* Toast notifications */}
+      {toast.visible && (
+        <Toast
+          visible={toast.visible}
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+        />
+      )}
+      
       {/* Loading indicator */}
       {isLoading && clientsList.length === 0 && (
         <div className="flex justify-center items-center h-64">
@@ -684,7 +771,7 @@ export default function ClientManagementPage() {
       {/* Modals */}
       {isAddClientModalOpen && (
       <AddClientModal 
-          isOpen={isAddClientModalOpen}
+        isOpen={isAddClientModalOpen}
         onClose={() => setIsAddClientModalOpen(false)}
         onAddClient={handleAddClient}
       />
@@ -705,13 +792,13 @@ export default function ClientManagementPage() {
           <div className="fixed bottom-5 left-0 right-0 flex justify-center z-50">
             <div className="bg-white rounded-full shadow-lg p-2 flex gap-2">
               <button 
-                onClick={() => handleUpdateClient(selectedClient)}
+                onClick={() => handleEditClient(selectedClient)}
                 className="bg-blue-500 text-white px-4 py-2 rounded-full"
               >
                 {t('clientManagementPage.update')}
               </button>
               <button 
-                onClick={() => handleDeleteClient(selectedClient.id)}
+                onClick={() => handleDeleteClient(selectedClient)}
                 className="bg-red-500 text-white px-4 py-2 rounded-full"
               >
                 {t('clientManagementPage.delete')}

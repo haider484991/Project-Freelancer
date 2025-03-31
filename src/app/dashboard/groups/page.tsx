@@ -8,10 +8,11 @@ import {
 } from '@/components/dashboard/ClientPopups'
 import { useAppContext } from '@/context/AppContext'
 import { useTranslation } from 'react-i18next'
-import { groupsApi } from '@/services/fitTrackApi'
-import { DEBUG_MODE } from '@/utils/config'
+import { groupsApi, traineesApi } from '@/services/fitTrackApi'
+import { DEBUG_MODE, parseApiResponse } from '@/utils/config'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import GroupsTable from '@/components/dashboard/GroupsTable'
+import { Client } from '@/components/dashboard/ClientTable'
 
 // Define group type for API responses
 interface ApiGroup {
@@ -22,63 +23,73 @@ interface ApiGroup {
   [key: string]: unknown;
 }
 
-// Map API group to UI Group format
-const mapApiGroupToGroup = (apiGroup: ApiGroup, membersCount = 0): Group => {
-  return {
-    id: apiGroup.id,
-    name: apiGroup.name,
-    members: membersCount,
-    dietary: apiGroup.dietary_guidelines,
-    mealPlan: apiGroup.weekly_menu,
-    dietaryGoal: apiGroup.dietary_guidelines,
-    createdAt: new Date().toISOString(),
-    clients: []
-  }
-}
-
-// Convert API groups to UI Group array
-const convertApiGroupsToGroups = (apiGroups: ApiGroup[]): Group[] => {
-  return apiGroups.map(group => mapApiGroupToGroup(group))
-}
-
-// Define a more specific type matching the API's expectations
-interface GroupApiInput {
+// Define trainee type for API responses
+interface ApiTrainee {
+  id: string;
   name: string;
-  dietary_guidelines: string;
-  weekly_menu: string;
-  id?: string;
+  email: string;
+  phone: string;
+  group_id: string;
+  [key: string]: unknown;
 }
 
-// Update the API response type to avoid using 'any'
-interface GroupApiResponse {
-  data?: {
-    success?: boolean;
-    group_id?: string;
-    [key: string]: unknown;
-  };
+// Function to convert API groups to Group format
+function convertApiGroupsToGroups(apiGroups: ApiGroup[]): Group[] {
+  return apiGroups.map(group => ({
+    id: group.id,
+    name: group.name,
+    members: [], // Members will be populated separately
+    dietary: group.dietary_guidelines || '',
+    mealPlan: group.weekly_menu || '',
+    apiData: group
+  }))
 }
 
-// Function that adapts our Group data to the API format with proper return type
-const callGroupsApi = (groupData: {
-  name: string;
-  dietary: string;
-  mealPlan: string;
-  id?: string;
-}): Promise<GroupApiResponse> => {
-  // Map to the format expected by the API with proper type
-  const apiData: GroupApiInput = {
-    name: groupData.name,
-    dietary_guidelines: groupData.dietary || '',
-    weekly_menu: groupData.mealPlan || '',
-  };
-  
-  // Add id only if it exists
-  if (groupData.id) {
-    apiData.id = groupData.id;
+// CSS animations
+const animations = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
-  return groupsApi.set(apiData);
-};
+  @keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes grow {
+    from { transform: scale(0.9); }
+    to { transform: scale(1); }
+  }
+  
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(19, 167, 83, 0.2); }
+    70% { box-shadow: 0 0 0 10px rgba(19, 167, 83, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(19, 167, 83, 0); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+  
+  .animate-grow {
+    animation: grow 0.2s ease-out forwards;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  .staggered-item:nth-child(1) { animation-delay: 0.05s; }
+  .staggered-item:nth-child(2) { animation-delay: 0.1s; }
+  .staggered-item:nth-child(3) { animation-delay: 0.15s; }
+  .staggered-item:nth-child(4) { animation-delay: 0.2s; }
+  .staggered-item:nth-child(5) { animation-delay: 0.25s; }
+`
 
 export default function CoachingGroupsPage() {
   const { groups: contextGroups, addGroup, updateGroup, deleteGroup } = useAppContext()
@@ -86,6 +97,7 @@ export default function CoachingGroupsPage() {
   
   // API data states
   const [apiGroups, setApiGroups] = useState<ApiGroup[]>([])
+  const [apiTrainees, setApiTrainees] = useState<ApiTrainee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -98,6 +110,7 @@ export default function CoachingGroupsPage() {
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([])
+  const [availableClients, setAvailableClients] = useState<Client[]>([])
   
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -109,48 +122,86 @@ export default function CoachingGroupsPage() {
     }
   }, [successMessage])
   
-  // Fetch groups from API
+  // Fetch groups and trainees from API
   useEffect(() => {
-    const fetchGroups = async () => {
+    const fetchData = async () => {
       setLoading(true)
       try {
-        const response = await groupsApi.list()
-        if (response.data && response.data.groups) {
-          setApiGroups(response.data.groups)
+        // Fetch groups
+        const groupsResponse = await groupsApi.list()
+        const groups = parseApiResponse<ApiGroup>(groupsResponse.data);
+        if (groups.length > 0) {
+          setApiGroups(groups);
           if (DEBUG_MODE) {
-            console.log('Fetched groups:', response.data.groups)
+            console.log('Fetched groups:', groups)
+          }
+        }
+        
+        // Fetch trainees/clients
+        const traineesResponse = await traineesApi.list()
+        const trainees = parseApiResponse<ApiTrainee>(traineesResponse.data);
+        if (trainees.length > 0) {
+          setApiTrainees(trainees);
+          
+          // Convert to client format for modals
+          const clients: Client[] = trainees.map(trainee => ({
+            id: trainee.id,
+            name: trainee.name,
+            image: '/images/profile.jpg',
+            group: '', // Will be filled based on group_id
+            status: 'active',
+            compliance: 'compliant'
+          }));
+          
+          setAvailableClients(clients);
+          
+          if (DEBUG_MODE) {
+            console.log('Fetched trainees for clients:', trainees)
           }
         }
       } catch (err) {
-        console.error('Error fetching groups:', err)
-        setError('Failed to load groups')
-        // Fall back to context groups
+        console.error('Error fetching data:', err)
+        setError('Failed to load groups and clients')
         setApiGroups([])
+        setApiTrainees([])
       } finally {
         setLoading(false)
       }
     }
     
-    fetchGroups()
+    fetchData()
   }, [])
   
   // Update filtered groups when apiGroups, contextGroups, or searchQuery changes
   useEffect(() => {
     // Use API groups if available, otherwise fall back to context groups
-    const groupsToDisplay = apiGroups.length > 0 
+    const baseGroups = apiGroups.length > 0 
       ? convertApiGroupsToGroups(apiGroups)
       : contextGroups
+      
+    // Add members to each group based on trainees
+    const groupsWithMembers = baseGroups.map(group => {
+      // Find trainees that belong to this group
+      const members = apiTrainees
+        .filter(trainee => trainee.group_id === group.id)
+        .map(trainee => trainee.name)
+        
+      return {
+        ...group,
+        members
+      }
+    })
     
     // Filter groups based on search query
     const filtered = searchQuery
-      ? groupsToDisplay.filter(group => 
+      ? groupsWithMembers.filter(group => 
         group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (group.dietary && group.dietary.toLowerCase().includes(searchQuery.toLowerCase()))
       )
-      : groupsToDisplay
+      : groupsWithMembers
     
       setFilteredGroups(filtered)
-  }, [apiGroups, contextGroups, searchQuery])
+  }, [apiGroups, apiTrainees, contextGroups, searchQuery])
   
   // Handle create group
   const handleCreateGroup = async (group: {
@@ -163,112 +214,200 @@ export default function CoachingGroupsPage() {
     try {
       setLoading(true)
       
-      // Use the adapter function instead of direct API call
-      const response = await callGroupsApi({
+      const response = await groupsApi.set({
         name: group.name,
-        dietary: group.dietary,
-        mealPlan: group.mealPlan
-      });
+        dietary_guidelines: group.dietary || '',
+        weekly_menu: group.mealPlan || ''
+      })
       
       if (response.data && response.data.success) {
-        // Refresh groups list
-        const updatedGroups = await groupsApi.list()
-        if (updatedGroups.data && updatedGroups.data.groups) {
-          setApiGroups(updatedGroups.data.groups)
+        // Get the new group ID
+        const groupId = response.data.group_id
+        
+        // Update clients to associate them with this group
+        if (group.clients.length > 0) {
+          // Update each client's group_id
+          for (const clientId of group.clients) {
+            // Find the client in apiTrainees
+            const trainee = apiTrainees.find(t => t.id === clientId)
+            if (trainee) {
+              await traineesApi.set({
+                id: trainee.id,
+                name: trainee.name,
+                email: trainee.email || '',
+                phone: trainee.phone || '',
+                group_id: groupId,
+                is_active: '1',
+                gender: trainee.gender || '1',
+                target_calories: trainee.target_calories || '2000',
+                target_weight: trainee.target_weight || '70'
+              })
+            }
+          }
         }
         
-        // Fix: only pass properties that are in Omit<Group, 'id' | 'members' | 'createdAt'>
-        // These properties are automatically added by the addGroup function
+        // Refresh groups list
+        const refreshResponse = await groupsApi.list()
+        const refreshedGroups = parseApiResponse<ApiGroup>(refreshResponse.data);
+        if (refreshedGroups.length > 0) {
+          setApiGroups(refreshedGroups);
+        }
+        
+        // Refresh trainees list to get updated group associations
+        const refreshTraineesResponse = await traineesApi.list()
+        const refreshedTrainees = parseApiResponse<ApiTrainee>(refreshTraineesResponse.data);
+        if (refreshedTrainees.length > 0) {
+          setApiTrainees(refreshedTrainees);
+        }
+        
+        // Add to context for fallback
         addGroup({
+          id: groupId,
           name: group.name,
-          dietary: group.dietary,
-          mealPlan: group.mealPlan,
-          clients: group.clients
+          members: group.clients,
+          dietary: group.dietary || '',
+          mealPlan: group.mealPlan || ''
         })
         
         setSuccessMessage(t('groupsPage.groupCreatedSuccess'))
+        setShowCreateGroupModal(false)
+      } else {
+        setError(t('groupsPage.errorCreatingGroup'))
       }
     } catch (err) {
       console.error('Error creating group:', err)
       setError(t('groupsPage.errorCreatingGroup'))
-      // Fix: only pass properties that are in Omit<Group, 'id' | 'members' | 'createdAt'>
-      // These properties are automatically added by the addGroup function
+      
+      // Fall back to context only
+      const newGroupId = Math.random().toString(36).substring(7)
       addGroup({
+        id: newGroupId,
         name: group.name,
-        dietary: group.dietary,
-        mealPlan: group.mealPlan,
-        clients: group.clients
+        members: group.clients,
+        dietary: group.dietary || '',
+        mealPlan: group.mealPlan || ''
       })
     } finally {
       setLoading(false)
-    setShowCreateGroupModal(false)
     }
   }
   
-  // Handle edit group
+  // Handle view/edit group
   const handleEditGroup = (group: Group) => {
-    // Look first in API groups
-    const apiGroup = apiGroups.find(g => g.id === group.id)
-    
-    if (apiGroup) {
-      // Convert API group to Group format
-      setSelectedGroup({
-        id: apiGroup.id,
-        name: apiGroup.name,
-        dietary: apiGroup.dietary_guidelines,
-        mealPlan: apiGroup.weekly_menu,
-        members: 0,
-        createdAt: new Date().toISOString()
-      })
-    } else {
-      // Fall back to context
-      setSelectedGroup(group)
-    }
-    
+    setSelectedGroup(group)
     setShowEditGroupModal(true)
   }
   
   // Handle save edited group
-  const handleSaveEditedGroup = async (group: {
+  const handleSaveEditedGroup = async (editedGroup: {
     id: string;
     name: string;
     clients: string[];
     dietary: string;
     mealPlan: string;
-    members?: number;
-    createdAt?: string;
     dietaryGoal?: string;
   }) => {
     try {
       setLoading(true)
       
-      // Use the adapter function 
-      const response = await callGroupsApi({
-        id: group.id,
-        name: group.name,
-        dietary: group.dietary,
-        mealPlan: group.mealPlan
-      });
+      // Update group details
+      const response = await groupsApi.set({
+        id: editedGroup.id,
+        name: editedGroup.name,
+        dietary_guidelines: editedGroup.dietary || '',
+        weekly_menu: editedGroup.mealPlan || ''
+      })
       
       if (response.data && response.data.success) {
-        // Refresh groups list
-        const updatedGroups = await groupsApi.list()
-        if (updatedGroups.data && updatedGroups.data.groups) {
-          setApiGroups(updatedGroups.data.groups)
+        // Get current members of this group
+        const currentMembers = apiTrainees
+          .filter(trainee => trainee.group_id === editedGroup.id)
+          .map(trainee => trainee.id)
+        
+        // Determine which members to add and which to remove
+        const membersToAdd = editedGroup.clients.filter(id => !currentMembers.includes(id))
+        const membersToRemove = currentMembers.filter(id => !editedGroup.clients.includes(id))
+        
+        // Add new members to this group
+        for (const clientId of membersToAdd) {
+          // Find the client in apiTrainees
+          const trainee = apiTrainees.find(t => t.id === clientId)
+          if (trainee) {
+            await traineesApi.set({
+              id: trainee.id,
+              name: trainee.name,
+              email: trainee.email || '',
+              phone: trainee.phone || '',
+              group_id: editedGroup.id,
+              is_active: '1',
+              gender: trainee.gender || '1',
+              target_calories: trainee.target_calories || '2000',
+              target_weight: trainee.target_weight || '70'
+            })
+          }
         }
         
-        // Also update context for fallback
-        updateGroup(group as Group)
+        // Remove members from this group (set to default group or no group)
+        for (const clientId of membersToRemove) {
+          // Find the client in apiTrainees
+          const trainee = apiTrainees.find(t => t.id === clientId)
+          if (trainee) {
+            await traineesApi.set({
+              id: trainee.id,
+              name: trainee.name,
+              email: trainee.email || '',
+              phone: trainee.phone || '',
+              group_id: '0', // Default/no group
+              is_active: '1',
+              gender: trainee.gender || '1',
+              target_calories: trainee.target_calories || '2000',
+              target_weight: trainee.target_weight || '70'
+            })
+          }
+        }
+        
+        // Refresh groups list
+        const refreshResponse = await groupsApi.list()
+        const refreshedGroups = parseApiResponse<ApiGroup>(refreshResponse.data);
+        if (refreshedGroups.length > 0) {
+          setApiGroups(refreshedGroups);
+        }
+        
+        // Refresh trainees list to get updated group associations
+        const refreshTraineesResponse = await traineesApi.list()
+        const refreshedTrainees = parseApiResponse<ApiTrainee>(refreshTraineesResponse.data);
+        if (refreshedTrainees.length > 0) {
+          setApiTrainees(refreshedTrainees);
+        }
+        
+        // Update context for fallback
+        updateGroup({
+          id: editedGroup.id,
+          name: editedGroup.name,
+          members: editedGroup.clients,
+          dietary: editedGroup.dietary || '',
+          mealPlan: editedGroup.mealPlan || ''
+        })
+        
         setSuccessMessage(t('groupsPage.groupUpdatedSuccess'))
+        setShowEditGroupModal(false)
+      } else {
+        setError(t('groupsPage.errorUpdatingGroup'))
       }
     } catch (err) {
       console.error('Error updating group:', err)
       setError(t('groupsPage.errorUpdatingGroup'))
+      
       // Fall back to context only
-      updateGroup(group as Group)
+      updateGroup({
+        id: editedGroup.id,
+        name: editedGroup.name,
+        members: editedGroup.clients,
+        dietary: editedGroup.dietary || '',
+        mealPlan: editedGroup.mealPlan || ''
+      })
     } finally {
       setLoading(false)
-      setShowEditGroupModal(false)
     }
   }
   
@@ -280,9 +419,10 @@ export default function CoachingGroupsPage() {
       
       if (response.data && response.data.success) {
         // Refresh groups list
-        const updatedGroups = await groupsApi.list()
-        if (updatedGroups.data && updatedGroups.data.groups) {
-          setApiGroups(updatedGroups.data.groups)
+        const groupsResponse = await groupsApi.list()
+        const updatedGroups = parseApiResponse<ApiGroup>(groupsResponse.data);
+        if (updatedGroups.length > 0) {
+          setApiGroups(updatedGroups);
         }
         
         // Also update context for fallback
@@ -310,63 +450,6 @@ export default function CoachingGroupsPage() {
       <path d="M18 19.75H20" stroke="#636363" strokeWidth="2" strokeLinecap="round"/>
     </svg>
   )
-  
-  // CSS Animations
-  const animations = `
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateX(-20px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes growWidth {
-      from { width: 0; }
-      to { width: 100%; }
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    
-    @keyframes shimmer {
-      0% { background-position: -468px 0; }
-      100% { background-position: 468px 0; }
-    }
-    
-    .animate-fade-in {
-      animation: fadeIn 0.3s ease-out forwards;
-    }
-    
-    .animate-slide-in {
-      animation: slideIn 0.3s ease-out forwards;
-    }
-    
-    .animate-grow-width {
-      animation: growWidth 0.5s ease-out forwards;
-    }
-    
-    .animate-pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    .animate-shimmer {
-      background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
-      background-size: 800px 104px;
-      animation: shimmer 1.5s infinite linear;
-    }
-    
-    .staggered-item:nth-child(1) { animation-delay: 0.1s; }
-    .staggered-item:nth-child(2) { animation-delay: 0.2s; }
-    .staggered-item:nth-child(3) { animation-delay: 0.3s; }
-    .staggered-item:nth-child(4) { animation-delay: 0.4s; }
-    .staggered-item:nth-child(5) { animation-delay: 0.5s; }
-  `;
   
   // Display loading state
   if (loading && filteredGroups.length === 0) {
@@ -397,28 +480,45 @@ export default function CoachingGroupsPage() {
       <style jsx>{animations}</style>
       
       <div className="flex flex-col animate-fade-in">
-        {/* Error/Success Messages */}
+        {/* Error notification */}
         {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-sm animate-fade-in">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span className="font-medium">{error}</span>
-                </div>
-              </div>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <strong className="font-bold mr-1">Error:</strong>
+            <span className="block sm:inline">{error}</span>
+              <button 
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              onClick={() => setError(null)}
+            >
+              <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <title>Close</title>
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                </svg>
+              </button>
+            </div>
         )}
         
+        {/* Success message */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-sm animate-fade-in">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              <span className="font-medium">{successMessage}</span>
-          </div>
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <span className="block sm:inline">{successMessage}</span>
+            <button
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              onClick={() => setSuccessMessage(null)}
+            >
+              <svg className="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <title>Close</title>
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+              </svg>
+            </button>
         </div>
       )}
+      
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex justify-center items-center py-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#13A753]"></div>
+        </div>
+        )}
         
         {/* Header Section with Stats and Actions */}
         <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8 hover:shadow-lg transition-all duration-300">
@@ -497,22 +597,22 @@ export default function CoachingGroupsPage() {
         {/* Mobile View - Replace card view with GroupsTable */}
         <div className="md:hidden">
           <div className="animate-fade-in">
-            <GroupsTable 
-              groups={filteredGroups}
+              <GroupsTable 
+                groups={filteredGroups}
               searchTerm={searchQuery}
               onViewGroup={handleEditGroup}
               onDeleteGroup={(group) => handleDeleteGroup(group.id)}
-              isMobile={true}
-            />
-          </div>
+                isMobile={true}
+              />
         </div>
+      </div>
       
         {/* Create Group Modal */}
       <CreateGroupModal
         isOpen={showCreateGroupModal}
         onClose={() => setShowCreateGroupModal(false)}
         onCreateGroup={handleCreateGroup}
-          availableClients={[]}
+        availableClients={availableClients}
       />
       
         {/* Edit Group Modal */}
@@ -520,9 +620,9 @@ export default function CoachingGroupsPage() {
       <EditGroupModal
         isOpen={showEditGroupModal}
         onClose={() => setShowEditGroupModal(false)}
-            onEditGroup={handleSaveEditedGroup}
+        onEditGroup={handleSaveEditedGroup}
         group={selectedGroup}
-            availableClients={[]}
+        availableClients={availableClients}
       />
         )}
     </div>

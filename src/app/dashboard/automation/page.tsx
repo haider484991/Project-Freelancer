@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { useAppContext } from '@/context/AppContext'
 import { useTranslation } from 'react-i18next'
 import { reportingsApi, traineesApi } from '@/services/fitTrackApi'
-import { DEBUG_MODE } from '@/utils/config'
+import { DEBUG_MODE, parseApiResponse } from '@/utils/config'
 import { useUser } from '@/context/UserContext'
 
 // Define message types
@@ -49,7 +49,7 @@ interface ApiReporting {
 }
 
 // Update api response types to include potential error property
-interface ApiResponse<T> {
+interface _ApiResponse<T> {
   data?: T;
   error?: string;
   success?: boolean;
@@ -92,17 +92,19 @@ export default function WhatsAppAutomationPage() {
   const [selectedDate, setSelectedDate] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [messagePreview, setMessagePreview] = useState('')
+  const [apiTemplates, setApiTemplates] = useState<MessageTemplate[]>([])
+  const [apiClients, setApiClients] = useState<ApiTrainee[]>([])
+  const [hasLoaded, setHasLoaded] = useState(false)
   
-  // Message templates (mock data)
-  const messageTemplates: MessageTemplate[] = [
+  // Message templates (use API templates if available, otherwise use fallback templates)
+  const messageTemplates: MessageTemplate[] = apiTemplates.length > 0 
+  ? apiTemplates 
+  : [
     { id: '1', name: 'Weekly Update', content: 'Hi [CLIENT_NAME], here is your weekly nutrition update. Your progress is great, keep it up!' },
     { id: '2', name: 'Reminder', content: 'Hi [CLIENT_NAME], this is a reminder to update your food diary for today.' },
     { id: '3', name: 'Schedule Change', content: 'Hi [CLIENT_NAME], please note that your next session has been rescheduled to [DATE].' },
     { id: '4', name: 'New Program', content: 'Hi [CLIENT_NAME], your new nutrition program is now available. Please check your dashboard.' }
   ]
-  
-  // API-related states
-  const [apiClients, setApiClients] = useState<ApiTrainee[]>([])
   
   // Helper to get recipient name from ID - moved to top and wrapped in useCallback
   const getRecipientName = useCallback((id: string): string => {
@@ -112,55 +114,75 @@ export default function WhatsAppAutomationPage() {
   
   // Fetch clients and groups data from API
   useEffect(() => {
+    if (hasLoaded) return;
+    
     const fetchData = async () => {
       try {
         setLoading(true)
         setError(null)
         
         // Fetch trainees data
-        const traineesResponse = await traineesApi.list() as ApiResponse<{trainees: ApiTrainee[]}>
+        const traineesResponse = await traineesApi.list()
         
-        if (traineesResponse && traineesResponse.data?.trainees) {
-          setApiClients(traineesResponse.data.trainees)
-        } else if (DEBUG_MODE) {
-          console.error('Failed to fetch trainees:', traineesResponse?.error || 'Unknown error')
+        // Log the actual response structure for debugging
+        console.log('Trainees API Response:', traineesResponse);
+        
+        // Parse trainees/clients using our helper function
+        const clients = parseApiResponse(traineesResponse.data);
+        
+        // If we found clients, use them
+        if (clients.length > 0) {
+          setApiClients(clients as ApiTrainee[]);
+        } else {
+          console.warn('Could not extract clients from response:', traineesResponse.data);
+          throw new Error('Unable to extract client data from API response');
         }
         
         // Fetch reporting data (messages)
-        const reportingsResponse = await reportingsApi.list() as ApiResponse<{reportings: ApiReporting[]}>
+        const reportingsResponse = await reportingsApi.list()
         
-        if (reportingsResponse && reportingsResponse.data?.reportings) {
-          // Convert to message format
-          const messageData: Message[] = reportingsResponse.data.reportings.map((report: ApiReporting) => ({
+        // Log the actual response structure for debugging
+        console.log('Reportings API Response:', reportingsResponse);
+        
+        // Parse reportings using our helper function
+        const reportings = parseApiResponse(reportingsResponse.data);
+        
+        // If we found reportings, use them
+        if (reportings.length > 0) {
+          // Convert API reportings to MessageHistory format
+          const formattedReportings = reportings.map((report: ApiReporting) => ({
             id: report.id,
             recipient: getRecipientName(report.trainee_id),
             recipientId: report.trainee_id,
-            type: 'individual',
-            message: `Calories: ${report.calories}, Protein: ${report.protein}g, Carbs: ${report.carbs}g, Fat: ${report.fat}g`,
-            status: 'sent',
-            timestamp: new Date(report.report_date).toLocaleString()
-          }))
+            type: 'individual' as const,
+            message: report.message,
+            status: 'sent' as const,
+            timestamp: report.created_at || new Date().toISOString()
+          }));
           
-          setMessages(messageData)
-        } else if (DEBUG_MODE) {
-          console.error('Failed to fetch reportings:', reportingsResponse?.error || 'Unknown error')
-          
-          // Set empty messages array for now
-          setMessages([])
+          setMessages(formattedReportings);
+        } else {
+          console.warn('Could not extract reportings from response:', reportingsResponse.data);
+          throw new Error('Unable to extract reporting data from API response');
         }
         
-        setLoading(false)
+        setLoading(false);
+        setHasLoaded(true);
       } catch (err) {
-        setError('Failed to fetch data')
-        setLoading(false)
+        setError('Failed to load data from API. Please check your connection and try again.');
+        setLoading(false);
         if (DEBUG_MODE) {
-          console.error('Error fetching data:', err)
+          console.error('Error fetching data:', err);
         }
+        
+        // Initialize with empty data instead of falling back to mock data
+        setMessages([]);
+        setApiClients([]);
       }
     }
     
-    fetchData()
-  }, [getRecipientName])
+    fetchData();
+  }, [hasLoaded, getRecipientName]);
   
   // Handle recipient change
   const handleRecipientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -184,25 +206,29 @@ export default function WhatsAppAutomationPage() {
     let recipientName = ''
     
     if (type === 'individual') {
-      // First check the API clients
+      // Check the API clients first since that's the real data source
       const apiClient = apiClients.find(c => c.id === id)
       if (apiClient) {
         recipientName = apiClient.name
       } else {
-        // Fall back to context clients
-        const contextClient = clients.find(c => c.id === id) as Client | undefined
-        if (contextClient) {
-          recipientName = contextClient.name
-        }
+        // Fallback to context clients only if necessary
+        const contextClient = clients.find(c => c.id === id)
+        recipientName = contextClient ? contextClient.name : 'Unknown Client'
       }
     } else {
       const group = groups.find(g => g.id === id) as Group | undefined
       if (group) {
-        recipientName = group.name
+        recipientName = `${group.name} Group`
+      } else {
+        recipientName = 'Unknown Group'
       }
     }
     
-    updateMessagePreview(recipientName)
+    // Get the selected template
+    const template = messageTemplates.find(t => t.id === selectedTemplate)
+    if (template) {
+      setMessagePreview(template.content.replace('[CLIENT_NAME]', recipientName))
+    }
   }
   
   // Handle template change
@@ -215,15 +241,6 @@ export default function WhatsAppAutomationPage() {
     
     if (template && selectedRecipient) {
       updateMessagePreviewWithRecipient(selectedRecipientType, selectedRecipient)
-    }
-  }
-  
-  // Update message preview text
-  const updateMessagePreview = (recipientName: string) => {
-    const template = messageTemplates.find(t => t.id === selectedTemplate)
-    if (template) {
-      const previewText = template.content.replace('[CLIENT_NAME]', recipientName)
-      setMessagePreview(previewText)
     }
   }
   
@@ -276,9 +293,16 @@ export default function WhatsAppAutomationPage() {
     let recipientName = ''
     
     if (selectedRecipientType === 'individual') {
-      const client = clients.find(c => c.id === selectedRecipient) as Client | undefined
-      if (client) {
-        recipientName = client.name
+      // First check API clients (real data source)
+      const apiClient = apiClients.find(c => c.id === selectedRecipient)
+      if (apiClient) {
+        recipientName = apiClient.name
+      } else {
+        // Only fallback to context clients if needed
+        const contextClient = clients.find(c => c.id === selectedRecipient) as Client | undefined
+        if (contextClient) {
+          recipientName = contextClient.name
+        }
       }
     } else {
       const group = groups.find(g => g.id === selectedRecipient) as Group | undefined
@@ -314,8 +338,8 @@ export default function WhatsAppAutomationPage() {
     
     return true
   }
-  
-  // Reset form
+    
+    // Reset form
   const resetForm = () => {
     setSelectedRecipient('')
     setSelectedTemplate('')
@@ -348,6 +372,30 @@ export default function WhatsAppAutomationPage() {
   // WhatsApp Content Grid
   const whatsAppContentGrid = (
     <>
+      {/* Error notification */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+          <strong className="font-bold mr-1">Error:</strong>
+          <span className="block sm:inline">{error}</span>
+          <button 
+            className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            onClick={() => setError(null)}
+          >
+            <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Close</title>
+              <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Loading indicator */}
+      {loading && (
+        <div className="flex justify-center items-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#13A753]"></div>
+        </div>
+      )}
+
       {/* Message Form */}
       <div>
         <div className="bg-white p-6 rounded-[20px] shadow">
@@ -392,7 +440,7 @@ export default function WhatsAppAutomationPage() {
                 ))}
               </optgroup>
             </select>
-          </div>
+        </div>
           
           {/* Template Selection */}
           <div className="mb-4">
@@ -510,7 +558,7 @@ export default function WhatsAppAutomationPage() {
                 <path d="M17 2.43994V12.4199C17 14.3899 15.59 15.1599 13.86 14.1199L12.54 13.3299C12.24 13.1499 11.76 13.1499 11.46 13.3299L10.14 14.1199C8.41 15.1499 7 14.3899 7 12.4199V2.43994" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <p className="mt-2">{t('automation.noMessages')}</p>
-            </div>
+        </div>
           ) : (
             <>
               {/* Status Filter Pills */}
@@ -543,8 +591,8 @@ export default function WhatsAppAutomationPage() {
                   <div className="col-span-4">{t('automation.message')}</div>
                   <div className="col-span-2">{t('automation.status')}</div>
                   <div className="col-span-2">{t('automation.timestamp')}</div>
-                </div>
-                
+              </div>
+              
                 {/* Table Body */}
                 <div className="divide-y divide-gray-200">
                   {messages.map(message => (
@@ -560,11 +608,11 @@ export default function WhatsAppAutomationPage() {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M17 8C17 10.7614 14.7614 13 12 13C9.23858 13 7 10.7614 7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8Z" fill="#13A753"/>
                               <path d="M24 20.5C24 24.09 18.09 24 12 24C5.91 24 0 24.09 0 20.5C0 16.91 5.91 17 12 17C18.09 17 24 16.91 24 20.5Z" fill="#13A753"/>
-                            </svg>
+                  </svg>
                           )}
-                        </div>
+                </div>
                         <span className="text-sm font-medium">{message.recipient}</span>
-                      </div>
+              </div>
                       <div className="col-span-4 text-sm overflow-hidden line-clamp-2">{message.message}</div>
                       <div className="col-span-2">
                         <span className={`px-3 py-1 rounded-full text-xs ${
@@ -578,8 +626,8 @@ export default function WhatsAppAutomationPage() {
                       <div className="col-span-2 text-xs text-gray-500">{message.timestamp}</div>
                     </div>
                   ))}
-                </div>
-              </div>
+            </div>
+          </div>
             </>
           )}
         </div>
@@ -603,7 +651,7 @@ export default function WhatsAppAutomationPage() {
           <span className="absolute inset-y-0 left-0 flex items-center pl-3">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.5 17.5L12.5001 12.5M14.1667 8.33333C14.1667 11.555 11.555 14.1667 8.33333 14.1667C5.11167 14.1667 2.5 11.555 2.5 8.33333C2.5 5.11167 5.11167 2.5 8.33333 2.5C11.555 2.5 14.1667 5.11167 14.1667 8.33333Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+              </svg>
           </span>
           <input 
             type="text" 
@@ -613,11 +661,11 @@ export default function WhatsAppAutomationPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-      </div>
-      
+          </div>
+          
       {/* Mobile actions */}
       <div className="flex gap-2 mb-4">
-        <button
+            <button 
           onClick={handleCreateTemplate}
           className="flex-1 bg-white flex items-center justify-center gap-1 py-2 px-3 rounded-[10px] text-[#636363] text-sm hover:bg-gray-100"
         >
@@ -626,20 +674,20 @@ export default function WhatsAppAutomationPage() {
             <path d="M16 2V5" stroke="#636363" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M3.5 9.09H20.5" stroke="#636363" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#636363" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+              </svg>
           <span>{t('automation.createTemplate')}</span>
-        </button>
+            </button>
         
-        <button
+              <button 
           className="flex-1 bg-[#13A753] text-white flex items-center justify-center gap-1 py-2 px-3 rounded-[10px] text-sm hover:bg-[#0F8A44]"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M22 10V13C22 17 20 19 16 19H15.5C15.19 19 14.89 19.15 14.7 19.4L13.2 21.4C12.54 22.28 11.46 22.28 10.8 21.4L9.3 19.4C9.14 19.18 8.77 19 8.5 19H8C4 19 2 18 2 13V8C2 4 4 2 8 2H14" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M19.5 7C20.8807 7 22 5.88071 22 4.5C22 3.11929 20.8807 2 19.5 2C18.1193 2 17 3.11929 17 4.5C17 5.88071 18.1193 7 19.5 7Z" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+                </svg>
           <span>{t('automation.newMessage')}</span>
-        </button>
-      </div>
+              </button>
+            </div>
       
       {/* Message Form - Mobile */}
       <div className="bg-white p-4 rounded-[15px] shadow mb-4">
@@ -654,9 +702,9 @@ export default function WhatsAppAutomationPage() {
         {/* Recipient Selection */}
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('automation.recipient')}</label>
-          <select 
+                  <select 
             value={selectedRecipient ? `${selectedRecipientType}:${selectedRecipient}` : ''}
-            onChange={handleRecipientChange}
+                    onChange={handleRecipientChange} 
             className="w-full p-2.5 border border-gray-300 rounded-[10px] text-sm focus:ring-[#13A753] focus:border-[#13A753] shadow-sm"
           >
             <option value="">{t('automation.selectRecipient')}</option>
@@ -669,37 +717,37 @@ export default function WhatsAppAutomationPage() {
                   ))
                 : clients.map(client => (
                     <option key={`individual-${client.id}`} value={`individual:${client.id}`}>
-                      {client.name}
-                    </option>
-                  ))}
-            </optgroup>
+                              {client.name}
+                            </option>
+                    ))}
+                        </optgroup>
             <optgroup label={t('automation.groups')}>
-              {groups.map(group => (
-                <option key={`group-${group.id}`} value={`group:${group.id}`}>
-                  {group.name}
-                </option>
-              ))}
-            </optgroup>
-          </select>
-        </div>
-        
+                    {groups.map(group => (
+                            <option key={`group-${group.id}`} value={`group:${group.id}`}>
+                              {group.name}
+                            </option>
+                    ))}
+                        </optgroup>
+                  </select>
+              </div>
+              
         {/* Template Selection */}
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('automation.template')}</label>
-          <select 
-            value={selectedTemplate}
-            onChange={handleTemplateChange}
+                  <select 
+                    value={selectedTemplate} 
+                    onChange={handleTemplateChange} 
             className="w-full p-2.5 border border-gray-300 rounded-[10px] text-sm focus:ring-[#13A753] focus:border-[#13A753] shadow-sm"
-          >
+                  >
             <option value="">{t('automation.selectTemplate')}</option>
-            {messageTemplates.map(template => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        
+                    {messageTemplates.map(template => (
+                          <option key={template.id} value={template.id}>
+                            {template.name}
+                          </option>
+                    ))}
+                  </select>
+              </div>
+              
         {/* Message Preview */}
         {messagePreview && (
           <div className="mb-3">
@@ -713,17 +761,17 @@ export default function WhatsAppAutomationPage() {
         {/* Schedule Date */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">{t('automation.scheduleDate')}</label>
-          <input 
+                  <input 
             type="datetime-local" 
-            value={selectedDate}
-            onChange={handleDateChange}
+                    value={selectedDate} 
+                    onChange={handleDateChange} 
             className="w-full p-2.5 border border-gray-300 rounded-[10px] text-sm focus:ring-[#13A753] focus:border-[#13A753] shadow-sm"
-          />
-        </div>
-        
-        {/* Action Buttons */}
+                      />
+              </div>
+              
+                    {/* Action Buttons */}
         <div className="flex gap-2">
-          <button
+              <button 
             onClick={handleSendNow}
             className="flex-1 bg-[#13A753] text-white py-2.5 px-3 rounded-[10px] text-sm flex items-center justify-center gap-1"
           >
@@ -732,8 +780,8 @@ export default function WhatsAppAutomationPage() {
               <path d="M5.44 12H10.84" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             {t('automation.sendNow')}
-          </button>
-          <button
+              </button>
+              <button 
             onClick={handleScheduleMessage}
             className="flex-1 bg-white border border-[#13A753] text-[#13A753] py-2.5 px-3 rounded-[10px] text-sm flex items-center justify-center gap-1"
           >
@@ -744,9 +792,9 @@ export default function WhatsAppAutomationPage() {
               <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             {t('automation.schedule')}
-          </button>
-        </div>
-      </div>
+              </button>
+            </div>
+                  </div>
       
       {/* Message History - Mobile */}
       <div className="bg-white p-4 rounded-[15px] shadow">
@@ -768,8 +816,8 @@ export default function WhatsAppAutomationPage() {
               <path d="M18.7344 18.8V14.8" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </button>
-        </div>
-        
+                  </div>
+                  
         {/* Status Filter Pills - Mobile */}
         <div className="flex gap-1.5 mb-4 overflow-x-auto pb-2 -mx-1 px-1">
           <button className="px-2 py-1 bg-[#13A753] text-white rounded-full text-xs flex-shrink-0">
@@ -781,7 +829,7 @@ export default function WhatsAppAutomationPage() {
           <button className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs flex-shrink-0">
             {t('automation.scheduled')}
           </button>
-        </div>
+                        </div>
         
         {/* Message List */}
         {filteredMessages.length === 0 ? (
@@ -791,7 +839,7 @@ export default function WhatsAppAutomationPage() {
               <path d="M17 2.43994V12.4199C17 14.3899 15.59 15.1599 13.86 14.1199L12.54 13.3299C12.24 13.1499 11.76 13.1499 11.46 13.3299L10.14 14.1199C8.41 15.1499 7 14.3899 7 12.4199V2.43994" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <p className="mt-2 text-sm">{t('automation.noMessages')}</p>
-          </div>
+                        </div>
         ) : (
           <div className="divide-y divide-gray-200 -mx-4 border-t border-gray-200">
             {filteredMessages.map(message => (
@@ -810,7 +858,7 @@ export default function WhatsAppAutomationPage() {
                           <path d="M24 20.5C24 24.09 18.09 24 12 24C5.91 24 0 24.09 0 20.5C0 16.91 5.91 17 12 17C18.09 17 24 16.91 24 20.5Z" fill="#13A753"/>
                         </svg>
                       )}
-                    </div>
+                      </div>
                     <span className="text-sm font-medium">{message.recipient}</span>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-xs ${
@@ -823,7 +871,7 @@ export default function WhatsAppAutomationPage() {
                 </div>
                 <div className="mt-2 text-sm pl-9 line-clamp-2">{message.message}</div>
                 <div className="mt-1 text-xs text-gray-500 pl-9">{message.timestamp}</div>
-              </div>
+            </div>
             ))}
           </div>
         )}
@@ -836,7 +884,7 @@ export default function WhatsAppAutomationPage() {
     return (
       <div className="min-h-screen bg-[#1E1E1E] flex items-center justify-center">
         <div className="text-white">Loading data...</div>
-      </div>
+        </div>
     )
   }
 
@@ -856,7 +904,7 @@ export default function WhatsAppAutomationPage() {
       {/* Mobile View */}
       <div className="lg:hidden">
         {mobileContent}
-      </div>
+    </div>
     </DashboardLayout>
   )
 }

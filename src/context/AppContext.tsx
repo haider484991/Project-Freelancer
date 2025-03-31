@@ -1,4 +1,8 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Client } from '@/components/dashboard/ClientTable';
+import { Group } from '@/components/dashboard/GroupsTable';
 
 // Define client type
 export interface Client {
@@ -128,149 +132,281 @@ export const mockGroups: Group[] = [
   },
 ];
 
-// Define the context type
+// Define the AppContext type
 interface AppContextType {
-  // Clients
   clients: Client[];
-  addClient: (client: Omit<Client, 'id'>) => void;
-  updateClient: (client: Client) => void;
-  deleteClient: (id: string) => void;
-  toggleClientPush: (id: string, enabled: boolean) => void;
-  
-  // Groups
+  setClients: React.Dispatch<React.SetStateAction<Client[]>>;
   groups: Group[];
-  addGroup: (group: Omit<Group, 'id' | 'members' | 'createdAt'>) => void;
-  updateGroup: (group: Group) => void;
-  deleteGroup: (id: string) => void;
-  
-  // Available clients for selection
-  availableClients: { id: string; name: string }[];
+  setGroups: React.Dispatch<React.SetStateAction<Group[]>>;
+  addClient: (client: Client) => void;
+  updateClient: (clientId: string, updatedClient: Partial<Client>) => void;
+  deleteClient: (clientId: string) => void;
+  addGroup: (group: Group) => void;
+  updateGroup: (groupId: string, updatedGroup: Partial<Group>) => void;
+  deleteGroup: (groupId: string) => void;
+  togglePushNotification: (clientId: string, enabled: boolean) => Promise<void>;
+  notifications: Notification[];
+  addNotification: (notification: Notification) => void;
+  markNotificationAsRead: (id: string) => void;
+  clearNotifications: () => void;
+  notificationCount: number;
 }
 
-// Create the context
+// Notification type
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  timestamp: Date;
+  read: boolean;
+}
+
+// Create the AppContext
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Provider component
-export function AppProvider({ children }: { children: ReactNode }) {
-  // State for clients and groups
-  const [clients, setClients] = useState<Client[]>(mockClients);
-  const [groups, setGroups] = useState<Group[]>(mockGroups);
-  
-  // Derived state for available clients
-  const availableClients = clients.map(client => ({
-    id: client.id,
-    name: client.name
-  }));
-  
-  // Client operations
-  const addClient = (client: Omit<Client, 'id'>) => {
-    const newClient = {
-      ...client,
-      id: String(Date.now()),
-      pushEnabled: false
-    };
-    setClients(prevClients => [...prevClients, newClient]);
-  };
-  
-  const updateClient = (client: Client) => {
-    setClients(prevClients => 
-      prevClients.map(c => c.id === client.id ? client : c)
-    );
-  };
-  
-  const deleteClient = (id: string) => {
-    setClients(prevClients => prevClients.filter(c => c.id !== id));
-  };
-  
-  const toggleClientPush = (id: string, enabled: boolean) => {
-    setClients(prevClients => 
-      prevClients.map(c => c.id === id ? { ...c, pushEnabled: enabled } : c)
-    );
-  };
-  
-  // Group operations
-  const addGroup = (group: Omit<Group, 'id' | 'members' | 'createdAt'>) => {
-    const newGroup = {
-      ...group,
-      id: String(Date.now()),
-      members: group.clients?.length || 0,
-      createdAt: new Date().toLocaleDateString()
-    };
-    setGroups(prevGroups => [...prevGroups, newGroup]);
-  };
-  
-  const updateGroup = (group: Group) => {
-    // Ensure the members count is updated based on the clients array
-    const updatedGroup = {
-      ...group,
-      members: group.clients?.length || 0
-    };
-    
-    setGroups(prevGroups => 
-      prevGroups.map(g => g.id === updatedGroup.id ? updatedGroup : g)
-    );
-    
-    // Update client groups if the group name changed
-    const existingGroup = groups.find(g => g.id === group.id);
-    if (existingGroup && existingGroup.name !== group.name) {
-      setClients(prevClients => 
-        prevClients.map(c => 
-          c.group === existingGroup.name ? { ...c, group: group.name } : c
-        )
-      );
-    }
-  };
-  
-  const deleteGroup = (id: string) => {
-    const groupToDelete = groups.find(g => g.id === id);
-    setGroups(prevGroups => prevGroups.filter(g => g.id !== id));
-    
-    // Update clients that were in this group
-    if (groupToDelete) {
-      setClients(prevClients => 
-        prevClients.map(c => 
-          c.group === groupToDelete.name ? { ...c, group: '' } : c
-        )
-      );
-    }
-  };
-  
-  // Calculate members count for each group
+// AppProvider component
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
+
+  // Load notifications from localStorage on initial load
   useEffect(() => {
-    setGroups(prevGroups => 
-      prevGroups.map(group => {
-        // Use the clients array in the group to determine member count
-        const memberCount = group.clients?.length || 0;
-        return { ...group, members: memberCount };
-      })
-    );
-  }, [clients]);
-  
-  const value = {
-    clients,
-    addClient,
-    updateClient,
-    deleteClient,
-    toggleClientPush,
-    groups,
-    addGroup,
-    updateGroup,
-    deleteGroup,
-    availableClients
+    try {
+      const savedNotifications = localStorage.getItem('notifications');
+      if (savedNotifications) {
+        const parsedNotifications = JSON.parse(savedNotifications);
+        // Convert string dates back to Date objects
+        const processedNotifications = parsedNotifications.map((notif: any) => ({
+          ...notif,
+          timestamp: new Date(notif.timestamp)
+        }));
+        setNotifications(processedNotifications);
+        
+        // Count unread notifications
+        const unreadCount = processedNotifications.filter((n: Notification) => !n.read).length;
+        setNotificationCount(unreadCount);
+      }
+    } catch (error) {
+      console.error('Error loading notifications from localStorage:', error);
+    }
+  }, []);
+
+  // Save notifications to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+      
+      // Update notification count
+      const unreadCount = notifications.filter(n => !n.read).length;
+      setNotificationCount(unreadCount);
+    } catch (error) {
+      console.error('Error saving notifications to localStorage:', error);
+    }
+  }, [notifications]);
+
+  // Add a client
+  const addClient = (client: Client) => {
+    setClients(prevClients => [...prevClients, client]);
+    // Add notification when client is added
+    addNotification({
+      id: Date.now().toString(),
+      title: 'New Client Added',
+      message: `${client.name} has been added successfully.`,
+      type: 'success',
+      timestamp: new Date(),
+      read: false
+    });
   };
-  
+
+  // Update a client
+  const updateClient = (clientId: string, updatedClient: Partial<Client>) => {
+    setClients(prevClients => 
+      prevClients.map(client => 
+        client.id === clientId ? { ...client, ...updatedClient } : client
+      )
+    );
+    // Add notification when client is updated
+    addNotification({
+      id: Date.now().toString(),
+      title: 'Client Updated',
+      message: `Client information has been updated successfully.`,
+      type: 'info',
+      timestamp: new Date(),
+      read: false
+    });
+  };
+
+  // Delete a client
+  const deleteClient = (clientId: string) => {
+    const clientToDelete = clients.find(client => client.id === clientId);
+    setClients(prevClients => prevClients.filter(client => client.id !== clientId));
+    
+    // Add notification when client is deleted
+    if (clientToDelete) {
+      addNotification({
+        id: Date.now().toString(),
+        title: 'Client Deleted',
+        message: `${clientToDelete.name} has been deleted.`,
+        type: 'warning',
+        timestamp: new Date(),
+        read: false
+      });
+    }
+  };
+
+  // Add a group
+  const addGroup = (group: Group) => {
+    setGroups(prevGroups => [...prevGroups, group]);
+    // Add notification when group is added
+    addNotification({
+      id: Date.now().toString(),
+      title: 'New Group Created',
+      message: `Group "${group.name}" has been created successfully.`,
+      type: 'success',
+      timestamp: new Date(),
+      read: false
+    });
+  };
+
+  // Update a group
+  const updateGroup = (groupId: string, updatedGroup: Partial<Group>) => {
+    setGroups(prevGroups => 
+      prevGroups.map(group => 
+        group.id === groupId ? { ...group, ...updatedGroup } : group
+      )
+    );
+    // Add notification when group is updated
+    addNotification({
+      id: Date.now().toString(),
+      title: 'Group Updated',
+      message: `Group information has been updated successfully.`,
+      type: 'info',
+      timestamp: new Date(),
+      read: false
+    });
+  };
+
+  // Delete a group
+  const deleteGroup = (groupId: string) => {
+    const groupToDelete = groups.find(group => group.id === groupId);
+    setGroups(prevGroups => prevGroups.filter(group => group.id !== groupId));
+    
+    // Add notification when group is deleted
+    if (groupToDelete) {
+      addNotification({
+        id: Date.now().toString(),
+        title: 'Group Deleted',
+        message: `Group "${groupToDelete.name}" has been deleted.`,
+        type: 'warning',
+        timestamp: new Date(),
+        read: false
+      });
+    }
+  };
+
+  // Toggle push notification for a client
+  const togglePushNotification = async (clientId: string, enabled: boolean) => {
+    try {
+      // Update client in state
+      setClients(prevClients => 
+        prevClients.map(client => 
+          client.id === clientId ? { ...client, pushEnabled: enabled } : client
+        )
+      );
+      
+      // Get the client that was updated
+      const client = clients.find(c => c.id === clientId);
+      
+      // Add notification
+      addNotification({
+        id: Date.now().toString(),
+        title: 'Notification Settings Updated',
+        message: `Push notifications ${enabled ? 'enabled' : 'disabled'} for ${client?.name || 'client'}.`,
+        type: 'info',
+        timestamp: new Date(),
+        read: false
+      });
+      
+      // Here you would typically make an API call to update the server
+      // For now we'll just resolve the promise after a short delay
+      return new Promise<void>((resolve) => {
+        setTimeout(resolve, 500);
+      });
+    } catch (error) {
+      console.error('Error toggling push notification:', error);
+      throw error;
+    }
+  };
+
+  // Add a notification
+  const addNotification = (notification: Notification) => {
+    setNotifications(prev => [notification, ...prev]);
+    
+    // Show browser notification if supported
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(notification.title, {
+        body: notification.message,
+        icon: '/logo.png'
+      });
+    }
+    
+    // Play notification sound if available
+    try {
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(e => console.log('Audio play failed:', e));
+    } catch (e) {
+      console.log('Audio not supported:', e);
+    }
+  };
+
+  // Mark a notification as read
+  const markNotificationAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
+
+  // Clear all notifications
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider
+      value={{
+        clients,
+        setClients,
+        groups,
+        setGroups,
+        addClient,
+        updateClient,
+        deleteClient,
+        addGroup,
+        updateGroup,
+        deleteGroup,
+        togglePushNotification,
+        notifications,
+        addNotification,
+        markNotificationAsRead,
+        clearNotifications,
+        notificationCount
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
-}
+};
 
-// Custom hook to use the context
-export function useAppContext() {
+// Custom hook for using the AppContext
+export const useAppContext = () => {
   const context = useContext(AppContext);
   if (context === undefined) {
     throw new Error('useAppContext must be used within an AppProvider');
   }
   return context;
-}
+};

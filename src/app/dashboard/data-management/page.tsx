@@ -12,7 +12,9 @@ import CaloricTrendsChart from './components/CaloricTrendsChart'
 import ComplianceRateWidget from './components/ComplianceRateWidget'
 import InactiveClientsWidget from './components/InactiveClientsWidget'
 import { traineesApi, reportingsApi } from '@/services/fitTrackApi'
-import { DEBUG_MODE } from '@/utils/config'
+import { DEBUG_MODE, parseApiResponse } from '@/utils/config'
+import { useTranslation } from 'react-i18next'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 // Define API response types
 interface ApiTrainee {
@@ -67,14 +69,21 @@ interface PageClient {
 }
 
 const DataManagementPage: React.FC = () => {
+  const { t } = useTranslation();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [selectedWeek, setSelectedWeek] = useState('Week 1')
   const [selectedClientFilter, setSelectedClientFilter] = useState('All Clients')
   // Use the context as fallback
   const { clients: contextClients } = useAppContext()
   
-  // API data states
+  // State for API data
   const [apiTrainees, setApiTrainees] = useState<ApiTrainee[]>([])
   const [apiReportings, setApiReportings] = useState<ApiReporting[]>([])
+  
+  // State for tracking if API has already loaded
+  const [hasLoaded, setHasLoaded] = useState(false)
+  
+  // Other state
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -86,50 +95,96 @@ const DataManagementPage: React.FC = () => {
     { id: '4', type: 'Export', filename: 'client_reports.pdf', status: 'pending', date: '2023-05-20' }
   ])
 
-  // Fetch data from the API with retry mechanism
+  // Use API data or fall back to context
+  const clients = apiTrainees.length > 0 
+    ? apiTrainees.map(trainee => ({
+        id: trainee.id,
+        name: trainee.name,
+        image: '/images/profile.jpg',
+        status: trainee.is_active === '1' ? 'active' : 'inactive',
+        compliance: 'compliant' // Default since API doesn't provide this
+      } as PageClient))
+    : [] // No longer fall back to context clients, return empty array
+
+  // Derived data for statistics
+  const activeClients = apiTrainees.length > 0 
+    ? apiTrainees.filter(trainee => trainee.is_active === '1')
+    : [] // Return empty array instead of falling back to context
+
+  // Ensure inactiveClients is of type PageClient[] for component compatibility
+  const inactiveClients: PageClient[] = apiTrainees.length > 0
+    ? apiTrainees.filter(trainee => trainee.is_active !== '1').map(trainee => ({
+        id: trainee.id,
+        name: trainee.name,
+        image: '/images/profile.jpg', // Default image
+        status: 'inactive',
+        compliance: 'non-compliant' // Default value since API doesn't provide this
+      }))
+    : [] // Return empty array instead of falling back to context
+
+  // Calculate compliance rate from API data if available
+  const complianceRate = apiReportings.length > 0 && apiTrainees.length > 0
+    ? Math.round((apiReportings.filter(report => {
+        // Consider a client compliant if they have at least one reporting
+        return apiTrainees.some(trainee => trainee.id === report.trainee_id)
+      }).length / apiTrainees.length) * 100)
+    : 0
+
+  // Fetch API data on component mount
   useEffect(() => {
-    const fetchData = async (retryCount = 0) => {
-      setLoading(true)
-      setError(null)
+    // Skip if already loaded to prevent infinite API calls
+    if (hasLoaded) return;
+    
+    // Fetch trainees and reportings from API
+    const fetchData = async () => {
       try {
-        // Fetch trainees
+        setLoading(true)
+        setError(null)
+        
+        // Fetch trainees data
         const traineesResponse = await traineesApi.list()
-        if (traineesResponse.data && traineesResponse.data.trainees) {
-          setApiTrainees(traineesResponse.data.trainees)
-          if (DEBUG_MODE) {
-            console.log('Fetched trainees:', traineesResponse.data.trainees)
-          }
-        } else if (DEBUG_MODE) {
-          console.warn('No trainees data in API response:', traineesResponse)
+        
+        // Log the actual response structure for debugging
+        console.log('Trainees API Response:', traineesResponse);
+        
+        // Parse trainees using our helper function
+        const trainees = parseApiResponse(traineesResponse.data);
+        
+        // If we found trainees, use them
+        if (trainees.length > 0) {
+          setApiTrainees(trainees as ApiTrainee[]);
+        } else {
+          console.warn('Could not extract trainees from response:', traineesResponse.data);
+          throw new Error('Unable to extract trainee data from API response');
         }
 
         // Fetch reportings
         const reportingsResponse = await reportingsApi.list()
-        if (reportingsResponse.data && reportingsResponse.data.reportings) {
-          setApiReportings(reportingsResponse.data.reportings)
-          if (DEBUG_MODE) {
-            console.log('Fetched reportings:', reportingsResponse.data.reportings)
-          }
-        } else if (DEBUG_MODE) {
-          console.warn('No reportings data in API response:', reportingsResponse)
+        
+        // Log the response structure for debugging
+        console.log('Reportings API Response:', reportingsResponse);
+        
+        // Parse reportings using our helper function
+        const reportings = parseApiResponse(reportingsResponse.data);
+        
+        // If we found reportings, use them
+        if (reportings.length > 0) {
+          setApiReportings(reportings as ApiReporting[]);
+        } else {
+          console.warn('Could not extract reportings from response:', reportingsResponse.data);
+          throw new Error('Unable to extract reporting data from API response');
         }
       } catch (err) {
         console.error('Error fetching data:', err)
-        setError('Failed to load data. Using cached data instead.')
-        
-        // Retry up to 3 times with increasing delay
-        if (retryCount < 3) {
-          setTimeout(() => {
-            fetchData(retryCount + 1)
-          }, 1000 * (retryCount + 1)) // 1s, 2s, 3s delays
-        }
+        setError('Failed to load data from API. Please check your connection and try again.')
       } finally {
         setLoading(false)
+        setHasLoaded(true) // Mark as loaded to prevent re-fetching
       }
     }
 
     fetchData()
-  }, [])
+  }, [hasLoaded])
 
   // Function to handle client filter change
   const handleClientFilterChange = (filter: string) => {
@@ -140,47 +195,6 @@ const DataManagementPage: React.FC = () => {
   const handleWeekChange = (week: string) => {
     setSelectedWeek(week)
   }
-
-  // Use API data or fall back to context
-  const clients = apiTrainees.length > 0 
-    ? apiTrainees.map(trainee => ({
-        id: trainee.id,
-        name: trainee.name,
-        image: '/images/profile.jpg',
-        status: trainee.is_active === '1' ? 'active' : 'inactive',
-        compliance: 'compliant' // Default since API doesn't provide this
-      } as PageClient))
-    : contextClients.map(client => ({
-        id: client.id,
-        name: client.name,
-        image: client.image || '/images/profile.jpg',
-        status: client.status || 'inactive',
-        compliance: client.compliance || 'non-compliant'
-      } as PageClient))
-
-  // Derived data for statistics
-  const activeClients = apiTrainees.length > 0 
-    ? apiTrainees.filter(trainee => trainee.is_active === '1')
-    : clients.filter(client => client.status === 'active')
-    
-  // Ensure inactiveClients is of type PageClient[] for component compatibility
-  const inactiveClients: PageClient[] = apiTrainees.length > 0
-    ? apiTrainees.filter(trainee => trainee.is_active !== '1').map(trainee => ({
-        id: trainee.id,
-        name: trainee.name,
-        image: '/images/profile.jpg', // Default image
-        status: 'inactive',
-        compliance: 'non-compliant' // Default value since API doesn't provide this
-      }))
-    : clients.filter(client => client.status === 'inactive')
-    
-  // Calculate compliance rate from API data if available
-  const complianceRate = apiReportings.length > 0 && apiTrainees.length > 0
-    ? Math.round((apiReportings.filter(report => {
-        // Consider a client compliant if they have at least one reporting
-        return apiTrainees.some(trainee => trainee.id === report.trainee_id)
-      }).length / apiTrainees.length) * 100)
-    : 0
 
   // Generate weekly data from reportings if available
   const weeklyData: WeeklyData[] = apiReportings.length > 0 
@@ -381,14 +395,16 @@ const DataManagementPage: React.FC = () => {
     try {
       // Fetch trainees
       const traineesResponse = await traineesApi.list()
-      if (traineesResponse.data && traineesResponse.data.trainees) {
-        setApiTrainees(traineesResponse.data.trainees)
+      const trainees = parseApiResponse(traineesResponse.data);
+      if (trainees.length > 0) {
+        setApiTrainees(trainees as ApiTrainee[]);
       }
 
       // Fetch reportings
       const reportingsResponse = await reportingsApi.list()
-      if (reportingsResponse.data && reportingsResponse.data.reportings) {
-        setApiReportings(reportingsResponse.data.reportings)
+      const reportings = parseApiResponse(reportingsResponse.data);
+      if (reportings.length > 0) {
+        setApiReportings(reportings as ApiReporting[]);
       }
     } catch (err) {
       console.error('Error refreshing data:', err)
@@ -423,7 +439,7 @@ const DataManagementPage: React.FC = () => {
       // For now, we'll just log the data
       if (DEBUG_MODE) {
         console.log('Exporting data:', {
-          clients: apiTrainees.length > 0 ? apiTrainees : contextClients,
+          clients: apiTrainees,
           reportings: apiReportings
         })
       }
@@ -501,7 +517,7 @@ const DataManagementPage: React.FC = () => {
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500 mb-1">Total Clients</p>
-            <h3 className="text-2xl font-bold">{apiTrainees.length || clients.length}</h3>
+            <h3 className="text-2xl font-bold">{apiTrainees.length}</h3>
             <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -588,7 +604,7 @@ const DataManagementPage: React.FC = () => {
             dataActivities={dataActivities}
           />
         </div>
-      </div>
+          </div>
     </>
   )
 
@@ -647,7 +663,7 @@ const DataManagementPage: React.FC = () => {
             </div>
             <p className="text-xs text-gray-500">Total Clients</p>
           </div>
-          <h3 className="text-xl font-bold">{apiTrainees.length || clients.length}</h3>
+          <h3 className="text-xl font-bold">{apiTrainees.length}</h3>
         </div>
         
         <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
@@ -733,28 +749,33 @@ const DataManagementPage: React.FC = () => {
 
   return (
     <DashboardLayout
-      pageTitle="Data Analytics"
+      pageTitle={t('dataManagement.title')}
       pageIcon={dataPageIcon}
-      profileName="Alex Dube"
-      profileRole="admin"
-      notificationCount={3}
     >
-      {/* Error message if any */}
+      {/* Error notification */}
       {error && (
-        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+          <strong className="font-bold mr-1">Error:</strong>
           <span className="block sm:inline">{error}</span>
-        </div>
+          <button 
+            className="absolute top-0 bottom-0 right-0 px-4 py-3"
+            onClick={() => setError(null)}
+          >
+            <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Close</title>
+              <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+            </button>
+          </div>
       )}
 
-      {/* Desktop View */}
-      <div className="hidden lg:block">
-        {desktopContent}
-      </div>
-
-      {/* Mobile View */}
-      <div className="lg:hidden">
-        {mobileContent}
-      </div>
+      {loading ? (
+        <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#13A753]"></div>
+        </div>
+      ) : (
+        isMobile ? mobileContent : desktopContent
+      )}
     </DashboardLayout>
   )
 }

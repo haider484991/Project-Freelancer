@@ -70,22 +70,22 @@ const ComplianceRateWidget: React.FC<ComplianceRateWidgetProps> = ({
         <div className="flex justify-center items-center">
           <div className="relative w-[120px] h-[120px]">
             {/* Background Circle */}
-            <svg className="w-full h-full" viewBox="0 0 36 36">
+          <svg className="w-full h-full" viewBox="0 0 36 36">
               <circle cx="18" cy="18" r="16" fill="white" stroke="#F3F7F3" strokeWidth="3.5"></circle>
               {/* Progress Circle */}
-              <circle
-                cx="18" cy="18" r="16"
-                fill="none"
+            <circle
+              cx="18" cy="18" r="16"
+              fill="none"
                 stroke={getColor()}
                 strokeWidth="3.5"
-                strokeDasharray="100.5"
+              strokeDasharray="100.5"
                 strokeDashoffset={100.5 - (animatedRate / 100) * 100.5}
-                transform="rotate(-90 18 18)"
+              transform="rotate(-90 18 18)"
                 style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
-              ></circle>
-            </svg>
+            ></circle>
+          </svg>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[12px] text-gray-500">{t('Rate')}</span>
               <span className="text-[22px] font-bold text-gray-800">{animatedRate}%</span>
               <span className="text-[10px] text-gray-500">{selectedWeek}</span>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { settingsApi } from '@/services/fitTrackApi';
+import { parseApiResponse } from '@/utils/config';
 
 // Define user profile interface
 export interface UserProfile {
@@ -46,19 +47,29 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await settingsApi.get();
-        if (response.data && response.data.settings) {
-          const settings = response.data.settings;
+        // Use parseApiResponse to handle different response formats
+        const settingsArray = parseApiResponse(response.data);
+        
+        if (settingsArray && settingsArray.length > 0) {
+          // Find profile-related settings
+          const profileSettings = settingsArray.find(
+            setting => setting.type === 'profile' || setting.type === 'user'
+          ) || settingsArray[0]; // Fallback to first item
+          
+          // Company settings may be in a different item
+          const companySettings = settingsArray.find(
+            setting => setting.type === 'company' || setting.type === 'company_info'
+          );
           
           // Update profile with API data
           setProfile(prevProfile => ({
             ...prevProfile,
-            name: settings.company_name || prevProfile.name,
-            email: settings.email || prevProfile.email,
-            phone: settings.phone || prevProfile.phone,
-            image: settings.logo_url || prevProfile.image,
-            // Keep existing role and notification count if not in API
-            role: settings.role || prevProfile.role,
-            notificationCount: settings.unread_notifications || prevProfile.notificationCount
+            name: profileSettings.name || companySettings?.company_name || prevProfile.name,
+            email: profileSettings.email || companySettings?.email || prevProfile.email,
+            phone: profileSettings.phone || companySettings?.phone || prevProfile.phone,
+            image: profileSettings.image || profileSettings.logo_url || companySettings?.logo || prevProfile.image,
+            role: profileSettings.role || prevProfile.role,
+            notificationCount: parseInt(profileSettings.unread_notifications || '0') || prevProfile.notificationCount
           }));
         }
       } catch (err) {
@@ -89,7 +100,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         logo_url: profile.image
       });
       
-      if (!response.data || !response.data.success) {
+      // Use the parseApiResponse utility to check success status
+      const responseData = parseApiResponse(response.data);
+      
+      if (!responseData || responseData.length === 0 || !responseData[0].success) {
         throw new Error('Failed to save profile');
       }
       

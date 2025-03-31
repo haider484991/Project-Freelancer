@@ -82,11 +82,35 @@ const menuItems = [
   }
 ]
 
+// Filter out the hidden menu items
+const visibleMenuItems = menuItems.filter(item => 
+  item.href !== '/dashboard' && // Hide Dashboard
+  item.href !== '/dashboard/automation' && // Hide WhatsApp Automation
+  item.href !== '/dashboard/data-management' // Hide Data Analytics
+);
+
+// Add a new "Reportings" menu item
+const updatedMenuItems = [
+  ...visibleMenuItems,
+  {
+    title: 'sidebar.reportings',
+    href: '/dashboard/reportings',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 10H5C3.9 10 3 9.1 3 8V5C3 3.9 3.9 3 5 3H8C9.1 3 10 3.9 10 5V8C10 9.1 9.1 10 8 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M19 10H16C14.9 10 14 9.1 14 8V5C14 3.9 14.9 3 16 3H19C20.1 3 21 3.9 21 5V8C21 9.1 20.1 10 19 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M8 21H5C3.9 21 3 20.1 3 19V16C3 14.9 3.9 14 5 14H8C9.1 14 10 14.9 10 16V19C10 20.1 9.1 21 8 21Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M20 15.55H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M20 19.55H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    )
+  }
+];
+
 export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const { t, i18n } = useTranslation()
   const [isRtl, setIsRtl] = useState(false)
-  const { profile } = useUser()
   
   // Check if current language is RTL
   useEffect(() => {
@@ -96,43 +120,29 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
   
   return (
     <aside className={`${isMobile 
-      ? 'relative w-full' 
-      : 'w-[304px] h-full'
-    } p-[30px] bg-transparent z-20 ${isRtl ? 'rtl' : 'ltr'}`}>
+      ? 'relative w-full text-white' 
+      : 'w-[304px] h-full text-white'
+    } p-[30px] bg-black/50 backdrop-blur-sm z-20 ${isRtl ? 'rtl' : 'ltr'}`}>
       {/* Logo */}
-      <div className="flex flex-col gap-[5px]">
-        <h1 className="font-michael text-primary text-[29px] uppercase tracking-[0.04em] leading-[100%] font-bold">
+      <div className="flex flex-col gap-[5px] bg-black/30 p-3 rounded-lg">
+        <h1 className="font-michael text-primary text-[29px] uppercase tracking-[0.04em] leading-[100%] font-bold text-shadow-lg">
           FITTrack
         </h1>
-        <p className="text-gray-700 text-[11px] font-semibold tracking-[0.04em] capitalize">
+        <p className="text-white text-[11px] font-semibold tracking-[0.04em] capitalize text-shadow-md">
           fitness & nutrition tracking
         </p>
       </div>
 
-      {/* User Profile Section */}
-      <div className="mt-8 flex items-center gap-3">
-        <ProfileAvatar 
-          src={profile.image} 
-          alt={profile.name}
-          size={40}
-        />
-        <div>
-          <p className="text-gray-800 font-semibold text-sm">{profile.name}</p>
-          <p className="text-gray-600 text-xs">{t(`common.${profile.role}`)}</p>
-        </div>
-      </div>
-
-      {/* Navigation Menu */}
-      <nav className={`${isMobile ? 'mt-[30px]' : 'mt-[60px]'} flex flex-col gap-[36px]`}>
-        {menuItems.map((item) => {
+      {/* Navigation Menu - without profile section */}
+      <nav className="mt-[60px] flex flex-col gap-[20px]">
+        {updatedMenuItems.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-[14px] ${
-                isActive ? 'text-primary' : 'text-gray-700'
-              } hover:text-primary transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
+              className={`flex items-center gap-[14px] text-white hover:text-primary transition-colors ${isRtl ? 'flex-row-reverse' : ''} 
+              p-3 rounded-lg ${isActive ? 'bg-black/40' : 'hover:bg-black/20'} text-shadow-md`}
               onClick={isMobile && onClose ? onClose : undefined}
             >
               <span className="w-6 h-6">
@@ -144,15 +154,23 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
         })}
       </nav>
 
-      {/* Language Switcher */}
-      <div className={`mt-[36px] ${isRtl ? 'mr-auto' : 'ml-auto'}`}>
-          <LanguageSwitcher />
-        </div>
-
       {/* Logout Button */}
       <div className="mt-[36px]">
         <LogoutButton />
       </div>
+      
+      {/* Custom styles for text shadow */}
+      <style jsx global>{`
+        .text-shadow-sm {
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .text-shadow-md {
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        .text-shadow-lg {
+          text-shadow: 0 4px 6px rgba(0, 0, 0, 0.9);
+        }
+      `}</style>
     </aside>
   )
 }

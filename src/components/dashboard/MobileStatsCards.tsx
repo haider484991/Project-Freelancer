@@ -2,16 +2,36 @@
 
 import { useAppContext } from '@/context/AppContext'
 
-const MobileStatsCards = () => {
-  const { clients } = useAppContext()
+interface MobileStatsCardsProps {
+  totalClients: number;
+  inactiveClients: number;
+  reportData?: {
+    averageCalories?: number;
+    goalCompletionRate?: number;
+    averageProtein?: number;
+  };
+}
+
+const MobileStatsCards = ({ 
+  totalClients, 
+  inactiveClients, 
+  reportData = {} 
+}: MobileStatsCardsProps) => {
+  // Use provided data instead of calculating from context
+  const activeClients = totalClients - inactiveClients
   
-  // Calculate statistics from real client data
-  const activeClients = clients.filter(client => client.status === 'active').length
-  const averageCaloricIntake = '2200 klc' // This would be calculated from actual client data
-  const goalStatus = clients.length > 0 ? 
-    Math.round((clients.filter(client => client.goalsMet !== undefined && client.goalsMet > 70).length / clients.length) * 100) + '%' : 
-    'No Data'
-  const proteinIntake = '150 g' // This would be calculated from actual client data
+  // Use real data from API if available, fallback to placeholder text if not
+  const averageCaloricIntake = reportData.averageCalories 
+    ? `${reportData.averageCalories} kcal` 
+    : 'No data';
+    
+  const goalStatus = reportData.goalCompletionRate 
+    ? `${reportData.goalCompletionRate}%` 
+    : 'No data';
+    
+  const proteinIntake = reportData.averageProtein 
+    ? `${reportData.averageProtein} g` 
+    : 'No data';
   
   const statsData = [
     {

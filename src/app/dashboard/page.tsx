@@ -1,14 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import { dashboardApi, traineesApi } from '@/services/fitTrackApi'
+import { dashboardApi, traineesApi, reportingsApi, groupsApi } from '@/services/fitTrackApi'
 import { mockDashboardData } from '@/services/mockData'
-import { DEBUG_MODE } from '@/utils/config'
+import { DEBUG_MODE, parseApiResponse } from '@/utils/config'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useUser } from '@/context/UserContext'
 import Image from 'next/image'
+import StatsCards from '@/components/dashboard/StatsCards'
+import FlaggedIssues from '@/components/dashboard/FlaggedIssues'
+import ClientDistributionChart from '@/components/dashboard/ClientDistributionChart'
+import MobileStatsCards from '@/components/dashboard/MobileStatsCards'
 
 // Define the dashboard data interface
 interface DashboardData {
@@ -56,9 +60,99 @@ export default function DashboardPage() {
   const [recentActivity, setRecentActivity] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [trainees, setTrainees] = useState<Trainee[]>([])
+  const [reportings, setReportings] = useState<any[]>([])
+  const [groups, setGroups] = useState<any[]>([])
   
+  // State for tracking if API has already loaded
+  const [hasLoaded, setHasLoaded] = useState(false)
+  
+  // Fetch trainees from API
+  useEffect(() => {
+    // Skip if already loaded to prevent infinite API calls
+    if (hasLoaded) return;
+    
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch trainees
+        const traineeResponse = await traineesApi.get('');
+        const traineeData = parseApiResponse(traineeResponse.data);
+        setTrainees(traineeData as Trainee[]);
+        
+        // Fetch report data for statistics
+        const reportResponse = await reportingsApi.get('');
+        const reportData = parseApiResponse(reportResponse.data);
+        setReportings(reportData);
+        
+        // Fetch groups data
+        const groupResponse = await groupsApi.get('');
+        const groupData = parseApiResponse(groupResponse.data);
+        setGroups(groupData);
+        
+        setLoading(false);
+        setHasLoaded(true); // Mark as loaded to prevent re-fetching
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setError('Failed to load data');
+        setLoading(false);
+        setHasLoaded(true); // Still mark as loaded to prevent constant re-fetching on error
+      }
+    };
+
+    fetchData();
+  }, [hasLoaded]);
+  
+  // Calculate analytics data from API responses
+  const analytics = useMemo(() => {
+    const totalTrainees = trainees.length;
+    const inactiveTrainees = trainees.filter(trainee => trainee.is_active === '0').length;
+    
+    // Calculate caloric and protein analytics from reportings
+    const caloriesValues = reportings
+      .filter(report => report.calories && !isNaN(parseInt(report.calories)))
+      .map(report => parseInt(report.calories));
+      
+    const proteinValues = reportings
+      .filter(report => report.protein && !isNaN(parseInt(report.protein)))
+      .map(report => parseInt(report.protein));
+    
+    const averageCalories = caloriesValues.length > 0
+      ? Math.round(caloriesValues.reduce((sum, val) => sum + val, 0) / caloriesValues.length)
+      : 0;
+      
+    const averageProtein = proteinValues.length > 0
+      ? Math.round(proteinValues.reduce((sum, val) => sum + val, 0) / proteinValues.length)
+      : 0;
+    
+    // Calculate goal completion rate (approximate based on available data)
+    const goalCompletionRate = reportings.length > 0
+      ? Math.round((reportings.filter(r => r.status === 'completed' || parseInt(r.calories || '0') > 0).length / reportings.length) * 100)
+      : 0;
+    
+    return {
+      totalTrainees,
+      inactiveTrainees,
+      averageCalories,
+      averageProtein,
+      goalCompletionRate
+    };
+  }, [trainees, reportings]);
+  
+  // Prepare group data for chart
+  const groupsDataForChart = useMemo(() => {
+    return groups.map(group => ({
+      name: group.name,
+      trainees_count: parseInt(group.members || '0')
+    }));
+  }, [groups]);
+
   // Fetch dashboard data
   useEffect(() => {
+    // Skip if already loaded
+    if (hasLoaded) return;
+    
     const fetchDashboardData = async () => {
       setLoading(true)
       try {
@@ -99,11 +193,12 @@ export default function DashboardPage() {
         setError(null) // Clear any error since we're using fallback data
       } finally {
         setLoading(false)
+        setHasLoaded(true) // Mark as loaded to prevent re-fetching
       }
     }
     
     fetchDashboardData()
-  }, [])
+  }, [hasLoaded])
 
   // CSS animations for the dashboard
   const animations = `
@@ -209,100 +304,23 @@ export default function DashboardPage() {
       <style jsx>{animations}</style>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-delay-1">
-          <div className="flex items-center gap-4">
-            <div className="bg-[#13A753]/10 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#13A753"/>
-                <path d="M16.3598 3.08C16.7398 3.02 17.1298 3 17.5098 3C19.9898 3 21.9998 5.01 21.9998 7.5C21.9998 9.99 19.9898 12 17.5098 12C16.2598 12 15.1198 11.5 14.2998 10.68" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17C2 14.79 3.79 13 6 13H12C14.21 13 16 14.79 16 17V20C16 20.55 15.55 21 15 21H3C2.45 21 2 20.55 2 20V17Z" fill="#13A753" fillOpacity="0.6"/>
-                <path d="M17.5 21H20.5C21.05 21 21.5 20.55 21.5 20V17C21.5 14.79 19.71 13 17.5 13C16.53 13 15.63 13.33 14.96 13.88" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800">{totalClients}</h3>
-              <p className="text-gray-500">{t('dashboard.totalClients')}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-delay-2">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-50 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800">{activeClientsCount}</h3>
-              <p className="text-gray-500">{t('dashboard.activeClients')}</p>
-            </div>
-              </div>
-                </div>
-                
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-delay-3">
-          <div className="flex items-center gap-4">
-            <div className="bg-amber-50 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800">{inactiveClientsCount}</h3>
-              <p className="text-gray-500">{t('dashboard.inactiveClients')}</p>
-                  </div>
-                </div>
-              </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 staggered-delay-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-purple-50 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15.6947 13.7H15.7037" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15.6947 16.7H15.7037" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9955 13.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9955 16.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8.29431 13.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8.29431 16.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-800">{`${complianceRate}%`}</h3>
-              <p className="text-gray-500">{t('dashboard.complianceRate')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StatsCards 
+        totalClients={analytics.totalTrainees}
+        inactiveClients={analytics.inactiveTrainees}
+        reportData={{
+          averageCalories: analytics.averageCalories,
+          goalCompletionRate: analytics.goalCompletionRate,
+          averageProtein: analytics.averageProtein
+        }}
+      />
       
       {/* Charts and Data Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Client Distribution Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md border border-gray-100 animate-fade-in animate-grow">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Weekly Activity
-          </h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={dashboardData?.weekly_data || []}
-                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" name="Clients" fill="#13A753" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="col-span-1 animate-fade-in staggered-delay-3">
+          <ClientDistributionChart 
+            groupsData={groupsDataForChart}
+          />
         </div>
         
         {/* Client Distribution by Group */}
@@ -314,7 +332,7 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={dashboardData?.groups_distribution || []}
+                  data={groupsDataForChart}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -324,7 +342,7 @@ export default function DashboardPage() {
                   nameKey="name"
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                 >
-                  {dashboardData?.groups_distribution?.map((entry, index) => (
+                  {groupsDataForChart.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={['#13A753', '#4285F4', '#F59E0B', '#8B5CF6', '#EC4899'][index % 5]} 
@@ -340,38 +358,12 @@ export default function DashboardPage() {
       
       {/* Inactive Client Alerts and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Flagged Issues / Inactive Clients */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md border border-gray-100 animate-fade-in animate-grow">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
-            Flagged Issues
-          </h3>
-          
-          {inactiveTrainees.length > 0 ? (
-            <div className="space-y-4">
-              {inactiveTrainees.map(trainee => (
-                <div key={trainee.id} className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                  <div className="bg-amber-50 p-2 rounded-full">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-800">{trainee.name}</h4>
-                    <p className="text-sm text-gray-500">Inactive client account</p>
-                  </div>
-                  <button className="text-[#13A753] hover:text-[#0F8A44] font-medium text-sm transition-colors">
-                    Contact
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-32 bg-gray-50 rounded-xl">
-              <p className="text-gray-500">No flagged issues at this time</p>
-            </div>
-          )}
+        {/* Flagged Issues */}
+        <div className="col-span-1 animate-fade-in staggered-delay-2">
+          <FlaggedIssues 
+            inactiveClients={analytics.inactiveTrainees} 
+            inactiveTraineesList={trainees.filter(trainee => trainee.is_active === '0')}
+          />
         </div>
         
         {/* Recent Activity */}
@@ -418,63 +410,16 @@ export default function DashboardPage() {
     <>
       <style jsx>{animations}</style>
       
-      {/* Mobile Stats Widgets - Scrollable horizontally */}
-      <div className="flex overflow-x-auto gap-3 pb-2 mb-5 hide-scrollbar">
-        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[160px] animate-fade-in staggered-delay-1">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-[#13A753]/10 p-2 rounded-full">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" fill="#13A753"/>
-                <path d="M2 17C2 14.79 3.79 13 6 13H12C14.21 13 16 14.79 16 17V20C16 20.55 15.55 21 15 21H3C2.45 21 2 20.55 2 20V17Z" fill="#13A753" fillOpacity="0.6"/>
-              </svg>
-            </div>
-            <span className="text-xs text-gray-500">{t('dashboard.totalClients')}</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-800">{totalClients}</h3>
-        </div>
-        
-        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[160px] animate-fade-in staggered-delay-2">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-blue-50 p-2 rounded-full">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-xs text-gray-500">{t('dashboard.activeClients')}</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-800">{activeClientsCount}</h3>
-          </div>
-          
-        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[160px] animate-fade-in staggered-delay-3">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-amber-50 p-2 rounded-full">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              </div>
-            <span className="text-xs text-gray-500">{t('dashboard.inactiveClients')}</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-800">{inactiveClientsCount}</h3>
-        </div>
-        
-        <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 min-w-[160px] animate-fade-in staggered-delay-4">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-purple-50 p-2 rounded-full">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-            </div>
-            <span className="text-xs text-gray-500">{t('dashboard.complianceRate')}</span>
-          </div>
-          <h3 className="text-xl font-bold text-gray-800">{`${complianceRate}%`}</h3>
-        </div>
-      </div>
+      {/* Mobile Stats Cards with Real API Data */}
+      <MobileStatsCards 
+        totalClients={analytics.totalTrainees}
+        inactiveClients={analytics.inactiveTrainees}
+        reportData={{
+          averageCalories: analytics.averageCalories,
+          goalCompletionRate: analytics.goalCompletionRate,
+          averageProtein: analytics.averageProtein
+        }}
+      />
       
       {/* Weekly Activity Chart */}
       <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 mb-4 animate-fade-in">
@@ -506,7 +451,7 @@ export default function DashboardPage() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={dashboardData?.groups_distribution || []}
+                data={groupsDataForChart}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
@@ -515,7 +460,7 @@ export default function DashboardPage() {
                 dataKey="trainees_count"
                 nameKey="name"
               >
-                {dashboardData?.groups_distribution?.map((entry, index) => (
+                {groupsDataForChart.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={['#13A753', '#4285F4', '#F59E0B', '#8B5CF6', '#EC4899'][index % 5]} 

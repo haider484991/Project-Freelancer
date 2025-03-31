@@ -15,7 +15,69 @@ const fitTrackApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Ensure cookies are sent with all requests
+  // Add timeout for all requests
+  timeout: 15000, // 15 seconds
 });
+
+// Add request interceptor for logging
+fitTrackApi.interceptors.request.use(
+  (config) => {
+    // Log outgoing requests (without sensitive data)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[API Client] Request:', {
+        url: config.url,
+        method: config.method,
+        hasData: !!config.data,
+      });
+    }
+    return config;
+  },
+  (error) => {
+    console.error('[API Client] Request error:', error.message);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for error handling
+fitTrackApi.interceptors.response.use(
+  (response) => {
+    // Log successful responses
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[API Client] Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.config.url,
+      });
+    }
+    return response;
+  },
+  (error) => {
+    // Handle different types of errors
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('[API Client] Response error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        url: error.config?.url,
+      });
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('[API Client] Network error:', {
+        message: 'No response received',
+        url: error.config?.url,
+      });
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('[API Client] Error:', error.message);
+    }
+
+    // Propagate error with additional context
+    return Promise.reject(error);
+  }
+);
 
 // API module functions with ability to switch between real and mock APIs
 export const loginApi = USE_MOCK_DATA 
@@ -60,28 +122,17 @@ export const settingsApi = USE_MOCK_DATA
   : {
     get: () => {
       return fitTrackApi.post('', {
-        mdl: 'settings', 
+        mdl: 'settings',
         act: 'get'
       });
     },
-    set: (settingsData: {
-      company_name?: string;
-      email?: string;
-      phone?: string;
-      address?: string;
-      logo_url?: string;
-      default_target_calories?: string;
-      default_protein_ratio?: string;
-      default_carbs_ratio?: string;
-      default_fat_ratio?: string;
-      language?: string;
-      theme?: string;
-      notifications_enabled?: string;
-      auto_save?: string;
-      data_retention?: string;
-      dark_mode?: string;
-      [key: string]: unknown;
-    }) => {
+    getUserSettings: () => {
+      return fitTrackApi.post('', {
+        mdl: 'users',
+        act: 'get_settings'
+      });
+    },
+    set: (settingsData: Record<string, string>) => {
       return fitTrackApi.post('', {
         mdl: 'settings',
         act: 'set',
@@ -93,7 +144,7 @@ export const settingsApi = USE_MOCK_DATA
       new_password: string;
     }) => {
       return fitTrackApi.post('', {
-        mdl: 'settings',
+        mdl: 'users',
         act: 'change_password',
         ...passwordData
       });

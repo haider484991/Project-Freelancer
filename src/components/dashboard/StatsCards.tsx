@@ -3,14 +3,33 @@
 interface StatsCardsProps {
   totalClients: number;
   inactiveClients: number;
+  reportData?: {
+    averageCalories?: number;
+    goalCompletionRate?: number;
+    averageProtein?: number;
+  };
 }
 
-export default function StatsCards({ totalClients, inactiveClients }: StatsCardsProps) {
+export default function StatsCards({ 
+  totalClients, 
+  inactiveClients, 
+  reportData = {} 
+}: StatsCardsProps) {
   // Use provided totalClients instead of calculating from context
   const activeClients = totalClients - inactiveClients
-  const averageCaloricIntake = '2200 klc' // This would be calculated from actual client data
-  const goalStatus = '80%' // This would be calculated from actual client data
-  const proteinIntake = '150 g' // This would be calculated from actual client data
+  
+  // Use real data from API if available, fallback to placeholder text if not
+  const averageCaloricIntake = reportData.averageCalories 
+    ? `${reportData.averageCalories} kcal` 
+    : 'No data';
+    
+  const goalStatus = reportData.goalCompletionRate 
+    ? `${reportData.goalCompletionRate}%` 
+    : 'No data';
+    
+  const proteinIntake = reportData.averageProtein 
+    ? `${reportData.averageProtein} g` 
+    : 'No data';
 
   const statsData = [
     {

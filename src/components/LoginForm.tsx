@@ -200,12 +200,21 @@ export default function LoginForm() {
     <div className="flex flex-col gap-[40px] lg:gap-[76px] w-full">
       {/* Logo and Title */}
       <div className="flex flex-col gap-[5px]">
-        <h1 className="font-michael text-primary text-[45px] lg:text-[55px] uppercase tracking-[0.04em] leading-none font-bold">FITTRACK</h1>
-        <p className="font-manrope font-semibold text-[16px] lg:text-[20px] text-white tracking-[0.04em] capitalize">fitness & nutrition tracking</p>
-        </div>
+        <h1 className="font-michael text-primary text-[45px] lg:text-[55px] uppercase tracking-[0.04em] leading-none font-bold shadow-text">FITTRACK</h1>
+        <p className="font-manrope font-semibold text-[16px] lg:text-[20px] text-white tracking-[0.04em] capitalize shadow-text">fitness & nutrition tracking</p>
+      </div>
 
-      {/* Login Form */}
-      {step === 'phone' ? renderPhoneStep() : renderOtpStep()}
+      {/* Login Form - With background to improve visibility */}
+      <div className="bg-black/30 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+        {step === 'phone' ? renderPhoneStep() : renderOtpStep()}
+      </div>
+      
+      {/* Custom styles for text shadow */}
+      <style jsx global>{`
+        .shadow-text {
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+      `}</style>
     </div>
   );
 } 

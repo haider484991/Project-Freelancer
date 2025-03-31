@@ -64,7 +64,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   }, [isMobileMenuOpen])
 
   return (
-    <div className={`min-h-screen bg-black relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'}`} style={{
+      backgroundAttachment: 'scroll, scroll, scroll',
+      backgroundColor: 'rgb(255, 255, 255)',
+      backgroundImage: 'repeating-linear-gradient(to right, rgba(170, 170, 170, 0.133) 0px, rgba(170, 170, 170, 0.133) 1px, rgba(0, 0, 0, 0) 1px, rgba(0, 0, 0, 0) 175px), repeating-linear-gradient(rgba(170, 170, 170, 0.133) 0px, rgba(170, 170, 170, 0.133) 1px, rgba(0, 0, 0, 0) 1px, rgba(0, 0, 0, 0) 175px), linear-gradient(rgb(30, 30, 30), rgb(22, 160, 133))',
+      backgroundPositionX: '50%, 50%, 50%',
+      backgroundPositionY: '50%, 50%, 50%',
+      backgroundSize: 'cover, cover, cover'
+    }}>
       {/* Background grid lines */}
       <div className="absolute inset-0 z-0 opacity-20">
         <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
@@ -87,9 +94,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div className="absolute w-[300px] h-[300px] top-[-150px] right-[-150px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[150px] lg:hidden block"></div>
       <div className="absolute w-[300px] h-[300px] bottom-[-150px] left-[-150px] rounded-full bg-[rgba(19,167,83,0.8)] blur-[150px] lg:hidden block"></div>
       
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Updated background color and removed blur */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 backdrop-blur-md bg-[rgba(19,167,83,0.15)] z-50 overflow-auto">
+        <div className="fixed inset-0 bg-[rgba(139,287,203,1)] z-50 overflow-auto">
           <div className="p-4">
             <button 
               className="w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#3DD559] mb-6"
@@ -101,7 +108,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <path d="M13 1L1 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <Sidebar isMobile={true} />
+            <Sidebar isMobile={true} onClose={() => setIsMobileMenuOpen(false)} />
           </div>
         </div>
       )}
@@ -109,7 +116,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Desktop Layout */}
       <div className="relative w-full min-h-screen z-10 hidden lg:flex">
         {/* Sidebar */}
-        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
+        <div className={`transition-all duration-300 ease-in-out ${isRtl ? 'right-0' : 'left-0'} fixed top-0 h-full z-20 bg-black/40 backdrop-blur-sm ${isSidebarOpen ? (isRtl ? 'translate-x-0' : 'translate-x-0') : (isRtl ? 'translate-x-[100%]' : 'translate-x-[-100%]')}`}>
           <Sidebar />
         </div>
         
