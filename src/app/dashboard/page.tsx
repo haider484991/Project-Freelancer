@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { dashboardApi, traineesApi, reportingsApi, groupsApi } from '@/services/fitTrackApi'
@@ -55,6 +56,7 @@ interface Activity {
 export default function DashboardPage() {
   const { t } = useTranslation()
   const { profile } = useUser()
+  const router = useRouter()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [inactiveTrainees, setInactiveTrainees] = useState<Trainee[]>([])
   const [recentActivity, setRecentActivity] = useState<Activity[]>([])
@@ -66,6 +68,29 @@ export default function DashboardPage() {
   
   // State for tracking if API has already loaded
   const [hasLoaded, setHasLoaded] = useState(false)
+  
+  // Check authentication on page load
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = () => {
+      const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+      
+      if (!authToken) {
+        console.log('[Dashboard] No auth token found, redirecting to login');
+        router.push('/login');
+      } else {
+        console.log('[Dashboard] Auth token found:', authToken ? authToken.substring(0, 10) + '...' : 'none');
+        
+        // If it's a test token, ensure the cookie is set
+        if (authToken.includes('test_token')) {
+          document.cookie = `auth_token=${authToken}; path=/; max-age=86400; SameSite=Strict`;
+          console.log('[Dashboard] Reinforced auth cookie for test token');
+        }
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
   
   // Fetch trainees from API
   useEffect(() => {
