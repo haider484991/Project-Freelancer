@@ -57,6 +57,14 @@ export async function POST(req: NextRequest) {
     const cookies = req.cookies;
     const authToken = cookies.get('auth_token')?.value || req.headers.get('authorization')?.replace('Bearer ', '');
     
+    // Log authentication details
+    console.log('[Proxy] Authentication details:', {
+      hasCookie: !!cookies.get('auth_token'),
+      hasAuthHeader: !!req.headers.get('authorization'),
+      authToken: authToken ? 'present' : 'missing',
+      headers: Object.fromEntries(req.headers.entries())
+    });
+    
     // Headers with conditional authentication
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -67,6 +75,9 @@ export async function POST(req: NextRequest) {
     // Add authorization header if token exists
     if (authToken) {
       headers['Authorization'] = `Bearer ${authToken}`;
+      console.log('[Proxy] Added Authorization header');
+    } else {
+      console.log('[Proxy] No auth token found in cookies or headers');
     }
     
     // Log the outgoing request (without sensitive data)
@@ -160,17 +171,21 @@ export async function POST(req: NextRequest) {
       data = await apiResponse.json();
       console.log(`[Proxy] Successfully received response for ${body.mdl}/${body.act}`);
       
-      // Handle authentication responses
-      if (body.mdl === 'login' && body.act === 'verify' && data.token) {
-        console.log('[Proxy] Received authentication token');
-        
-        // For login success, create a Response object to set cookies
-        const jsonResponse = NextResponse.json(data);
+      // Create response object
+      const jsonResponse = NextResponse.json(data);
+      
+      // Handle authentication responses - extract token from any response that has it
+      const token = data.token || 
+                   (data.data && data.data.token) || 
+                   (typeof data.data === 'string' && data.result === true ? data.data : null);
+      
+      if (token) {
+        console.log('[Proxy] Found token in response, setting auth_token cookie');
         
         // Set auth token cookie (secure in production, httpOnly for security)
         jsonResponse.cookies.set({
           name: 'auth_token',
-          value: data.token,
+          value: token,
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
@@ -180,6 +195,17 @@ export async function POST(req: NextRequest) {
         
         return jsonResponse;
       }
+      
+      // Add CORS headers for the response
+      // Use the request origin instead of wildcard for credentials to work
+      const origin = req.headers.get('origin') || 'https://bot.fit-track.net';
+      jsonResponse.headers.set('Access-Control-Allow-Origin', origin);
+      jsonResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      jsonResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      jsonResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+      
+      // Return the response
+      return jsonResponse;
     } catch (parseError) {
       console.error('[Proxy] Error parsing API response:', parseError);
       return NextResponse.json(
@@ -192,18 +218,6 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
-
-    // Add CORS headers for the response
-    const clientResponse = NextResponse.json(data);
-    // Use the request origin instead of wildcard for credentials to work
-    const origin = req.headers.get('origin') || 'https://bot.fit-track.net';
-    clientResponse.headers.set('Access-Control-Allow-Origin', origin);
-    clientResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    clientResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    clientResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-    
-    // Return the response
-    return clientResponse;
   } catch (error) {
     console.error('[Proxy] Unhandled error:', error);
     

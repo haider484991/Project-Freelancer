@@ -23,11 +23,23 @@ const fitTrackApi = axios.create({
 // Add request interceptor for logging
 fitTrackApi.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
-    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    // Get token from localStorage for direct header injection (as fallback)
+    const authToken = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     
-    // Add token to headers if it exists
-    if (token) {
+    // Log token state
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[API Client] Token state:', {
+        hasAuthToken: !!authToken,
+        hasToken: !!token,
+        usingCookies: true
+      });
+    }
+    
+    // Add token to headers if it exists in localStorage (as fallback)
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
+    } else if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     
@@ -37,7 +49,7 @@ fitTrackApi.interceptors.request.use(
         url: config.url,
         method: config.method,
         hasData: !!config.data,
-        hasToken: !!token,
+        hasAuthHeader: !!config.headers.Authorization,
       });
     }
     return config;
@@ -57,8 +69,20 @@ fitTrackApi.interceptors.response.use(
         status: response.status,
         statusText: response.statusText,
         url: response.config.url,
+        data: response.data, // Log the data structure
       });
     }
+    
+    // Check if response contains error message about login required
+    if (response.data?.error === 'login required' || 
+        (response.data?.result === false && response.data?.error === 'login required')) {
+      console.error('[API Client] Authentication error: Login required');
+      // Redirect to login page if not already there
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    
     return response;
   },
   (error) => {

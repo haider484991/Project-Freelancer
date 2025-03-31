@@ -6,6 +6,7 @@ import axios, { AxiosError } from 'axios';
 
 interface ApiErrorResponse {
   message?: string;
+  error?: string;
 }
 
 export default function LoginForm() {
@@ -56,20 +57,36 @@ export default function LoginForm() {
     
     try {
       const response = await loginApi.verifyOtp(phone, otp);
-      const { token } = response.data;
+      console.log('[LoginForm] OTP verification response:', response.data);
+      
+      // Check for token in different possible structures
+      const token = response.data.token || 
+                   (response.data.data && response.data.data.token) || 
+                   (response.data.result === true && response.data.data);
       
       if (token) {
-        // Store token in both places for compatibility
+        console.log('[LoginForm] Received token in response');
+        // Store token in localStorage as fallback
         localStorage.setItem('authToken', token);
         localStorage.setItem('token', token);
+        
+        // The HTTP-only cookie is set by the proxy
+        router.push('/dashboard');
+      } else if (response.data.result === true) {
+        // If result is true but no token, still consider it success (cookie might be set)
+        console.log('[LoginForm] No explicit token in response, but result is success');
         router.push('/dashboard');
       } else {
-        setError('Invalid response from server');
+        console.error('[LoginForm] Authentication failed:', response.data);
+        setError('Authentication failed - please try again');
       }
     } catch (err: unknown) {
+      console.error('[LoginForm] OTP verification error:', err);
       if (axios.isAxiosError(err)) {
         const axiosError = err as AxiosError<ApiErrorResponse>;
-        setError(axiosError.response?.data?.message || 'Invalid verification code');
+        setError(axiosError.response?.data?.message || 
+                axiosError.response?.data?.error || 
+                'Invalid verification code');
       } else {
         setError('Invalid verification code');
       }
@@ -80,9 +97,14 @@ export default function LoginForm() {
 
   // Skip login and go directly to dashboard (test mode)
   const handleSkipLogin = () => {
-    // Set test token in both places for compatibility
-    localStorage.setItem('authToken', 'test_token_123');
-    localStorage.setItem('token', 'test_token_123');
+    // Set test token in localStorage
+    const testToken = 'test_token_123';
+    localStorage.setItem('authToken', testToken);
+    localStorage.setItem('token', testToken);
+    
+    // Create a test authorization cookie
+    document.cookie = `auth_token=${testToken}; path=/; max-age=86400; SameSite=Strict`;
+    
     router.push('/dashboard');
   };
 
