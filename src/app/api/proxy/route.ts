@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
     // DEBUG: Log environment variables for debugging
     console.log('[Proxy] Environment variables:', {
       REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
       NODE_ENV: process.env.NODE_ENV
     });
     
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Add clear debugging for headers going to the API
-    console.log('[Proxy] Request headers sent to API:', Object.fromEntries(Object.entries(headers)));
+    console.log('[Proxy] Request headers sent to API:', headers);
     
     // Log the outgoing request (without sensitive data)
     console.log(`[Proxy] Outgoing request to API: ${apiUrl}`, {
@@ -99,6 +100,17 @@ export async function POST(req: NextRequest) {
       hasAuthToken: !!authToken
     });
 
+    // ------------------------
+    // VERCEL PREVIEW MODE
+    // ------------------------
+    const isVercelBot = req.headers.get('x-vercel-internal-bot-check') === 'pass' || 
+                        req.headers.get('user-agent')?.includes('vercel-screenshot');
+    
+    if (isVercelBot) {
+      console.log('[Proxy] Detected Vercel bot/preview - returning mock response');
+      return mockResponseForRequest(body);
+    }
+    
     // ------------------------
     // USE TEST MODE FOR DEBUGGING
     // ------------------------
@@ -254,7 +266,7 @@ export async function POST(req: NextRequest) {
       
       // Add CORS headers for the response
       // Use the request origin instead of wildcard for credentials to work
-      const origin = req.headers.get('origin') || 'https://bot.fit-track.net';
+      const origin = req.headers.get('origin') || 'https://app.fit-track.net';
       jsonResponse.headers.set('Access-Control-Allow-Origin', origin);
       jsonResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       jsonResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -317,7 +329,7 @@ export async function OPTIONS(req: NextRequest) {
   const corsResponse = new NextResponse(null, { status: 204 }); // No content
   
   // Use the request origin instead of wildcard for credentials to work
-  const origin = req.headers.get('origin') || 'https://bot.fit-track.net';
+  const origin = req.headers.get('origin') || 'https://app.fit-track.net';
   corsResponse.headers.set('Access-Control-Allow-Origin', origin);
   corsResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -325,4 +337,56 @@ export async function OPTIONS(req: NextRequest) {
   corsResponse.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
   
   return corsResponse;
+}
+
+// Helper function to generate mock responses for preview mode
+function mockResponseForRequest(body: any) {
+  console.log('[Proxy] Generating mock response for:', body);
+  
+  let mockResponse;
+  
+  if (body.mdl === 'login' && body.act === 'otp') {
+    mockResponse = { result: true, message: 'OTP sent successfully' };
+  } else if (body.mdl === 'login' && body.act === 'verify') {
+    mockResponse = { 
+      result: true, 
+      token: 'preview_test_token',
+      user: { id: 'preview123', name: 'Preview User', role: 'admin' } 
+    };
+  } else if (body.mdl === 'trainees' && body.act === 'list') {
+    mockResponse = { 
+      result: true, 
+      message: [
+        { id: '1', name: 'Preview User 1', email: 'preview1@example.com', phone: '1234567890', is_active: '1' },
+        { id: '2', name: 'Preview User 2', email: 'preview2@example.com', phone: '0987654321', is_active: '0' }
+      ] 
+    };
+  } else if (body.mdl === 'dashboard' && body.act === 'get') {
+    mockResponse = {
+      result: true,
+      inactive_trainees_count: 2,
+      trainees_count: 10,
+      weekly_data: [
+        { day: 'Mon', count: 5 },
+        { day: 'Tue', count: 7 },
+        { day: 'Wed', count: 8 },
+        { day: 'Thu', count: 6 },
+        { day: 'Fri', count: 9 },
+        { day: 'Sat', count: 4 },
+        { day: 'Sun', count: 3 }
+      ],
+      groups_distribution: [
+        { name: 'Beginners', trainees_count: 4 },
+        { name: 'Intermediate', trainees_count: 3 },
+        { name: 'Advanced', trainees_count: 3 }
+      ]
+    };
+  } else {
+    mockResponse = { 
+      result: true, 
+      data: { message: 'Preview mock response for ' + body.mdl + '/' + body.act } 
+    };
+  }
+  
+  return NextResponse.json(mockResponse);
 } 
