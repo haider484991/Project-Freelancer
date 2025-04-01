@@ -43,45 +43,107 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Fetch user profile on mount
   useEffect(() => {
     const fetchUserProfile = async () => {
-      setLoading(true);
+      // Only set loading true on first attempt
+      if (profile.name === defaultProfile.name) {
+        setLoading(true);
+      }
       setError(null);
+      
+      // Check if user is authenticated
+      const isLoggedIn = typeof window !== 'undefined' ? 
+        localStorage.getItem('is_logged_in') === 'true' : false;
+      const userPhone = typeof window !== 'undefined' ? 
+        localStorage.getItem('user_phone') : null;
+      const accessToken = typeof window !== 'undefined' ? 
+        localStorage.getItem('access_token') : null;
+      
+      // Only log this if in dev mode
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[UserContext] Authentication status:', { 
+          isLoggedIn, 
+          hasUserPhone: !!userPhone,
+          hasAccessToken: !!accessToken,
+          currentProfileName: profile.name
+        });
+      }
+      
+      // Check if we need to fetch profile or if we already have it
+      if (profile.name !== defaultProfile.name && profile.name !== 'Guest User') {
+        console.log('[UserContext] Profile already loaded:', profile.name);
+        setLoading(false);
+        return;
+      }
+      
+      // If not authenticated, don't try to fetch profile
+      if (!isLoggedIn || !userPhone) {
+        console.log('[UserContext] Not authenticated, skipping profile fetch');
+        setLoading(false);
+        return;
+      }
+      
+      // If we have an access token and phone, try to fetch profile
       try {
+        console.log('[UserContext] Attempting to fetch profile...');
         const response = await settingsApi.get();
+        
+        // Log the response for debugging
+        console.log('[UserContext] Profile API response:', response.data);
+        
         // Use parseApiResponse to handle different response formats
         const settingsArray = parseApiResponse(response.data);
+        
+        // Log the parsed data
+        console.log('[UserContext] Parsed settings array:', settingsArray);
         
         if (settingsArray && settingsArray.length > 0) {
           // Find profile-related settings
           const profileSettings = settingsArray.find(
-            setting => setting.type === 'profile' || setting.type === 'user'
+            (setting: any) => setting.type === 'profile' || setting.type === 'user'
           ) || settingsArray[0]; // Fallback to first item
           
           // Company settings may be in a different item
           const companySettings = settingsArray.find(
-            setting => setting.type === 'company' || setting.type === 'company_info'
+            (setting: any) => setting.type === 'company' || setting.type === 'company_info'
           );
           
-          // Update profile with API data
+          console.log('[UserContext] Found profile settings:', {
+            profileSettings,
+            companySettings
+          });
+          
+          // Update profile with API data, using typeof checks for safety
           setProfile(prevProfile => ({
             ...prevProfile,
-            name: profileSettings.name || companySettings?.company_name || prevProfile.name,
-            email: profileSettings.email || companySettings?.email || prevProfile.email,
-            phone: profileSettings.phone || companySettings?.phone || prevProfile.phone,
-            image: profileSettings.image || profileSettings.logo_url || companySettings?.logo || prevProfile.image,
-            role: profileSettings.role || prevProfile.role,
-            notificationCount: parseInt(profileSettings.unread_notifications || '0') || prevProfile.notificationCount
+            name: typeof profileSettings.name === 'string' ? profileSettings.name : 
+                 (typeof companySettings?.company_name === 'string' ? companySettings.company_name : prevProfile.name),
+            email: typeof profileSettings.email === 'string' ? profileSettings.email : 
+                  (typeof companySettings?.email === 'string' ? companySettings.email : prevProfile.email),
+            phone: typeof profileSettings.phone === 'string' ? profileSettings.phone : 
+                  (typeof companySettings?.phone === 'string' ? companySettings.phone : prevProfile.phone),
+            image: typeof profileSettings.image === 'string' ? profileSettings.image : 
+                  (typeof profileSettings.logo_url === 'string' ? profileSettings.logo_url : 
+                  (typeof companySettings?.logo === 'string' ? companySettings.logo : prevProfile.image)),
+            role: typeof profileSettings.role === 'string' ? profileSettings.role : prevProfile.role,
+            notificationCount: typeof profileSettings.unread_notifications === 'string' && !isNaN(parseInt(profileSettings.unread_notifications)) ? 
+                             parseInt(profileSettings.unread_notifications) : prevProfile.notificationCount
           }));
+          
+          console.log('[UserContext] Profile updated successfully');
+        } else {
+          console.log('[UserContext] No settings data found in response');
         }
       } catch (err) {
-        console.error('Error fetching user profile:', err);
+        console.error('[UserContext] Error fetching user profile:', err);
         setError('Failed to load user profile');
+        
+        // Don't clear login state on fetch failure - might be temporary
       } finally {
         setLoading(false);
       }
     };
     
     fetchUserProfile();
-  }, []);
+  }, [profile.name]);
 
   // Update profile function
   const updateProfile = (newData: Partial<UserProfile>) => {

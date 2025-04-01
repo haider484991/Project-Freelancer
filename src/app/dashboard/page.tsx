@@ -73,19 +73,20 @@ export default function DashboardPage() {
   useEffect(() => {
     // Check if user is authenticated
     const checkAuth = () => {
-      const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+      const accessToken = localStorage.getItem('access_token');
+      const userPhone = localStorage.getItem('user_phone');
       
-      if (!authToken) {
-        console.log('[Dashboard] No auth token found, redirecting to login');
+      if (!isLoggedIn || !accessToken || !userPhone) {
+        console.log('[Dashboard] Not authenticated, redirecting to login', { 
+          isLoggedIn, 
+          hasAccessToken: !!accessToken,
+          hasUserPhone: !!userPhone 
+        });
         router.push('/login');
       } else {
-        console.log('[Dashboard] Auth token found:', authToken ? authToken.substring(0, 10) + '...' : 'none');
-        
-        // If it's a test token, ensure the cookie is set
-        if (authToken.includes('test_token')) {
-          document.cookie = `auth_token=${authToken}; path=/; max-age=86400; SameSite=Strict`;
-          console.log('[Dashboard] Reinforced auth cookie for test token');
-        }
+        console.log('[Dashboard] Authenticated, redirecting to clients page');
+        router.push('/dashboard/clients');
       }
     };
     

@@ -56,7 +56,33 @@
     "searchPlaceholder": "Search client",
     "addClient": "Add Client",
     "export": "Export",
-    "schedule": "Schedule"
+    "schedule": "Schedule",
+    "title": "Client Management",
+    "searchClients": "Search clients",
+    "basicInfo": "Basic Information",
+    "name": "Name",
+    "enterName": "Enter name",
+    "email": "Email",
+    "enterEmail": "Enter email",
+    "phone": "Phone",
+    "enterPhone": "Enter phone",
+    "trainingDetails": "Training Details",
+    "group": "Group",
+    "selectGroup": "Select group",
+    "gender": "Gender",
+    "selectGender": "Select gender",
+    "male": "Male",
+    "female": "Female",
+    "targetCalories": "Target Calories",
+    "targetWeight": "Target Weight",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "cancel": "Cancel",
+    "save": "Save",
+    "total": "Total",
+    "compliant": "Compliant",
+    "clientName": "Client Name"
   },
   "clientTable": {
     "all_clients": "All Clients",
@@ -68,7 +94,9 @@
     "compliance": "COMPLIANCE",
     "push_notifications": "PUSH",
     "actions": "ACTIONS",
-    "no_clients_found": "No clients found"
+    "no_clients_found": "No clients found",
+    "confirmDelete": "Are you sure you want to delete client \"{{name}}\"?",
+    "deleteNotImplemented": "Delete functionality will be implemented soon."
   },
   "groupsTable": {
     "Group Name": "Group Name",
@@ -80,7 +108,8 @@
     "Delete Group": "Delete Group",
     "N/A": "N/A",
     "No groups found matching your search.": "No groups found matching your search.",
-    "No groups available.": "No groups available."
+    "No groups available.": "No groups available.",
+    "Are you sure you want to delete the group \"{{name}}\"?": "Are you sure you want to delete the group \"{{name}}\"?"
   },
   "clientPopups": {
     "add_client": "Add Client",
@@ -136,7 +165,19 @@
     "create_group": "Create Group",
     "export": "Export",
     "groups": "Groups",
-    "add_group": "Add Group"
+    "add_group": "Add Group",
+    "header": "Groups",
+    "group_name": "Group Name",
+    "select_dietary_plan": "Select Dietary Plan",
+    "select_meal_plan": "Select Meal Plan",
+    "search_clients": "Search Clients"
+  },
+  "groupsPage": {
+    "header": "Groups",
+    "title": "Groups Management",
+    "createGroup": "Create Group",
+    "totalGroups": "Total Groups",
+    "loading": "Loading groups..."
   },
   "validation": {
     "required": "This field is required",
@@ -152,7 +193,8 @@
     "automation": "WhatsApp Automation",
     "dataManagement": "Data Analytics",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "reportings": "Reportings"
   },
   "settings": {
     "header": "Settings",
@@ -212,5 +254,16 @@
     "delivered": "Delivered",
     "read": "Read",
     "failed": "Failed"
+  },
+  "reportings": {
+    "title": "Reportings",
+    "dateTime": "Date/Time",
+    "traineeName": "Trainee Name",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fats": "Fats",
+    "calories": "Calories",
+    "searchReportings": "Search reportings...",
+    "noReportingsFound": "No reportings found"
   }
 }

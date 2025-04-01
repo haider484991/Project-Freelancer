@@ -72,7 +72,33 @@
     "searchPlaceholder": "חפש לקוח",
     "addClient": "הוסף לקוח",
     "export": "ייצוא",
-    "schedule": "לוח זמנים"
+    "schedule": "לוח זמנים",
+    "title": "ניהול לקוחות",
+    "searchClients": "חיפוש לקוחות",
+    "basicInfo": "מידע בסיסי",
+    "name": "שם",
+    "enterName": "הכנס שם",
+    "email": "אימייל",
+    "enterEmail": "הכנס אימייל",
+    "phone": "טלפון",
+    "enterPhone": "הכנס טלפון",
+    "trainingDetails": "פרטי אימון",
+    "group": "קבוצה",
+    "selectGroup": "בחר קבוצה",
+    "gender": "מגדר",
+    "selectGender": "בחר מגדר",
+    "male": "זכר",
+    "female": "נקבה",
+    "targetCalories": "קלוריות יעד",
+    "targetWeight": "משקל יעד",
+    "status": "סטטוס",
+    "active": "פעיל",
+    "inactive": "לא פעיל",
+    "cancel": "ביטול",
+    "save": "שמירה",
+    "total": "סה\"כ",
+    "compliant": "מציית",
+    "clientName": "שם לקוח"
   },
   "clientTable": {
     "all_clients": "כל הלקוחות",
@@ -84,7 +110,9 @@
     "compliance": "עמידה ביעדים",
     "push_notifications": "התראות",
     "actions": "פעולות",
-    "no_clients_found": "לא נמצאו לקוחות"
+    "no_clients_found": "לא נמצאו לקוחות",
+    "confirmDelete": "האם אתה בטוח שברצונך למחוק את הלקוח \"{{name}}\"?",
+    "deleteNotImplemented": "פונקציונליות המחיקה תיושם בקרוב."
   },
   "groupsTable": {
     "Group Name": "שם קבוצה",
@@ -96,7 +124,8 @@
     "Delete Group": "מחק קבוצה",
     "N/A": "לא זמין",
     "No groups found matching your search.": "לא נמצאו קבוצות התואמות את החיפוש שלך.",
-    "No groups available.": "אין קבוצות זמינות."
+    "No groups available.": "אין קבוצות זמינות.",
+    "Are you sure you want to delete the group \"{{name}}\"?": "האם אתה בטוח שברצונך למחוק את הקבוצה \"{{name}}\"?"
   },
   "clientPopups": {
     "add_client": "הוסף לקוח",
@@ -152,7 +181,19 @@
     "create_group": "צור קבוצה",
     "export": "ייצוא",
     "groups": "קבוצות",
-    "add_group": "הוסף קבוצה"
+    "add_group": "הוסף קבוצה",
+    "header": "קבוצות",
+    "group_name": "שם קבוצה",
+    "select_dietary_plan": "בחר תוכנית תזונה",
+    "select_meal_plan": "בחר תוכנית ארוחות",
+    "search_clients": "חיפוש לקוחות"
+  },
+  "groupsPage": {
+    "header": "קבוצות",
+    "title": "ניהול קבוצות",
+    "createGroup": "צור קבוצה",
+    "totalGroups": "סה\"כ קבוצות",
+    "loading": "טוען קבוצות..."
   },
   "sidebar": {
     "dashboard": "לוח בקרה",
@@ -161,7 +202,8 @@
     "automation": "אוטומציה של וואטסאפ",
     "dataManagement": "ניתוח נתונים",
     "settings": "הגדרות",
-    "logout": "התנתק"
+    "logout": "התנתק",
+    "reportings": "דיווחים"
   },
   "validation": {
     "required": "שדה זה הוא חובה",
@@ -228,5 +270,16 @@
     "delivered": "נמסר",
     "read": "נקרא",
     "failed": "נכשל"
+  },
+  "reportings": {
+    "title": "דיווחים",
+    "dateTime": "תאריך/שעה",
+    "traineeName": "שם מתאמן",
+    "protein": "חלבון",
+    "carbs": "פחמימות",
+    "fats": "שומנים",
+    "calories": "קלוריות",
+    "searchReportings": "חיפוש דיווחים...",
+    "noReportingsFound": "לא נמצאו דיווחים"
   }
 }

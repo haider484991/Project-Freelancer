@@ -35,6 +35,40 @@ export function parseApiResponse<T>(data: unknown): T[] {
   if (data && typeof data === 'object') {
     const apiResponse = data as Record<string, unknown>;
     
+    // Check if response indicates an error
+    if (apiResponse.result === false && apiResponse.error) {
+      const errorMessage = apiResponse.error as string;
+      console.warn(`API error: ${errorMessage}`);
+      
+      // Handle coach not found errors by triggering re-login
+      if (errorMessage.includes('coach not found') || errorMessage.includes('re-login')) {
+        console.error('Coach not found error detected - redirecting to login');
+        
+        // Only redirect if in browser context
+        if (typeof window !== 'undefined') {
+          // Clear auth data
+          localStorage.removeItem('is_logged_in');
+          localStorage.removeItem('user_phone');
+          localStorage.removeItem('user_id');
+          localStorage.removeItem('access_token');
+          
+          // Clear cookies
+          document.cookie = "is_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie = "user_phone=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie = "PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          
+          // Redirect to login (after a short delay to let the console messages complete)
+          setTimeout(() => {
+            window.location.href = '/login?error=coach_not_found&message=' + encodeURIComponent(errorMessage);
+          }, 500);
+        }
+      }
+      
+      return [];
+    }
+    
     if (apiResponse.result === true && Array.isArray(apiResponse.message)) {
       return apiResponse.message as T[];
     }

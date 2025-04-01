@@ -3,11 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     // Get the API URL from environment variables or use default
-    let apiUrl = process.env.REACT_APP_API_URL || 'https://app.fit-track.net/api/';
+    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://bot.fit-track.net/api/';
     
     // DEBUG: Log environment variables for debugging
     console.log('[Proxy] Environment variables:', {
-      REACT_APP_API_URL: process.env.REACT_APP_API_URL,
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
       NODE_ENV: process.env.NODE_ENV
     });
@@ -56,22 +55,40 @@ export async function POST(req: NextRequest) {
     if (body.mdl === 'login') {
       console.log(`[Proxy] Processing login request: ${body.act}`);
       
+      // Always include user_type for login requests
+      if (!body.user_type) {
+        body.user_type = 'coach';
+        console.log('[Proxy] Added user_type=coach to login request');
+      }
+      
       // For OTP and verification, ensure phone number is in correct format
       if ((body.act === 'otp' || body.act === 'verify') && body.phone) {
         // Log without the actual number for security
-        console.log(`[Proxy] Processing authentication request with phone number`);
+        console.log(`[Proxy] Processing authentication request:`, {
+          action: body.act,
+          hasPhone: !!body.phone,
+          hasCode: !!body.code,
+          userType: body.user_type,
+          headers: Object.fromEntries(req.headers.entries())
+        });
       }
     }
     
     // Get cookies for authentication if present
     const cookies = req.cookies;
-    const authToken = cookies.get('auth_token')?.value || req.headers.get('authorization')?.replace('Bearer ', '');
+    const isLoggedIn = cookies.get('is_logged_in')?.value === 'true';
+    const sessionId = cookies.get('PHPSESSID')?.value;
+    const userPhone = cookies.get('user_phone')?.value;
+    const accessToken = cookies.get('access_token')?.value;
+    const userType = cookies.get('user_type')?.value || 'coach';
     
     // Log authentication details
     console.log('[Proxy] Authentication details:', {
-      hasCookie: !!cookies.get('auth_token'),
-      hasAuthHeader: !!req.headers.get('authorization'),
-      authToken: authToken ? 'present' : 'missing',
+      hasSessionCookie: !!sessionId,
+      hasUserPhone: !!userPhone,
+      hasAccessToken: !!accessToken,
+      isLoggedIn: isLoggedIn,
+      userType,
       headers: Object.fromEntries(req.headers.entries())
     });
     
@@ -80,14 +97,62 @@ export async function POST(req: NextRequest) {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Origin': new URL(req.url).origin,
+      'User-Agent': 'FitTrack-Web/1.0', // Add a consistent user agent
     };
     
-    // Add authorization header if token exists
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-      console.log('[Proxy] Added Authorization header');
+    // Add session cookie if present - format it properly for the API
+    if (sessionId) {
+      // Format cookie properly without extra attributes
+      headers['Cookie'] = `PHPSESSID=${sessionId}`;
+      console.log('[Proxy] Added session cookie to request');
     } else {
-      console.log('[Proxy] No auth token found in cookies or headers');
+      console.log('[Proxy] No session cookie found');
+    }
+    
+    // Add Authorization header if access token is present
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      console.log('[Proxy] Added access token to Authorization header');
+    }
+    
+    // Also check for Authorization header in the incoming request
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader && !headers['Authorization']) {
+      headers['Authorization'] = authHeader;
+      console.log('[Proxy] Forwarded Authorization header from client request');
+    }
+    
+    // Add user credentials if available and not already in the request
+    if (userPhone && isLoggedIn && body.mdl !== 'login') {
+      console.log('[Proxy] Adding user credentials to request');
+      // Ensure the phone is trimmed to avoid spaces
+      body.phone = userPhone.trim();
+      
+      // Add user type - required by this API
+      body.user_type = userType;
+      
+      // The API requires the user's phone for authentication
+      // Add the user_id parameter which may be required by the API
+      if (!body.user_id) {
+        body.user_id = userPhone.trim();
+      }
+
+      // Handle id parameter based on action type
+      if (!body.id) {
+        if (body.act === 'list') {
+          // List operations don't need an id
+          body.id = undefined;
+        } else if (body.act === 'get') {
+          // Get operations need 'all' as id
+          body.id = 'all';
+        } else if (body.act === 'del') {
+          // Delete operations need an id
+          body.id = '1'; // Default ID for delete
+        } else {
+          // Other operations (like set) don't need an id
+          body.id = undefined;
+        }
+      }
     }
     
     // Add clear debugging for headers going to the API
@@ -97,7 +162,13 @@ export async function POST(req: NextRequest) {
     console.log(`[Proxy] Outgoing request to API: ${apiUrl}`, {
       method: 'POST',
       moduleAction: `${body.mdl}/${body.act}`,
-      hasAuthToken: !!authToken
+      hasSession: !!sessionId,
+      body: {
+        ...body,
+        phone: body.phone ? '***' : undefined,
+        code: body.code ? '***' : undefined,
+        id: body.id // Log the id parameter
+      }
     });
 
     // ------------------------
@@ -111,47 +182,62 @@ export async function POST(req: NextRequest) {
       return mockResponseForRequest(body);
     }
     
-    // ------------------------
-    // USE TEST MODE FOR DEBUGGING
-    // ------------------------
-    if (authToken && authToken.includes('test_token')) {
-      console.log('[Proxy] USING TEST MODE - Returning mock success response');
-      
-      // Create mock response based on the request
-      let mockResponse;
-      
-      if (body.mdl === 'login' && body.act === 'otp') {
-        mockResponse = { result: true, message: 'OTP sent successfully' };
-      } else if (body.mdl === 'login' && body.act === 'verify') {
-        mockResponse = { 
-          result: true, 
-          token: authToken || 'test_token_123',
-          user: { id: 'test123', name: 'Test User', role: 'admin' } 
-        };
-      } else if (body.mdl === 'trainees' && body.act === 'list') {
-        mockResponse = { 
-          result: true, 
-          message: [
-            { id: '1', name: 'Test User 1', email: 'test1@example.com', phone: '1234567890', is_active: '1' },
-            { id: '2', name: 'Test User 2', email: 'test2@example.com', phone: '0987654321', is_active: '0' }
-          ] 
-        };
-      } else {
-        mockResponse = { result: true, data: { message: 'Mock response for ' + body.mdl + '/' + body.act } };
-      }
-      
-      const jsonResponse = NextResponse.json(mockResponse);
-      return jsonResponse;
-    }
-    
     // Send the request to the real API
     let apiResponse;
     try {
-      apiResponse = await fetch(apiUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body)
-      });
+      // For dashboard, settings, and other authenticated endpoints, try a direct URL approach
+      if (body.mdl !== 'login' && isLoggedIn && userPhone) {
+        // Create a copy of the body to modify for authentication
+        const authBody = { ...body };
+        
+        // Add authentication parameters that the API expects
+        // IMPORTANT: For this specific API, the phone number is the primary auth method
+        authBody.phone = userPhone.trim();
+        
+        // Set user_id from phone if not already set
+        if (!authBody.user_id) {
+          authBody.user_id = userPhone.trim();
+        }
+
+        // Add access_token parameter for authentication
+        const authToken = cookies.get('access_token')?.value;
+        if (authToken) {
+          authBody.access_token = authToken;
+          console.log('[Proxy] Added access token to request');
+          
+          // Also add to headers for APIs that use header-based auth
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        // Only add id if it's not already set and it's not a list action
+        if (!authBody.id && authBody.act !== 'list' && authBody.act !== 'get') {
+          authBody.id = '1';
+        }
+        
+        console.log(`[Proxy] Using authenticated body:`, {
+          moduleAction: `${authBody.mdl}/${authBody.act}`,
+          hasPhone: !!authBody.phone,
+          hasUserId: !!authBody.user_id,
+          hasId: !!authBody.id,
+          id: authBody.id
+        });
+        
+        // Send request with auth data
+        apiResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(authBody),
+          credentials: 'include'
+        });
+      } else {
+        // Standard request for login endpoints
+        apiResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          credentials: 'include'
+        });
+      }
       
       console.log(`[Proxy] API response status: ${apiResponse.status} ${apiResponse.statusText}`);
     } catch (fetchError) {
@@ -193,36 +279,6 @@ export async function POST(req: NextRequest) {
       
       console.error(`[Proxy] API error (${apiResponse.status}):`, errorMessage);
       
-      // If it's a login required error but we have a test auth token, create a success response instead
-      if (errorMessage === 'login required' && authToken && authToken.includes('test_token')) {
-        console.log('[Proxy] Intercepting login required error and returning success for test token');
-        
-        const successResponse = NextResponse.json({
-          result: true,
-          data: { 
-            message: 'Test authentication successful',
-            user: {
-              id: 'test_user_123',
-              name: 'Test User',
-              role: 'admin'
-            }
-          }
-        });
-        
-        // Ensure the auth cookie is set
-        successResponse.cookies.set({
-          name: 'auth_token',
-          value: authToken,
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 60 * 60 * 24 * 7, // 1 week
-          path: '/',
-        });
-        
-        return successResponse;
-      }
-      
       return NextResponse.json(
         { 
           error: errorMessage,
@@ -237,42 +293,114 @@ export async function POST(req: NextRequest) {
     let data;
     try {
       data = await apiResponse.json();
-      console.log(`[Proxy] Successfully received response for ${body.mdl}/${body.act}`);
+      console.log(`[Proxy] Successfully received response for ${body.mdl}/${body.act}:`, {
+        status: apiResponse.status,
+        data: data,
+        setCookieHeader: apiResponse.headers.get('set-cookie'),
+        headers: Object.fromEntries(apiResponse.headers.entries())
+      });
       
       // Create response object
       const jsonResponse = NextResponse.json(data);
       
-      // Handle authentication responses - extract token from any response that has it
-      const token = data.token || 
-                   (data.data && data.data.token) || 
-                   (typeof data.data === 'string' && data.result === true ? data.data : null);
-      
-      if (token) {
-        console.log('[Proxy] Found token in response, setting auth_token cookie');
+      // For login verification, ensure we set the session cookie
+      if (body.mdl === 'login' && body.act === 'verify' && data.result === true) {
+        console.log('[Proxy] Login successful, processing session cookie');
         
-        // Set auth token cookie (secure in production, httpOnly for security)
+        // Store user credentials for subsequent requests - ensure phone is trimmed
+        const phoneValue = body.phone.toString().trim();
         jsonResponse.cookies.set({
-          name: 'auth_token',
-          value: token,
-          httpOnly: true,
+          name: 'user_phone',
+          value: phoneValue,
+          httpOnly: false,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 60 * 60 * 24 * 7, // 1 week
+          sameSite: 'lax',
           path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 1 week
         });
         
-        return jsonResponse;
+        // Set login state
+        jsonResponse.cookies.set({
+          name: 'is_logged_in',
+          value: 'true',
+          httpOnly: false, 
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 7, // 1 week
+        });
+
+        // Store access token if provided in the API response
+        if (data.access_token) {
+          console.log('[Proxy] Setting access token from response');
+          jsonResponse.cookies.set({
+            name: 'access_token',
+            value: data.access_token,
+            httpOnly: false, // Set to false so JavaScript can access it
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+          });
+        }
+
+        // Get the PHPSESSID from the API response
+        const setCookieHeader = apiResponse.headers.get('set-cookie');
+        if (setCookieHeader) {
+          console.log('[Proxy] Processing API set-cookie header:', setCookieHeader);
+          
+          // Extract PHPSESSID from the Set-Cookie header
+          const phpSessionIdMatch = setCookieHeader.match(/PHPSESSID=([^;]+)/);
+          if (phpSessionIdMatch && phpSessionIdMatch[1]) {
+            const sessionId = phpSessionIdMatch[1];
+            console.log(`[Proxy] Extracted PHPSESSID: ${sessionId}`);
+            
+            // Set PHPSESSID cookie with proper attributes
+            jsonResponse.cookies.set({
+              name: 'PHPSESSID',
+              value: sessionId,
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+              maxAge: 60 * 60 * 24 * 7, // 1 week
+            });
+          }
+        } else {
+          // If no PHPSESSID in response, try to get it from the request
+          const requestSessionId = req.cookies.get('PHPSESSID')?.value;
+          if (requestSessionId) {
+            console.log(`[Proxy] Using existing PHPSESSID from request: ${requestSessionId}`);
+            jsonResponse.cookies.set({
+              name: 'PHPSESSID',
+              value: requestSessionId,
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+              maxAge: 60 * 60 * 24 * 7, // 1 week
+            });
+          } else {
+            console.log('[Proxy] No PHPSESSID found in response or request');
+          }
+        }
+      } else {
+        // For non-login requests, ensure we preserve the PHPSESSID
+        const requestSessionId = req.cookies.get('PHPSESSID')?.value;
+        if (requestSessionId) {
+          console.log(`[Proxy] Preserving PHPSESSID for non-login request: ${requestSessionId}`);
+          jsonResponse.cookies.set({
+            name: 'PHPSESSID',
+            value: requestSessionId,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+          });
+        }
       }
       
-      // Add CORS headers for the response
-      // Use the request origin instead of wildcard for credentials to work
-      const origin = req.headers.get('origin') || 'https://app.fit-track.net';
-      jsonResponse.headers.set('Access-Control-Allow-Origin', origin);
-      jsonResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      jsonResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      jsonResponse.headers.set('Access-Control-Allow-Credentials', 'true');
-      
-      // Return the response
       return jsonResponse;
     } catch (parseError) {
       console.error('[Proxy] Error parsing API response:', parseError);
@@ -329,10 +457,10 @@ export async function OPTIONS(req: NextRequest) {
   const corsResponse = new NextResponse(null, { status: 204 }); // No content
   
   // Use the request origin instead of wildcard for credentials to work
-  const origin = req.headers.get('origin') || 'https://app.fit-track.net';
+  const origin = req.headers.get('origin') || 'http://localhost:3000';
   corsResponse.headers.set('Access-Control-Allow-Origin', origin);
   corsResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Cookie');
   corsResponse.headers.set('Access-Control-Allow-Credentials', 'true');
   corsResponse.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
   

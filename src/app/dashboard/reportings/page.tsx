@@ -11,12 +11,13 @@ interface ApiReporting {
   id: string;
   trainee_id: string;
   trainee_name: string;
-  report_date: string;
-  meal_protein: string;
-  meal_carbs: string;
-  meal_fats: string;
-  calories: string;
-  created_at?: string;
+  on_date: number;  // Unix timestamp
+  meal_text: string;
+  meal_protein: number;
+  meal_carbs: number;
+  meal_fats: number;
+  calories: number;
+  feedback: string;
   [key: string]: unknown;
 }
 
@@ -37,14 +38,32 @@ export default function ReportingsPage() {
         // Fetch reportings
         const reportingsResponse = await reportingsApi.list(searchTerm)
         
-        // Parse reportings using helper function
-        const reportings = parseApiResponse(reportingsResponse.data);
+        // Debug log the full response
+        console.log('Full API Response:', JSON.stringify(reportingsResponse.data, null, 2));
         
-        if (reportings.length > 0) {
-          setApiReportings(reportings as ApiReporting[]);
+        // Check if the response has the expected structure
+        if (reportingsResponse.data?.result === true && Array.isArray(reportingsResponse.data?.message)) {
+          // Log each reporting object individually
+          reportingsResponse.data.message.forEach((report: ApiReporting, index: number) => {
+            console.log(`Reporting ${index + 1}:`, JSON.stringify(report, null, 2));
+          });
+          
+          // Map the data to ensure all required fields are present
+          const mappedReportings = reportingsResponse.data.message.map((report: ApiReporting) => ({
+            id: report.id || '',
+            trainee_id: report.trainee_id || '',
+            trainee_name: report.trainee_name || '',
+            on_date: report.on_date || 0,
+            meal_protein: report.meal_protein || 0,
+            meal_carbs: report.meal_carbs || 0,
+            meal_fats: report.meal_fats || 0,
+            calories: report.calories || 0
+          }));
+          
+          setApiReportings(mappedReportings);
         } else {
-          console.warn('Could not extract reportings from response:', reportingsResponse.data);
-          throw new Error('Unable to extract reporting data from API response');
+          console.warn('Unexpected API response format:', reportingsResponse.data);
+          throw new Error('Unexpected API response format');
         }
       } catch (err) {
         console.error('Error fetching reportings:', err);
@@ -58,20 +77,27 @@ export default function ReportingsPage() {
     fetchData();
   }, [searchTerm]);
   
-  // Format date: convert YYYY-MM-DD to local format
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+  // Format date: convert Unix timestamp to local format
+  const formatDate = (timestamp: number) => {
+    if (!timestamp) return '';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString(undefined, { 
-        year: 'numeric', 
-        month: 'short', 
+      // Convert Unix timestamp to milliseconds
+      const date = new Date(timestamp * 1000);
+      
+      // Format the date in the local format
+      const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
+        minute: '2-digit',
+        hour12: false
+      };
+      
+      return date.toLocaleDateString(undefined, options);
     } catch (e) {
-      return dateString;
+      console.error('Error formatting date:', e, 'Timestamp:', timestamp);
+      return timestamp.toString();
     }
   };
   
@@ -175,7 +201,7 @@ export default function ReportingsPage() {
                   apiReportings.map((report) => (
                     <tr key={report.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(report.report_date || report.created_at || '')}
+                        {formatDate(report.on_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{report.trainee_name}</div>

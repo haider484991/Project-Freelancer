@@ -163,71 +163,36 @@ export default function ClientManagementPage() {
   }, [apiTrainees, apiGroups])
   
   // Handle add client
-  const handleAddClient = async (client: {
+  const handleAddClient = async (clientData: {
     name: string;
-    dietaryGoal: string;
-    group: string;
-    status: 'active' | 'inactive';
     email: string;
     phone: string;
+    group_id: string;
+    target_calories: string;
+    target_weight: string;
     gender: string;
+    is_active: string;
   }) => {
     try {
       setIsLoading(true);
 
-      // Find the group ID based on the selected group name
-      const selectedGroup = apiGroups.find(g => g.name === client.group);
-      const groupId = selectedGroup ? selectedGroup.id : '1'; // Default to first group if not found
-
-      // Prepare trainee data for API
-      const traineeData = {
-        name: client.name || '',
-        email: client.email || 'client@example.com', // Use provided email or default
-        phone: client.phone || '123456789', // Use provided phone or default
-        group_id: groupId,
-        target_calories: (client.dietaryGoal?.split(' ')[0] || '2000').trim(), // Extract calories and ensure it's trimmed
-        target_weight: (client.dietaryGoal?.split(' ')[3] || '70').trim(), // Extract weight and ensure it's trimmed
-        gender: client.gender || 'male', // Use provided gender or default to male
-        is_active: client.status === 'inactive' ? '0' : '1' // Set active status based on client status
-      };
-
-      if (DEBUG_MODE) {
-        console.log('Adding client with data:', traineeData);
-      }
-
       // Call API to create trainee
-      const response = await traineesApi.set(traineeData);
+      const response = await traineesApi.set(clientData);
 
-      if (DEBUG_MODE) {
-        console.log('API response for adding client:', response);
-      }
-
-      if (response.data && response.data.success) {
+      if (response.data && response.data.result) {
         // Refresh trainees list
         const refreshResponse = await traineesApi.list();
-        // Use our type-safe wrapper function
         const refreshedTrainees = parseApiResponse<ApiTrainee>(refreshResponse.data);
         if (refreshedTrainees.length > 0) {
           setApiTrainees(refreshedTrainees);
+          showToast('success', t('clientManagementPage.clientAdded'));
         }
       } else {
-        throw new Error('API returned unsuccessful response: ' + JSON.stringify(response.data));
+        throw new Error(response.data?.message || 'Failed to add client');
       }
     } catch (err) {
       console.error('Error adding client:', err);
-      setError('Failed to add client. Using local data instead.');
-      
-      // Fall back to context only
-      const newClient = {
-        ...client,
-        id: Math.random().toString(36).substring(7),
-        image: '/images/profile.jpg',
-        goalsMet: 75,
-        status: 'active' as const,
-        compliance: 'compliant' as const
-      } as Client;
-      
-      addClient(newClient);
+      showToast('error', t('clientManagementPage.errorAddingClient'));
     } finally {
       setIsLoading(false);
       setIsAddClientModalOpen(false);
@@ -770,42 +735,22 @@ export default function ClientManagementPage() {
       
       {/* Modals */}
       {isAddClientModalOpen && (
-      <AddClientModal 
-        isOpen={isAddClientModalOpen}
-        onClose={() => setIsAddClientModalOpen(false)}
-        onAddClient={handleAddClient}
-      />
+        <AddClientModal 
+          isOpen={isAddClientModalOpen}
+          onClose={() => setIsAddClientModalOpen(false)}
+          onSubmit={handleAddClient}
+          groups={apiGroups}
+        />
       )}
       
       {selectedClient && isClientDetailsModalOpen && (
-        <>
-      <ClientDetailsModal
-            isOpen={true}
-        onClose={() => setIsClientDetailsModalOpen(false)}
-            client={{
-              name: selectedClient.name,
-              group: selectedClient.group || '',
-              dietaryGoal: selectedClient.dietaryGoal || '',
-              image: selectedClient.image
-            }}
-          />
-          <div className="fixed bottom-5 left-0 right-0 flex justify-center z-50">
-            <div className="bg-white rounded-full shadow-lg p-2 flex gap-2">
-              <button 
-                onClick={() => handleEditClient(selectedClient)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-full"
-              >
-                {t('clientManagementPage.update')}
-              </button>
-              <button 
-                onClick={() => handleDeleteClient(selectedClient)}
-                className="bg-red-500 text-white px-4 py-2 rounded-full"
-              >
-                {t('clientManagementPage.delete')}
-              </button>
-            </div>
-    </div>
-        </>
+        <ClientDetailsModal
+          isOpen={isClientDetailsModalOpen}
+          onClose={() => setIsClientDetailsModalOpen(false)}
+          client={selectedClient}
+          onEdit={handleEditClient}
+          onDelete={handleDeleteClient}
+        />
       )}
     </DashboardLayout>
   )

@@ -17,66 +17,39 @@ interface ApiSettings {
 
 export default function SettingsPage() {
   const { t } = useTranslation()
-  const [apiSettings, setApiSettings] = useState<ApiSettings | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    business: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   
-  // Fetch settings from API
+  // Fetch user settings on component mount
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        
-        // Try to fetch settings using the settings module
-        try {
-          const settingsResponse = await settingsApi.get()
-          console.log('Settings API response:', settingsResponse);
-          
-          if (settingsResponse?.data?.result === true && Array.isArray(settingsResponse?.data?.message)) {
-            if (settingsResponse.data.message.length > 0) {
-              setApiSettings(settingsResponse.data.message[0] as ApiSettings);
-              return; // Exit if successful
-            }
-          }
-        } catch (settingsError) {
-          console.error('Error fetching from settings module:', settingsError);
+        setLoading(true);
+        const response = await settingsApi.get();
+        if (response.data.result && response.data.message) {
+          const settings = response.data.message;
+          setFormData(prev => ({
+            ...prev,
+            name: settings.name || '',
+            email: settings.email || '',
+            phone: settings.phone || '',
+            business: settings.business || ''
+          }));
         }
-        
-        // If settings module failed, try the users module
-        try {
-          const userSettingsResponse = await settingsApi.getUserSettings()
-          console.log('User settings API response:', userSettingsResponse);
-          
-          if (userSettingsResponse?.data?.result === true && Array.isArray(userSettingsResponse?.data?.message)) {
-            if (userSettingsResponse.data.message.length > 0) {
-              setApiSettings(userSettingsResponse.data.message[0] as ApiSettings);
-              return; // Exit if successful
-            }
-          }
-        } catch (userSettingsError) {
-          console.error('Error fetching from users module:', userSettingsError);
-        }
-        
-        // If no data found but no errors thrown, set default placeholder data
-        setApiSettings({
-          name: 'User',
-          company_name: 'Your Business',
-          email: 'user@example.com',
-          phone: '123-456-7890'
-        });
-        
       } catch (err) {
         console.error('Error fetching settings:', err);
-        setError('Failed to load settings from API. Please check your connection and try again.');
-        
-        // Set default data even on error
-        setApiSettings({
-          name: 'User',
-          company_name: 'Your Business',
-          email: 'user@example.com',
-          phone: '123-456-7890'
-        });
+        setError('Failed to load settings');
       } finally {
         setLoading(false);
       }
@@ -84,6 +57,44 @@ export default function SettingsPage() {
     
     fetchSettings();
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    try {
+      const response = await settingsApi.set({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        business: formData.business,
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword
+      });
+
+      if (response.data.result) {
+        setSuccess('Settings updated successfully');
+        // Clear password fields after successful update
+        setFormData(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        }));
+      } else {
+        setError(response.data.message || 'Failed to update settings');
+      }
+    } catch (err) {
+      console.error('Error updating settings:', err);
+      setError('Failed to update settings');
+    }
+  };
   
   // Define page icon for settings page
   const settingsPageIcon = (
@@ -93,18 +104,41 @@ export default function SettingsPage() {
     </svg>
   )
   
-  // Display loading state
+  // Show loading state
   if (loading) {
     return (
-      <DashboardLayout 
-        pageTitle={t('settings.title')}
-        pageIcon={settingsPageIcon}
-      >
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#13A753]"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#13A753] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-gray-600 font-medium">Loading settings...</div>
         </div>
-      </DashboardLayout>
-    )
+      </div>
+    );
+  }
+  
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 9V14" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M12 17.5V18" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#EF4444" strokeWidth="2"/>
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Error Loading Settings</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-[#13A753] text-white py-2 px-6 rounded-lg hover:bg-[#0F8A44] transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
   
   // Settings content
@@ -128,7 +162,8 @@ export default function SettingsPage() {
           <input
             type="text"
             id="name"
-            value={apiSettings?.name || ''}
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
@@ -143,7 +178,8 @@ export default function SettingsPage() {
           <input
             type="text"
             id="business"
-            value={apiSettings?.company_name || ''}
+            value={formData.business}
+            onChange={(e) => setFormData(prev => ({ ...prev, business: e.target.value }))}
             className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
@@ -158,7 +194,8 @@ export default function SettingsPage() {
           <input
             type="email"
             id="email"
-            value={apiSettings?.email || ''}
+            value={formData.email}
+            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
             className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
@@ -173,7 +210,8 @@ export default function SettingsPage() {
           <input
             type="tel"
             id="phone"
-            value={apiSettings?.phone || ''}
+            value={formData.phone}
+            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
             className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly

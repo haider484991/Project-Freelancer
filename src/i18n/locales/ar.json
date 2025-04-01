@@ -63,7 +63,8 @@
     "automation": "أتمتة واتساب",
     "dataManagement": "تحليل البيانات",
     "settings": "الإعدادات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "reportings": "التقارير"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -129,5 +130,86 @@
     "delivered": "تم التسليم",
     "read": "مقروءة",
     "failed": "فشل"
+  },
+  "reportings": {
+    "title": "التقارير",
+    "dateTime": "التاريخ/الوقت",
+    "traineeName": "اسم المتدرب",
+    "protein": "البروتين",
+    "carbs": "الكربوهيدرات",
+    "fats": "الدهون",
+    "calories": "السعرات الحرارية",
+    "searchReportings": "البحث في التقارير...",
+    "noReportingsFound": "لم يتم العثور على تقارير"
+  },
+  "clientManagementPage": {
+    "title": "إدارة العملاء",
+    "searchClients": "بحث عن العملاء",
+    "basicInfo": "معلومات أساسية",
+    "name": "الاسم",
+    "enterName": "أدخل الاسم",
+    "email": "البريد الإلكتروني",
+    "enterEmail": "أدخل البريد الإلكتروني",
+    "phone": "الهاتف",
+    "enterPhone": "أدخل رقم الهاتف",
+    "trainingDetails": "تفاصيل التدريب",
+    "group": "المجموعة",
+    "selectGroup": "اختر المجموعة",
+    "gender": "الجنس",
+    "selectGender": "اختر الجنس",
+    "male": "ذكر",
+    "female": "أنثى",
+    "targetCalories": "السعرات الحرارية المستهدفة",
+    "targetWeight": "الوزن المستهدف",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "total": "المجموع",
+    "compliant": "متوافق",
+    "clientName": "اسم العميل"
+  },
+  "clientTable": {
+    "all_clients": "جميع العملاء",
+    "active_clients": "النشط",
+    "inactive_clients": "غير النشط",
+    "client_name": "اسم العميل",
+    "group": "المجموعة",
+    "dietary_goal": "الهدف الغذائي",
+    "compliance": "الامتثال",
+    "push_notifications": "إشعارات",
+    "actions": "إجراءات",
+    "no_clients_found": "لم يتم العثور على عملاء",
+    "confirmDelete": "هل أنت متأكد أنك تريد حذف العميل \"{{name}}\"؟",
+    "deleteNotImplemented": "سيتم تنفيذ وظيفة الحذف قريبًا."
+  },
+  "groupsTable": {
+    "Group Name": "اسم المجموعة",
+    "Members": "الأعضاء",
+    "Dietary Goal": "الهدف الغذائي",
+    "Created At": "تاريخ الإنشاء",
+    "Actions": "الإجراءات",
+    "View/Edit Group": "عرض/تعديل المجموعة",
+    "Delete Group": "حذف المجموعة",
+    "N/A": "غير متوفر",
+    "No groups found matching your search.": "لم يتم العثور على مجموعات تطابق بحثك.",
+    "No groups available.": "لا توجد مجموعات متاحة.",
+    "Are you sure you want to delete the group \"{{name}}\"?": "هل أنت متأكد أنك تريد حذف المجموعة \"{{name}}\"؟"
+  },
+  "groups": {
+    "header": "المجموعات",
+    "create_group": "إنشاء مجموعة",
+    "group_name": "اسم المجموعة",
+    "select_dietary_plan": "اختر خطة غذائية",
+    "select_meal_plan": "اختر خطة وجبات",
+    "search_clients": "بحث عن العملاء"
+  },
+  "groupsPage": {
+    "header": "المجموعات",
+    "title": "إدارة المجموعات",
+    "createGroup": "إنشاء مجموعة",
+    "totalGroups": "إجمالي المجموعات",
+    "loading": "جاري تحميل المجموعات..."
   }
 }

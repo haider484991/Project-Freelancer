@@ -14,8 +14,8 @@ export default function Home() {
       const hasToken = localStorage.getItem('authToken') || localStorage.getItem('token');
       
       if (hasToken) {
-        // If they have a token, redirect to dashboard
-        router.push('/dashboard');
+        // If they have a token, redirect to dashboard/clients
+        router.push('/dashboard/clients');
       } else {
         // Otherwise redirect to login
         router.push('/login');

@@ -29,8 +29,8 @@ export default function LoginPage() {
       <div className="absolute w-[300px] h-[300px] bottom-[-150px] left-[-150px] rounded-full bg-[#4D4D4D]/50 blur-[150px] lg:hidden block"></div>
       
       {/* Left side - Login container */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center z-10 relative">
-        <div className="w-full lg:w-[562.5px] px-[30px] lg:px-[50px] py-[40px] lg:ml-[76px] lg:mt-[90px] max-w-[100%] lg:max-w-none backdrop-blur-sm bg-black/30 rounded-3xl border border-white/10 shadow-xl">
+      <div className="w-full lg:w-1/2 flex items-center justify-center z-10 relative px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="w-full max-w-[480px] lg:w-[562.5px] px-6 sm:px-8 lg:px-12 py-8 sm:py-10 lg:py-12 lg:ml-[76px] lg:mt-[90px] backdrop-blur-sm bg-black/30 rounded-3xl border border-white/10 shadow-xl">
           <LoginForm />
         </div>
       </div>
@@ -41,10 +41,17 @@ export default function LoginPage() {
           src="/images/background-image.png" 
           alt="Fitness background" 
           fill 
+          sizes="50vw"
           style={{ objectFit: 'cover' }}
           priority
         />
-        <div className="absolute inset-0 bg-black/40 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60 z-10"></div>
+        <div className="absolute inset-0 z-20 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-4xl font-bold text-white mb-4">Welcome to FitTrack</h2>
+            <p className="text-xl text-white/80 max-w-md mx-auto">Your personal fitness and nutrition companion. Track your progress, achieve your goals, and transform your life.</p>
+          </div>
+        </div>
       </div>
       
       {/* Global styles for text enhancement */}

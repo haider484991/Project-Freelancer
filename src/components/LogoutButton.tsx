@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginApi } from '@/services/fitTrackApi';
+import { useDispatch } from 'react-redux';
+import { logout } from '@/store/slices/authSlice';
 
 interface LogoutButtonProps {
   className?: string;
@@ -11,13 +12,29 @@ interface LogoutButtonProps {
 export default function LogoutButton({ className = '' }: LogoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await loginApi.logout();
+      // Call the logout API endpoint
+      await fetch('/api/logout', {
+        method: 'POST',
+      });
+      
+      // Clear all auth-related storage
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('is_logged_in');
+      localStorage.removeItem('user_phone');
+      localStorage.removeItem('user_id');
+      
+      // Clear Redux state
+      dispatch(logout());
+      
       // Redirect to login page
-      router.push('/');
+      router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {

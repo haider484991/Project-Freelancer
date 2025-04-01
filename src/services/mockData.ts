@@ -103,42 +103,42 @@ export const mockReportingsData = {
     {
       id: "1",
       trainee_id: "1",
+      trainee_name: "John Smith",
       report_date: "2023-04-15",
-      weight: "78",
-      calories: "2100",
-      protein: "150",
-      carbs: "210",
-      fat: "70"
+      meal_protein: "150",
+      meal_carbs: "210",
+      meal_fats: "70",
+      calories: "2100"
     },
     {
       id: "2",
       trainee_id: "1",
+      trainee_name: "John Smith",
       report_date: "2023-04-08",
-      weight: "79",
-      calories: "2200",
-      protein: "145",
-      carbs: "220",
-      fat: "75"
+      meal_protein: "145",
+      meal_carbs: "220",
+      meal_fats: "75",
+      calories: "2200"
     },
     {
       id: "3",
       trainee_id: "2",
+      trainee_name: "Sarah Johnson",
       report_date: "2023-04-14",
-      weight: "66",
-      calories: "2150",
-      protein: "160",
-      carbs: "190",
-      fat: "65"
+      meal_protein: "160",
+      meal_carbs: "190",
+      meal_fats: "65",
+      calories: "2150"
     },
     {
       id: "4",
       trainee_id: "3",
+      trainee_name: "Mike Chen",
       report_date: "2023-04-10",
-      weight: "81",
-      calories: "2450",
-      protein: "170",
-      carbs: "230",
-      fat: "80"
+      meal_protein: "170",
+      meal_carbs: "230",
+      meal_fats: "80",
+      calories: "2450"
     }
   ]
 };
