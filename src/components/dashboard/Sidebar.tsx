@@ -154,8 +154,13 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
         })}
       </nav>
 
+      {/* Language Switcher */}
+      <div className="mt-[36px] mb-[20px]">
+        <LanguageSwitcher />
+      </div>
+
       {/* Logout Button */}
-      <div className="mt-[36px]">
+      <div className="mt-[16px]">
         <LogoutButton />
       </div>
       

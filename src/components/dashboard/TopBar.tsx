@@ -88,7 +88,12 @@ const TopBar: React.FC<TopBarProps> = ({
             </div>
           </div>
           
-          {/* Removed top bar elements as per requirements */}
+          {/* Language Switcher */}
+          <div className="flex items-center gap-3">
+            <div className="bg-gray-50 p-2 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+              <LanguageSwitcher />
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -115,7 +120,12 @@ const TopBar: React.FC<TopBarProps> = ({
           </h1>
         </div>
         
-        {/* Removed mobile top bar elements as per requirements */}
+        {/* Language Switcher */}
+        <div className="flex items-center">
+          <div className="bg-gray-50 p-1 rounded-lg shadow-sm border border-gray-100">
+            <LanguageSwitcher isMobile={true} />
+          </div>
+        </div>
       </header>
       
       {/* Notification Panel */}
