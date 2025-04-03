@@ -20,6 +20,7 @@
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
   --primary-color: #3DD559;
+  --border-radius: 25px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -46,11 +47,39 @@ body {
   }
 }
 
+@layer components {
+  /* Apply border radius to common components */
+  .panel, .card, .modal, .bg-white, .rounded-lg, .rounded-xl, .rounded-2xl {
+    border-radius: var(--border-radius) !important;
+  }
+  
+  /* Apply to inputs and search boxes */
+  input[type="text"], 
+  input[type="search"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea,
+  .search-input {
+    border-radius: var(--border-radius) !important;
+  }
+  
+  /* Apply to action buttons */
+  .btn, button:not(.icon-btn) {
+    border-radius: var(--border-radius) !important;
+  }
+}
+
 @layer utilities {
   .text-primary {
     color: var(--primary-color);
   }
   .bg-primary {
     background-color: var(--primary-color);
+  }
+  .rounded-custom {
+    border-radius: var(--border-radius);
   }
 } 

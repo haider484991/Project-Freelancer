@@ -6,8 +6,6 @@ import LanguageSwitcher from '../LanguageSwitcher'
 import LogoutButton from '../LogoutButton'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
-import ProfileAvatar from './ProfileAvatar'
-import { useUser } from '@/context/UserContext'
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -122,9 +120,9 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
     <aside className={`${isMobile 
       ? 'relative w-full text-white' 
       : 'w-[304px] h-full text-white'
-    } p-[30px] bg-black/50 backdrop-blur-sm z-20 ${isRtl ? 'rtl' : 'ltr'}`}>
+    } p-[30px] bg-black/50 backdrop-blur-sm z-20 ${isRtl ? 'rtl' : 'ltr'} flex flex-col min-h-screen`}>
       {/* Logo */}
-      <div className="flex flex-col gap-[5px] bg-black/30 p-3 rounded-lg">
+      <div className="flex flex-col gap-[5px] bg-black/30 p-3 rounded-[25px]">
         <h1 className="font-michael text-primary text-[29px] uppercase tracking-[0.04em] leading-[100%] font-bold text-shadow-lg">
           FITTrack
         </h1>
@@ -136,13 +134,17 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
       {/* Navigation Menu - without profile section */}
       <nav className="mt-[60px] flex flex-col gap-[20px]">
         {updatedMenuItems.map((item) => {
-          const isActive = pathname === item.href
+          // Check if the current path starts with this item's href
+          const isActive = item.href === '/dashboard' 
+            ? pathname === '/dashboard'
+            : pathname.startsWith(item.href)
+          
           return (
             <Link
               key={item.href}
               href={item.href}
               className={`flex items-center gap-[14px] text-white hover:text-primary transition-colors ${isRtl ? 'flex-row-reverse' : ''} 
-              p-3 rounded-lg ${isActive ? 'bg-black/40' : 'hover:bg-black/20'} text-shadow-md`}
+              p-3 rounded-[25px] ${isActive ? 'bg-black/40 text-primary' : 'hover:bg-black/20'} text-shadow-md`}
               onClick={isMobile && onClose ? onClose : undefined}
             >
               <span className="w-6 h-6">
@@ -154,6 +156,9 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
         })}
       </nav>
 
+      {/* Flex spacer to push down the bottom elements */}
+      <div className="flex-grow"></div>
+
       {/* Language Switcher */}
       <div className="mt-[36px] mb-[20px]">
         <LanguageSwitcher />
@@ -161,7 +166,7 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
 
       {/* Logout Button */}
       <div className="mt-[16px]">
-        <LogoutButton />
+        <LogoutButton className="w-full" />
       </div>
       
       {/* Custom styles for text shadow */}

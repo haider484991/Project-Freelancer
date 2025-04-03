@@ -15,7 +15,7 @@ interface IssueItem {
 }
 
 interface FlaggedIssuesProps {
-  inactiveClients: number;
+  _inactiveClients: number;
   inactiveTraineesList?: Array<{
     id: string;
     name: string;
@@ -28,8 +28,8 @@ interface FlaggedIssuesProps {
   }>;
 }
 
-const FlaggedIssues = ({ inactiveClients, inactiveTraineesList = [] }: FlaggedIssuesProps) => {
-  const { clients } = useAppContext()
+const FlaggedIssues = ({ _inactiveClients, inactiveTraineesList = [] }: FlaggedIssuesProps) => {
+  const { clients: _clients } = useAppContext()
   const { t } = useTranslation()
   
   // Generate flagged issues based on client data

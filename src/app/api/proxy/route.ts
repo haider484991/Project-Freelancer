@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import https from 'https';
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,6 +35,11 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Create HTTPS agent to disable SSL verification for local development
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false // Disable SSL certificate verification
+    });
     
     // DEBUG: Log complete request body
     console.log('[Proxy] Request body:', JSON.stringify(body));
@@ -222,12 +228,14 @@ export async function POST(req: NextRequest) {
           id: authBody.id
         });
         
-        // Send request with auth data
+        // Send request with auth data and the HTTPS agent to disable SSL verification
         apiResponse = await fetch(apiUrl, {
           method: 'POST',
           headers,
           body: JSON.stringify(authBody),
-          credentials: 'include'
+          credentials: 'include',
+          // @ts-expect-error - Agent isn't in standard fetch types but works in Node.js
+          agent: httpsAgent
         });
       } else {
         // Standard request for login endpoints
@@ -235,7 +243,9 @@ export async function POST(req: NextRequest) {
           method: 'POST',
           headers,
           body: JSON.stringify(body),
-          credentials: 'include'
+          credentials: 'include',
+          // @ts-expect-error - Agent isn't in standard fetch types but works in Node.js
+          agent: httpsAgent
         });
       }
       

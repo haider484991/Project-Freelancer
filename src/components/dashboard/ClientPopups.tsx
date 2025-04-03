@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
 import Image from 'next/image';
 import Modal from '../Modal';
 import { useTranslation } from 'react-i18next';
@@ -481,190 +481,153 @@ export function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsMod
 // ==========================================================================
 // Create Group Modal
 // ==========================================================================
-
 interface CreateGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateGroup: (group: {
     name: string;
-    clients: string[];
     dietary: string;
     mealPlan: string;
-    dietaryGoal?: string;
   }) => void;
-  availableClients: ClientType[];
 }
 
 export function CreateGroupModal({ 
   isOpen, 
   onClose, 
-  onCreateGroup,
-  availableClients = [] 
+  onCreateGroup
 }: CreateGroupModalProps) {
-  const [name, setName] = useState('');
-  const [dietary, setDietary] = useState('');
-  const [mealPlan, setMealPlan] = useState('');
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  
   const { t } = useTranslation();
+  const [formData, setFormData] = useState({
+    name: '',
+    dietary: '',
+    mealPlan: ''
+  });
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    
     onCreateGroup({
-      name,
-      clients: selectedClients,
-      dietary,
-      mealPlan,
-      dietaryGoal: dietary // Map dietary to dietaryGoal for consistency
+      name: formData.name,
+      dietary: formData.dietary,
+      mealPlan: formData.mealPlan
     });
-    
     resetForm();
-    onClose();
   };
   
   const resetForm = () => {
-    setName('');
-    setDietary('');
-    setMealPlan('');
-    setSelectedClients([]);
-    setSearchTerm('');
+    setFormData({
+      name: '',
+      dietary: '',
+      mealPlan: ''
+    });
   };
   
-  const toggleClient = (clientId: string) => {
-    if (selectedClients.includes(clientId)) {
-      setSelectedClients(selectedClients.filter(id => id !== clientId));
-    } else {
-      setSelectedClients([...selectedClients, clientId]);
-    }
-  };
-  
-  // Filter clients based on search term
-  const filteredClients = availableClients.length > 0 
-    ? availableClients.filter(client => 
-        client.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  if (!isOpen) return null;
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
-      <div className="p-5">
-        <h2 className="text-center font-semibold text-xl mb-5">{t('create_group')}</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Group Name */}
-          <div>
-            <input
-              type="text"
-              placeholder={t('group_name')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753]"
-              required
-            />
-          </div>
-          
-          {/* Dietary Plan */}
-          <div>
-            <select
-              value={dietary}
-              onChange={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setDietary(e.target.value);
-              }}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] appearance-none"
-            >
-              <option value="" disabled>{t('select_dietary_plan')}</option>
-              <option value="Vegan">{t('vegan')}</option>
-              <option value="Vegetarian">{t('vegetarian')}</option>
-              <option value="Keto">{t('keto')}</option>
-              <option value="Paleo">{t('paleo')}</option>
-            </select>
-          </div>
-          
-          {/* Meal Plan */}
-          <div>
-            <select
-              value={mealPlan}
-              onChange={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setMealPlan(e.target.value);
-              }}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] appearance-none"
-            >
-              <option value="" disabled>{t('select_meal_plan')}</option>
-              <option value="1800 kcal/day">{t('1800_kcal_day')}</option>
-              <option value="2000 kcal/day">{t('2000_kcal_day')}</option>
-              <option value="2200 kcal/day">{t('2200_kcal_day')}</option>
-              <option value="2500 kcal/day">{t('2500_kcal_day')}</option>
-            </select>
-          </div>
-          
-          {/* Search Clients */}
-          <div>
-            <input
-              type="text"
-              placeholder={t('search_clients')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753]"
-            />
-          </div>
-          
-          {/* Client List */}
-          <div className="bg-[#F8F8F8] rounded-2xl p-3 max-h-48 overflow-y-auto">
-            {filteredClients.length > 0 ? (
-              <div className="grid grid-cols-1 gap-2">
-                {filteredClients.map(client => (
-                  <div 
-                    key={client.id}
-                    className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center ${
-                      selectedClients.includes(client.id) ? 'bg-white font-medium' : 'text-gray-500'
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      toggleClient(client.id);
-                    }}
-                  >
-                    <input 
-                      type="checkbox" 
-                      checked={selectedClients.includes(client.id)} 
-                      onChange={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleClient(client.id);
-                      }} 
-                      className="mr-2" 
-                    />
-                    {client.name}
-                  </div>
-                ))}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+      <div className="bg-white rounded-[25px] w-full max-w-2xl mx-auto">
+        <div className="p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#13A753]/10 p-2.5 rounded-[25px]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.16 10.87C9.06 10.86 8.94 10.86 8.83 10.87C6.45 10.79 4.56 8.84 4.56 6.44C4.56 3.99 6.54 2 9 2C11.45 2 13.44 3.99 13.44 6.44C13.43 8.84 11.54 10.79 9.16 10.87Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16.41 4C18.35 4 19.91 5.57 19.91 7.5C19.91 9.39 18.41 10.93 16.54 11C16.46 10.99 16.37 10.99 16.28 11" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-            ) : (
-              <div className="text-center py-3 text-gray-400">
-                {availableClients.length > 0 
-                  ? t('no_clients_found')
-                  : t('no_clients_available')}
-              </div>
-            )}
-          </div>
-          
-          <div className="pt-3">
-            <button
-              type="submit"
-              className="w-full bg-[#13A753] text-white font-medium py-3 rounded-full hover:bg-[#0D8A40] transition-colors"
+              <h2 className="text-2xl font-semibold text-gray-800">{t('group.create', 'Create Group')}</h2>
+            </div>
+            <button 
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-[25px]"
+              aria-label={t('common.close', 'Close')}
             >
-              {t('create_group')}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           </div>
-        </form>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information Section */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('group.basicInfo', 'Basic Information')}</h3>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('group.enterName', 'Enter group name')}
+                  />
+                </div>
+                
+                {/* Dietary Guidelines */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="dietary"
+                    value={formData.dietary}
+                    onChange={(e) => setFormData({...formData, dietary: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
+                  />
+                </div>
+                
+                {/* Meal Plan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="mealPlan"
+                    value={formData.mealPlan}
+                    onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-[25px] text-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-[25px] text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              >
+                {t('common.create', 'Create')}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 
@@ -677,207 +640,161 @@ interface EditGroupModalProps {
   onEditGroup: (group: {
     id: string;
     name: string;
-    clients: string[];
     dietary: string;
     mealPlan: string;
-    members?: number;
-    createdAt?: string;
-    dietaryGoal?: string;
   }) => void;
   group?: {
     id: string;
     name: string;
-    clients?: string[];
     dietary?: string;
     mealPlan?: string;
-    members?: number;
-    createdAt?: string;
     dietaryGoal?: string;
   };
-  availableClients: ClientType[];
 }
 
 export function EditGroupModal({
   isOpen,
   onClose,
   onEditGroup,
-  group,
-  availableClients = []
+  group
 }: EditGroupModalProps) {
-  const [groupName, setGroupName] = useState(group?.name || '');
-  const [selectedClients, setSelectedClients] = useState<string[]>(group?.clients || []);
-  const [dietaryGuidelines, setDietaryGuidelines] = useState(group?.dietary || '');
-  const [mealPlan, setMealPlan] = useState(group?.mealPlan || '');
-  const [searchTerm, setSearchTerm] = useState('');
-  
   const { t } = useTranslation();
+  const [formData, setFormData] = useState({
+    id: group?.id || '',
+    name: group?.name || '',
+    dietary: group?.dietary || group?.dietaryGoal || '',
+    mealPlan: group?.mealPlan || ''
+  });
   
-  // Update state when group prop changes
-  React.useEffect(() => {
+  // Update form data when group changes
+  useEffect(() => {
     if (group) {
-      setGroupName(group.name || '');
-      setSelectedClients(group.clients || []);
-      setDietaryGuidelines(group.dietary || '');
-      setMealPlan(group.mealPlan || '');
+      setFormData({
+        id: group.id || '',
+        name: group.name || '',
+        dietary: group.dietary || group.dietaryGoal || '',
+        mealPlan: group.mealPlan || ''
+      });
     }
   }, [group]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    
-    if (!group || !group.id) {
-      console.error('Cannot edit group: missing group ID');
-      return;
-    }
-    
-    const updatedGroup = {
-      ...group, // Preserve all original properties
-      id: group.id,
-      name: groupName,
-      clients: selectedClients,
-      dietary: dietaryGuidelines,
-      mealPlan,
-      dietaryGoal: dietaryGuidelines // Update dietaryGoal to match dietary
-    };
-    
-    console.log('Submitting edited group:', updatedGroup);
-    onEditGroup(updatedGroup);
-    onClose();
+    onEditGroup({
+      id: formData.id,
+      name: formData.name,
+      dietary: formData.dietary,
+      mealPlan: formData.mealPlan
+    });
   };
   
-  const toggleClient = (clientId: string) => {
-    if (selectedClients.includes(clientId)) {
-      setSelectedClients(selectedClients.filter(id => id !== clientId));
-    } else {
-      setSelectedClients([...selectedClients, clientId]);
-    }
-  };
-  
-  const filteredClients = availableClients.filter(client => 
-    client.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  if (!isOpen || !group) return null;
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md md:max-w-3xl lg:max-w-5xl">
-      <div className="p-5">
-        <h2 className="text-center font-semibold text-xl mb-6">{t('edit_group')}</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Group Name */}
-          <div>
-            <input
-              type="text"
-              placeholder={t('enter_group_name')}
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] resize-none"
-              required
-            />
-          </div>
-          
-          {/* Assign Clients */}
-          <div className="relative">
-            <button
-              type="button"
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm text-left flex justify-between items-center"
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+      <div className="bg-white rounded-[25px] w-full max-w-2xl mx-auto">
+        <div className="p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#13A753]/10 p-2.5 rounded-[25px]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9.16 10.87C9.06 10.86 8.94 10.86 8.83 10.87C6.45 10.79 4.56 8.84 4.56 6.44C4.56 3.99 6.54 2 9 2C11.45 2 13.44 3.99 13.44 6.44C13.43 8.84 11.54 10.79 9.16 10.87Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16.41 4C18.35 4 19.91 5.57 19.91 7.5C19.91 9.39 18.41 10.93 16.54 11C16.46 10.99 16.37 10.99 16.28 11" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800">{t('group.edit', 'Edit Group')}</h2>
+            </div>
+            <button 
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-[25px]"
+              aria-label={t('common.close', 'Close')}
             >
-              <span className="text-[#636363]">{t('assign_clients')}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            
-            <div className="mt-2 border border-gray-100 rounded-xl p-3">
-              <div className="mb-3">
-                <div className="relative">
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information Section */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('group.basicInfo', 'Basic Information')}</h3>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder={t('search_client')}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-gray-100 rounded-full text-sm focus:outline-none"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('group.enterName', 'Enter group name')}
                   />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M22 22L20 20" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
+                </div>
+                
+                {/* Dietary Guidelines */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="dietary"
+                    value={formData.dietary}
+                    onChange={(e) => setFormData({...formData, dietary: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
+                  />
+                </div>
+                
+                {/* Meal Plan */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="mealPlan"
+                    value={formData.mealPlan}
+                    onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
+                  />
                 </div>
               </div>
-              
-              <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
-                {filteredClients.map(client => (
-                  <div 
-                    key={client.id}
-                    className="flex items-center p-2 hover:bg-gray-50 rounded-md"
-                  >
-                    <input
-                      type="checkbox"
-                      id={`edit-client-${client.id}`}
-                      checked={selectedClients.includes(client.id)}
-                      onChange={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleClient(client.id);
-                      }}
-                      className="w-4 h-4 text-[#13A753] border-gray-300 rounded focus:ring-[#13A753]"
-                    />
-                    <label htmlFor={`edit-client-${client.id}`} className="ml-3 text-sm text-[#636363] cursor-pointer">
-                      {client.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
             </div>
-          </div>
-          
-          {/* Dietary Guidelines */}
-          <div>
-            <textarea
-              placeholder={t('enter_dietary_guidelines')}
-              value={dietaryGuidelines}
-              onChange={(e) => setDietaryGuidelines(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] resize-none"
-              rows={3}
-            ></textarea>
-          </div>
-          
-          {/* Meal Plan */}
-          <div className="relative">
-            <select
-              value={mealPlan}
-              onChange={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setMealPlan(e.target.value);
-              }}
-              className="w-full px-4 py-3 border border-gray-100 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-[#13A753] appearance-none"
-            >
-              <option value="" disabled>{t('select_meal_plan')}</option>
-              <option value="Low Carb">{t('low_carb')}</option>
-              <option value="High Protein">{t('high_protein')}</option>
-            </select>
-            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 9L12 16L5 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-[25px] text-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-[25px] text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              >
+                {t('common.save', 'Save')}
+              </button>
             </div>
-          </div>
-          
-          {/* Save Button */}
-          <div className="pt-3">
-            <button
-              type="submit"
-              className="w-full bg-[#13A753] text-white font-medium py-3 rounded-full hover:bg-[#0D8A40] transition-colors"
-            >
-              {t('edit_group')}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 

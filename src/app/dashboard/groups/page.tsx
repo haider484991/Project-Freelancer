@@ -38,9 +38,10 @@ function convertApiGroupsToGroups(apiGroups: ApiGroup[]): Group[] {
   return apiGroups.map(group => ({
     id: group.id,
     name: group.name,
-    members: [], // Members will be populated separately
+    members: 0, // Start with 0, will be updated with actual count later
     dietary: group.dietary_guidelines || '',
     mealPlan: group.weekly_menu || '',
+    createdAt: new Date().toLocaleDateString(), // Add default value
     apiData: group
   }))
 }
@@ -124,10 +125,15 @@ export default function CoachingGroupsPage() {
   
   // Fetch groups and trainees from API
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        // Fetch groups
+    fetchData()
+  }, [])
+  
+  // Function to fetch data from API
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      // Fetch groups
+      if (groupsApi) {
         const groupsResponse = await groupsApi.list()
         const groups = parseApiResponse<ApiGroup>(groupsResponse.data);
         if (groups.length > 0) {
@@ -136,8 +142,10 @@ export default function CoachingGroupsPage() {
             console.log('Fetched groups:', groups)
           }
         }
-        
-        // Fetch trainees/clients
+      }
+      
+      // Fetch trainees/clients
+      if (traineesApi) {
         const traineesResponse = await traineesApi.list()
         const trainees = parseApiResponse<ApiTrainee>(traineesResponse.data);
         if (trainees.length > 0) {
@@ -159,18 +167,16 @@ export default function CoachingGroupsPage() {
             console.log('Fetched trainees for clients:', trainees)
           }
         }
-      } catch (err) {
-        console.error('Error fetching data:', err)
-        setError('Failed to load groups and clients')
-        setApiGroups([])
-        setApiTrainees([])
-      } finally {
-        setLoading(false)
       }
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to load groups and clients')
+      setApiGroups([])
+      setApiTrainees([])
+    } finally {
+      setLoading(false)
     }
-    
-    fetchData()
-  }, [])
+  }
   
   // Update filtered groups when apiGroups, contextGroups, or searchQuery changes
   useEffect(() => {
@@ -203,94 +209,54 @@ export default function CoachingGroupsPage() {
       setFilteredGroups(filtered)
   }, [apiGroups, apiTrainees, contextGroups, searchQuery])
   
-  // Handle create group
+  // Handle creating a new group
   const handleCreateGroup = async (group: {
     name: string;
-    clients: string[];
     dietary: string;
     mealPlan: string;
-    dietaryGoal?: string;
   }) => {
+    setLoading(true);
+    
     try {
-      setLoading(true)
-      
-      const response = await groupsApi.set({
+      // Prepare the API request data
+      const apiRequestData = {
+        mdl: 'groups',
+        act: 'set',
         name: group.name,
-        dietary_guidelines: group.dietary || '',
-        weekly_menu: group.mealPlan || ''
-      })
+        dietary_guidelines: group.dietary,
+        weekly_menu: group.mealPlan
+      };
+      
+      // Make the API request
+      const response = await groupsApi.set(apiRequestData);
       
       if (response.data && response.data.success) {
-        // Get the new group ID
-        const groupId = response.data.group_id
+        // Show success message
+        setSuccessMessage(t('group_created_successfully'));
         
-        // Update clients to associate them with this group
-        if (group.clients.length > 0) {
-          // Update each client's group_id
-          for (const clientId of group.clients) {
-            // Find the client in apiTrainees
-            const trainee = apiTrainees.find(t => t.id === clientId)
-            if (trainee) {
-              await traineesApi.set({
-                id: trainee.id,
-                name: trainee.name,
-                email: trainee.email || '',
-                phone: trainee.phone || '',
-                group_id: groupId,
-                is_active: '1',
-                gender: trainee.gender || '1',
-                target_calories: trainee.target_calories || '2000',
-                target_weight: trainee.target_weight || '70'
-              })
-            }
-          }
-        }
-        
-        // Refresh groups list
-        const refreshResponse = await groupsApi.list()
-        const refreshedGroups = parseApiResponse<ApiGroup>(refreshResponse.data);
-        if (refreshedGroups.length > 0) {
-          setApiGroups(refreshedGroups);
-        }
-        
-        // Refresh trainees list to get updated group associations
-        const refreshTraineesResponse = await traineesApi.list()
-        const refreshedTrainees = parseApiResponse<ApiTrainee>(refreshTraineesResponse.data);
-        if (refreshedTrainees.length > 0) {
-          setApiTrainees(refreshedTrainees);
-        }
-        
-        // Add to context for fallback
+        // Add to context if needed (as fallback)
         addGroup({
-          id: groupId,
+          id: response.data.id || `temp-${Date.now()}`,
           name: group.name,
-          members: group.clients,
-          dietary: group.dietary || '',
-          mealPlan: group.mealPlan || ''
-        })
+          members: 0,
+          dietary: group.dietary,
+          mealPlan: group.mealPlan,
+          createdAt: new Date().toLocaleDateString()
+        });
         
-        setSuccessMessage(t('groupsPage.groupCreatedSuccess'))
-        setShowCreateGroupModal(false)
+        // Refresh data
+        fetchData();
       } else {
-        setError(t('groupsPage.errorCreatingGroup'))
+        setError(response.data?.message || 'Failed to create group');
       }
-    } catch (err) {
-      console.error('Error creating group:', err)
-      setError(t('groupsPage.errorCreatingGroup'))
-      
-      // Fall back to context only
-      const newGroupId = Math.random().toString(36).substring(7)
-      addGroup({
-        id: newGroupId,
-        name: group.name,
-        members: group.clients,
-        dietary: group.dietary || '',
-        mealPlan: group.mealPlan || ''
-      })
+    } catch (error) {
+      console.error('Error creating group:', error);
+      setError('An error occurred while creating the group');
     } finally {
-      setLoading(false)
+      setLoading(false);
+      setShowCreateGroupModal(false);
     }
-  }
+  };
   
   // Handle view/edit group
   const handleEditGroup = (group: Group) => {
@@ -298,118 +264,53 @@ export default function CoachingGroupsPage() {
     setShowEditGroupModal(true)
   }
   
-  // Handle save edited group
+  // Handle saving edited group
   const handleSaveEditedGroup = async (editedGroup: {
     id: string;
     name: string;
-    clients: string[];
     dietary: string;
     mealPlan: string;
-    dietaryGoal?: string;
   }) => {
+    setLoading(true);
+    
     try {
-      setLoading(true)
-      
-      // Update group details
-      const response = await groupsApi.set({
+      // Prepare API request data
+      const apiRequestData = {
+        mdl: 'groups',
+        act: 'set',
         id: editedGroup.id,
         name: editedGroup.name,
-        dietary_guidelines: editedGroup.dietary || '',
-        weekly_menu: editedGroup.mealPlan || ''
-      })
+        dietary_guidelines: editedGroup.dietary,
+        weekly_menu: editedGroup.mealPlan
+      };
+      
+      // Make the API request
+      const response = await groupsApi.set(apiRequestData);
       
       if (response.data && response.data.success) {
-        // Get current members of this group
-        const currentMembers = apiTrainees
-          .filter(trainee => trainee.group_id === editedGroup.id)
-          .map(trainee => trainee.id)
+        // Show success message
+        setSuccessMessage(t('group_updated_successfully'));
         
-        // Determine which members to add and which to remove
-        const membersToAdd = editedGroup.clients.filter(id => !currentMembers.includes(id))
-        const membersToRemove = currentMembers.filter(id => !editedGroup.clients.includes(id))
-        
-        // Add new members to this group
-        for (const clientId of membersToAdd) {
-          // Find the client in apiTrainees
-          const trainee = apiTrainees.find(t => t.id === clientId)
-          if (trainee) {
-            await traineesApi.set({
-              id: trainee.id,
-              name: trainee.name,
-              email: trainee.email || '',
-              phone: trainee.phone || '',
-              group_id: editedGroup.id,
-              is_active: '1',
-              gender: trainee.gender || '1',
-              target_calories: trainee.target_calories || '2000',
-              target_weight: trainee.target_weight || '70'
-            })
-          }
-        }
-        
-        // Remove members from this group (set to default group or no group)
-        for (const clientId of membersToRemove) {
-          // Find the client in apiTrainees
-          const trainee = apiTrainees.find(t => t.id === clientId)
-          if (trainee) {
-            await traineesApi.set({
-              id: trainee.id,
-              name: trainee.name,
-              email: trainee.email || '',
-              phone: trainee.phone || '',
-              group_id: '0', // Default/no group
-              is_active: '1',
-              gender: trainee.gender || '1',
-              target_calories: trainee.target_calories || '2000',
-              target_weight: trainee.target_weight || '70'
-            })
-          }
-        }
-        
-        // Refresh groups list
-        const refreshResponse = await groupsApi.list()
-        const refreshedGroups = parseApiResponse<ApiGroup>(refreshResponse.data);
-        if (refreshedGroups.length > 0) {
-          setApiGroups(refreshedGroups);
-        }
-        
-        // Refresh trainees list to get updated group associations
-        const refreshTraineesResponse = await traineesApi.list()
-        const refreshedTrainees = parseApiResponse<ApiTrainee>(refreshTraineesResponse.data);
-        if (refreshedTrainees.length > 0) {
-          setApiTrainees(refreshedTrainees);
-        }
-        
-        // Update context for fallback
-        updateGroup({
-          id: editedGroup.id,
+        // Update in context
+        updateGroup(editedGroup.id, {
           name: editedGroup.name,
-          members: editedGroup.clients,
-          dietary: editedGroup.dietary || '',
-          mealPlan: editedGroup.mealPlan || ''
-        })
+          dietary: editedGroup.dietary,
+          mealPlan: editedGroup.mealPlan
+        });
         
-        setSuccessMessage(t('groupsPage.groupUpdatedSuccess'))
-        setShowEditGroupModal(false)
+        // Refresh data
+        fetchData();
       } else {
-        setError(t('groupsPage.errorUpdatingGroup'))
+        setError(response.data?.message || 'Failed to update group');
       }
-    } catch (err) {
-      console.error('Error updating group:', err)
-      setError(t('groupsPage.errorUpdatingGroup'))
-      
-      // Fall back to context only
-      updateGroup({
-        id: editedGroup.id,
-        name: editedGroup.name,
-        members: editedGroup.clients,
-        dietary: editedGroup.dietary || '',
-        mealPlan: editedGroup.mealPlan || ''
-      })
+    } catch (error) {
+      console.error('Error updating group:', error);
+      setError('An error occurred while updating the group');
     } finally {
-      setLoading(false)
+      setLoading(false);
+      setShowEditGroupModal(false);
     }
-  }
+  };
   
   // Handle delete group
   const handleDeleteGroup = async (groupId: string) => {
@@ -612,7 +513,6 @@ export default function CoachingGroupsPage() {
         isOpen={showCreateGroupModal}
         onClose={() => setShowCreateGroupModal(false)}
         onCreateGroup={handleCreateGroup}
-        availableClients={availableClients}
       />
       
         {/* Edit Group Modal */}
@@ -622,7 +522,6 @@ export default function CoachingGroupsPage() {
         onClose={() => setShowEditGroupModal(false)}
         onEditGroup={handleSaveEditedGroup}
         group={selectedGroup}
-        availableClients={availableClients}
       />
         )}
     </div>
