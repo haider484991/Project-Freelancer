@@ -12,10 +12,16 @@ interface ClientDetailsModalProps {
     dietaryGoal: string;
     image?: string;
     workoutGoal?: string;
+    status?: string;
+    gender?: string;
+    email?: string;
+    phone?: string;
   };
+  onEdit?: (client: any) => void;
+  onDelete?: (client: any) => void;
 }
 
-export default function ClientDetailsModal({ isOpen, onClose, client }: ClientDetailsModalProps) {
+export default function ClientDetailsModal({ isOpen, onClose, client, onEdit, onDelete }: ClientDetailsModalProps) {
   const [selectedWeek, setSelectedWeek] = useState(1);
   
   if (!client) return null;
@@ -27,6 +33,18 @@ export default function ClientDetailsModal({ isOpen, onClose, client }: ClientDe
     { week: 3, compliant: true },
     { week: 4, compliant: true },
   ];
+
+  const handleEdit = () => {
+    if (onEdit && client) {
+      onEdit(client);
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete && client) {
+      onDelete(client);
+    }
+  };
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
@@ -105,9 +123,41 @@ export default function ClientDetailsModal({ isOpen, onClose, client }: ClientDe
           </div>
         </div>
         
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex justify-between">
+          <div className="flex gap-2">
+            {onEdit && (
+              <button
+                onClick={handleEdit}
+                className="bg-[#F3F7F3] hover:bg-[#E5F0E5] text-[#13A753] font-medium py-2 px-4 rounded-full flex items-center gap-2 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22H15C20 22 22 20 22 15V13" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16.04 3.02L8.16 10.9C7.86 11.2 7.56 11.79 7.5 12.22L7.07 15.23C6.91 16.32 7.68 17.08 8.77 16.93L11.78 16.5C12.2 16.44 12.79 16.14 13.1 15.84L20.98 7.96C22.34 6.6 22.98 5.02 20.98 3.02C18.98 1.02 17.4 1.66 16.04 3.02Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14.91 4.1501C15.58 6.5401 17.45 8.4101 19.85 9.0901" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Edit
+              </button>
+            )}
+            
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className="bg-[#FFF5F5] hover:bg-[#FFE5E5] text-[#FF5C5C] font-medium py-2 px-4 rounded-full flex items-center gap-2 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10.33 16.5H13.66" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9.5 12.5H14.5" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Delete
+              </button>
+            )}
+          </div>
+          
           <button
-            className="bg-gradient-to-r from-[#106A02] to-[#13A753] text-white font-medium py-3 px-10 rounded-full"
+            className="bg-gradient-to-r from-[#106A02] to-[#13A753] text-white font-medium py-2 px-6 rounded-full"
           >
             Chat
           </button>

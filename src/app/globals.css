@@ -21,6 +21,7 @@
   --background-end-rgb: 255, 255, 255;
   --primary-color: #3DD559;
   --border-radius: 25px;
+  --bg-dark: #121212;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,12 +34,54 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background-color: var(--bg-dark);
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Global background grid pattern */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 
+    calc(100% / 12) 100%,
+    100% calc(100% / 12);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Global background blur elements */
+body::after {
+  content: "";
+  position: absolute;
+  width: 418px;
+  height: 633px;
+  top: -404px;
+  right: 452px;
+  border-radius: 9999px;
+  background-color: rgba(61, 213, 89, 0.8);
+  filter: blur(287px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-blur-bottom {
+  position: fixed;
+  width: 418px;
+  height: 633px;
+  bottom: -400px;
+  left: -271px;
+  border-radius: 9999px;
+  background-color: rgba(61, 213, 89, 0.8);
+  filter: blur(324px);
+  z-index: 0;
+  pointer-events: none;
 }
 
 @layer base {

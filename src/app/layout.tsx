@@ -26,6 +26,7 @@ export default function RootLayout({
             </Providers>
           </Suspense>
         </ErrorBoundaryWrapper>
+        <div className="bg-blur-bottom"></div>
       </body>
     </html>
   )

@@ -79,9 +79,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </div>
       </div>
       
-      {/* Background blur elements */}
-      <div className="absolute w-[418px] h-[633px] top-[-363px] right-[639px] rounded-full bg-primary/80 blur-[287px] hidden lg:block"></div>
-      <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-84px] rounded-full bg-primary/80 blur-[324px] hidden lg:block"></div>
+      {/* Background blur elements - matching login page specs */}
+      <div className="absolute w-[418px] h-[633px] top-[-404px] right-[452px] rounded-full bg-primary/80 blur-[287px] lg:block hidden"></div>
+      <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-271px] rounded-full bg-primary/80 blur-[324px] lg:block hidden"></div>
       
       {/* Mobile background blur elements */}
       <div className="absolute w-[300px] h-[300px] top-[-150px] right-[-150px] rounded-full bg-primary/50 blur-[150px] lg:hidden block"></div>
