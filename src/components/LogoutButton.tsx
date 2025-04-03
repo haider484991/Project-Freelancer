@@ -32,27 +32,40 @@ export default function LogoutButton({ className = '' }: LogoutButtonProps) {
         credentials: 'include'
       });
       
-      const data = await response.json();
-      
-      if (data.success) {
-        // Clear all auth-related storage
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('token');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('is_logged_in');
-        localStorage.removeItem('user_phone');
-        localStorage.removeItem('user_id');
-        
-        // Clear Redux state
-        dispatch(logout());
-        
-        // Redirect to login page
-        router.push('/login');
-      } else {
-        console.error('Logout failed:', data.message || 'Unknown error');
+      // Handle response, but don't wait for it to be successful to proceed with local logout
+      try {
+        const data = await response.json();
+        console.log('Logout API response:', data);
+      } catch (e) {
+        console.log('Error parsing logout response:', e);
       }
+      
+      // Always clear local storage and state regardless of API response
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('is_logged_in');
+      localStorage.removeItem('user_phone');
+      localStorage.removeItem('user_id');
+      sessionStorage.clear();
+      
+      // Clear Redux state
+      dispatch(logout() as any);
+      
+      // Redirect to login page
+      router.push('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout error:', error);
+      
+      // Even if API call fails, still logout locally
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('is_logged_in');
+      sessionStorage.clear();
+      
+      dispatch(logout() as any);
+      router.push('/login');
     } finally {
       setLoading(false);
     }

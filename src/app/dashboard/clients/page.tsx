@@ -302,20 +302,6 @@ export default function ClientManagementPage() {
     }
   };
   
-  // Handle export clients (example function)
-  const handleExportClients = (e: React.MouseEvent) => {
-    e.preventDefault()
-    console.log('Exporting clients:', clientsList)
-    // Implement export logic
-  }
-  
-  // Handle schedule (example function)
-  const handleSchedule = (e: React.MouseEvent) => {
-    e.preventDefault()
-    console.log('Opening schedule')
-    // Implement schedule logic
-  }
-  
   // Client page icon
   const clientPageIcon = (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

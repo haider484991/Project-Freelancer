@@ -9,11 +9,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     // Check if we're running in the browser before accessing localStorage
     if (typeof window !== 'undefined') {
       try {
-        // Initialize any client-side specific i18n settings
-        const savedLang = localStorage.getItem('language') || 'en';
-        i18n.changeLanguage(savedLang);
-        document.documentElement.dir = savedLang === 'he' ? 'rtl' : 'ltr';
-        document.documentElement.lang = savedLang;
+        // Always use Hebrew language
+        const langToUse = 'he';
+        i18n.changeLanguage(langToUse);
+        document.documentElement.dir = 'rtl';
+        document.documentElement.lang = langToUse;
       } catch (error) {
         console.error('Error initializing i18n:', error);
       }

@@ -164,8 +164,8 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
         <LanguageSwitcher />
       </div>
 
-      {/* Logout Button */}
-      <div className="mt-[16px]">
+      {/* Logout Button - moved to the very bottom with more space */}
+      <div className="mt-auto pt-8">
         <LogoutButton className="w-full" />
       </div>
       

@@ -70,6 +70,16 @@ body {
   .btn, button:not(.icon-btn) {
     border-radius: var(--border-radius) !important;
   }
+  
+  /* Additional classes for tailwind compatibility */
+  .rounded-25 {
+    border-radius: 25px !important;
+  }
+  
+  /* Override any instances of other rounded corners */
+  .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-full, .rounded-\[10px\], .rounded-\[20px\] {
+    border-radius: 25px !important;
+  }
 }
 
 @layer utilities {

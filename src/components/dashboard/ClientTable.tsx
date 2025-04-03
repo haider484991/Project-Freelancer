@@ -152,7 +152,12 @@ export default function ClientTable({
               filteredClients.map((client) => (
                 <tr key={client.id} className="border-b border-gray-100">
                   <td className="py-4 px-4">
-                    <div className="font-medium text-[#1E1E1E]">{client.name}</div>
+                    <div 
+                      className="font-medium text-[#1E1E1E] hover:text-primary cursor-pointer"
+                      onClick={(e) => handleViewClient(e, client)}
+                    >
+                      {client.name}
+                    </div>
                   </td>
                   <td className="py-4 px-4 text-[#636363]">{client.phone || '-'}</td>
                   <td className="py-4 px-4 text-[#636363]">{client.email || '-'}</td>
@@ -213,7 +218,8 @@ export default function ClientTable({
                 </div>
                 <div className="text-sm text-[#636363] mb-1">{client.phone || '-'}</div>
                 <div className="text-sm text-[#636363] mb-1">{client.email || '-'}</div>
-                <div className="flex justify-between mt-3">
+                <div className="text-sm text-[#636363] mb-2">{getGenderText(client.gender)}</div>
+                <div className="flex justify-between mt-2">
                   <div className="text-xs text-[#636363]">{client.group || '-'}</div>
                   <button
                     onClick={(e) => {

@@ -1029,12 +1029,12 @@ export function EditClientModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-      <div className="bg-white rounded-25 w-full max-w-2xl mx-auto">
+      <div className="bg-white rounded-3xl w-full max-w-2xl mx-auto">
         <div className="p-6 md:p-8">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-3">
-              <div className="bg-[#13A753]/10 p-2.5 rounded-25">
+              <div className="bg-[#13A753]/10 p-2.5 rounded-xl">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#13A753" fillOpacity="0.3"/>
                   <path d="M12 14.5C6.99 14.5 2.91 17.86 2.91 22C2.91 22.28 3.13 22.5 3.41 22.5H20.59C20.87 22.5 21.09 22.28 21.09 22C21.09 17.86 17.01 14.5 12 14.5Z" fill="#13A753" fillOpacity="0.3"/>
@@ -1044,7 +1044,7 @@ export function EditClientModal({
             </div>
             <button 
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-25"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
               aria-label="Close"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1063,7 +1063,7 @@ export function EditClientModal({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Name */}
-                <div>
+                <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.name', 'Name')} <span className="text-red-500">*</span>
                   </label>
@@ -1073,7 +1073,7 @@ export function EditClientModal({
                     value={formData?.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_name', 'Enter client name')}
                   />
                 </div>
@@ -1088,7 +1088,7 @@ export function EditClientModal({
                     name="email"
                     value={formData?.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_email', 'Enter email address')}
                   />
                 </div>
@@ -1103,7 +1103,7 @@ export function EditClientModal({
                     name="phone"
                     value={formData?.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_phone', 'Enter phone number')}
                   />
                 </div>
@@ -1117,7 +1117,7 @@ export function EditClientModal({
                     name="group_id"
                     value={formData?.group_id}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                   >
                     <option value="">{t('client.select_group', 'Select group')}</option>
                     {availableGroups.map(group => (
@@ -1135,7 +1135,7 @@ export function EditClientModal({
                     name="gender"
                     value={formData?.gender}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                   >
                     <option value="male">{getMaleText()}</option>
                     <option value="female">{getFemaleText()}</option>
@@ -1151,7 +1151,7 @@ export function EditClientModal({
                     name="is_active"
                     value={formData?.is_active}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                   >
                     <option value="1">{t('client.active', 'Active')}</option>
                     <option value="0">{t('client.inactive', 'Inactive')}</option>
@@ -1168,7 +1168,7 @@ export function EditClientModal({
                     name="target_calories"
                     value={formData?.target_calories}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_calories', 'Enter target calories')}
                   />
                 </div>
@@ -1183,7 +1183,7 @@ export function EditClientModal({
                     name="target_weight"
                     value={formData?.target_weight}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_weight', 'Enter target weight')}
                   />
                 </div>
@@ -1191,18 +1191,18 @@ export function EditClientModal({
             </div>
             
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 justify-end">
+            <div className="flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-25 text-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors text-sm"
               >
                 {t('common.cancel', 'Cancel')}
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-25 text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-[#13A753] text-white font-medium rounded-xl hover:bg-[#0F8A44] transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
               </button>

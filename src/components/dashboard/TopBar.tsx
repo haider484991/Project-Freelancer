@@ -3,7 +3,6 @@
 import React, { ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ProfileAvatar from '@/components/dashboard/ProfileAvatar'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useUser } from '@/context/UserContext'
 import { useAppContext } from '@/context/AppContext'
 import NotificationPanel from '@/components/dashboard/NotificationPanel'
@@ -87,13 +86,6 @@ const TopBar: React.FC<TopBarProps> = ({
               <h1 className="text-2xl font-bold text-[#1E1E1E]">{pageTitle}</h1>
             </div>
           </div>
-          
-          {/* Language Switcher */}
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-50 p-2 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-              <LanguageSwitcher />
-            </div>
-          </div>
         </div>
       </div>
     )
@@ -118,13 +110,6 @@ const TopBar: React.FC<TopBarProps> = ({
           <h1 className="font-michael text-primary text-[24px] uppercase tracking-[0.04em] leading-[100%] font-bold">
             FITTrack
           </h1>
-        </div>
-        
-        {/* Language Switcher */}
-        <div className="flex items-center">
-          <div className="bg-gray-50 p-1 rounded-lg shadow-sm border border-gray-100">
-            <LanguageSwitcher isMobile={true} />
-          </div>
         </div>
       </header>
       
