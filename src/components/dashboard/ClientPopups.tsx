@@ -513,110 +513,98 @@ export function CreateGroupModal({
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-      <div className="bg-white rounded-[25px] w-full max-w-2xl mx-auto">
-        <div className="p-6 md:p-8">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#13A753]/10 p-2.5 rounded-[25px]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.16 10.87C9.06 10.86 8.94 10.86 8.83 10.87C6.45 10.79 4.56 8.84 4.56 6.44C4.56 3.99 6.54 2 9 2C11.45 2 13.44 3.99 13.44 6.44C13.43 8.84 11.54 10.79 9.16 10.87Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M16.41 4C18.35 4 19.91 5.57 19.91 7.5C19.91 9.39 18.41 10.93 16.54 11C16.46 10.99 16.37 10.99 16.28 11" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800">{t('group.create', 'Create Group')}</h2>
-            </div>
-            <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-[25px]"
-              aria-label={t('common.close', 'Close')}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
+      <div className="p-6 md:p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#13A753]/10 p-2.5 rounded-xl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.16 10.87C9.06 10.86 8.94 10.86 8.83 10.87C6.45 10.79 4.56 8.84 4.56 6.44C4.56 3.99 6.54 2 9 2C11.45 2 13.44 3.99 13.44 6.44C13.43 8.84 11.54 10.79 9.16 10.87Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.41 4C18.35 4 19.91 5.57 19.91 7.5C19.91 9.39 18.41 10.93 16.54 11C16.46 10.99 16.37 10.99 16.28 11" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-            </button>
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-800">{t('group.create', 'Create Group')}</h2>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information Section */}
-            <div className="space-y-5">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('group.basicInfo', 'Basic Information')}</h3>
-              
-              <div className="grid grid-cols-1 gap-4">
-                {/* Name */}
-          <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
-                  </label>
-            <input
-              type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-              required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                    placeholder={t('group.enterName', 'Enter group name')}
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information Section */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('group.basicInfo', 'Basic Information')}</h3>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  placeholder={t('group.enterName', 'Enter group name')}
+                />
+              </div>
+          
+              {/* Dietary Guidelines */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="dietary"
+                  value={formData.dietary}
+                  onChange={(e) => setFormData({...formData, dietary: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
+                />
+              </div>
+          
+              {/* Meal Plan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="mealPlan"
+                  value={formData.mealPlan}
+                  onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
+                />
+              </div>
+            </div>
           </div>
           
-                {/* Dietary Guidelines */}
-          <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="dietary"
-                    value={formData.dietary}
-                    onChange={(e) => setFormData({...formData, dietary: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                    placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
-                  />
-          </div>
-          
-          {/* Meal Plan */}
-          <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
-                  </label>
-            <input
-              type="text"
-                    name="mealPlan"
-                    value={formData.mealPlan}
-                    onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                    placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
-            />
-          </div>
-                  </div>
-          </div>
-          
-            {/* Action Buttons */}
-            <div className="flex gap-3 justify-end pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-[25px] text-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
-              >
-                {t('common.cancel', 'Cancel')}
-              </button>
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full border border-gray-300 text-gray-700 font-medium py-3 rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              {t('common.cancel', 'Cancel')}
+            </button>
             <button
               type="submit"
-                className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-[25px] text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              className="w-full bg-gradient-to-r from-[#106A02] to-[#13A753] text-white font-medium py-3 rounded-xl"
             >
-                {t('common.create', 'Create')}
+              {t('common.create', 'Create')}
             </button>
           </div>
         </form>
       </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -680,110 +668,98 @@ export function EditGroupModal({
   if (!isOpen || !group) return null;
   
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-      <div className="bg-white rounded-[25px] w-full max-w-2xl mx-auto">
-        <div className="p-6 md:p-8">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#13A753]/10 p-2.5 rounded-[25px]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.16 10.87C9.06 10.86 8.94 10.86 8.83 10.87C6.45 10.79 4.56 8.84 4.56 6.44C4.56 3.99 6.54 2 9 2C11.45 2 13.44 3.99 13.44 6.44C13.43 8.84 11.54 10.79 9.16 10.87Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M16.41 4C18.35 4 19.91 5.57 19.91 7.5C19.91 9.39 18.41 10.93 16.54 11C16.46 10.99 16.37 10.99 16.28 11" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-          </div>
-              <h2 className="text-2xl font-semibold text-gray-800">{t('group.edit', 'Edit Group')}</h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-[25px]"
-              aria-label={t('common.close', 'Close')}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
+      <div className="p-6 md:p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#13A753]/10 p-2.5 rounded-xl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.16 10.87C9.06 10.86 8.94 10.86 8.83 10.87C6.45 10.79 4.56 8.84 4.56 6.44C4.56 3.99 6.54 2 9 2C11.45 2 13.44 3.99 13.44 6.44C13.43 8.84 11.54 10.79 9.16 10.87Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.41 4C18.35 4 19.91 5.57 19.91 7.5C19.91 9.39 18.41 10.93 16.54 11C16.46 10.99 16.37 10.99 16.28 11" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-            </button>
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-800">{t('group.edit', 'Edit Group')}</h2>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information Section */}
-            <div className="space-y-5">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('group.basicInfo', 'Basic Information')}</h3>
-              
-              <div className="grid grid-cols-1 gap-4">
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                    placeholder={t('group.enterName', 'Enter group name')}
-                  />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information Section */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('group.basicInfo', 'Basic Information')}</h3>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  placeholder={t('group.enterName', 'Enter group name')}
+                />
               </div>
               
-                {/* Dietary Guidelines */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
-                  </label>
-                    <input
-                    type="text"
-                    name="dietary"
-                    value={formData.dietary}
-                    onChange={(e) => setFormData({...formData, dietary: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                    placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
-                  />
-          </div>
+              {/* Dietary Guidelines */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="dietary"
+                  value={formData.dietary}
+                  onChange={(e) => setFormData({...formData, dietary: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
+                />
+              </div>
           
-                {/* Meal Plan */}
-          <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="mealPlan"
-                    value={formData.mealPlan}
-                    onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                    placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
-                  />
-          </div>
+              {/* Meal Plan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="mealPlan"
+                  value={formData.mealPlan}
+                  onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
+                />
+              </div>
             </div>
           </div>
           
-            {/* Action Buttons */}
-            <div className="flex gap-3 justify-end pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-[25px] text-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
-              >
-                {t('common.cancel', 'Cancel')}
-              </button>
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full border border-gray-300 text-gray-700 font-medium py-3 rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              {t('common.cancel', 'Cancel')}
+            </button>
             <button
               type="submit"
-                className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-[25px] text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              className="w-full bg-gradient-to-r from-[#106A02] to-[#13A753] text-white font-medium py-3 rounded-xl"
             >
-                {t('common.save', 'Save')}
+              {t('common.save', 'Save')}
             </button>
           </div>
         </form>
       </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
