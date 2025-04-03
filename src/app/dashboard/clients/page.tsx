@@ -11,6 +11,7 @@ import { DEBUG_MODE } from '@/utils/config'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { parseApiResponse as parseApiResponseRaw } from '@/utils/config'
 import Toast from '@/components/ui/Toast'
+import ClientModal from '@/components/dashboard/ClientModal'
 
 // Define types for API responses
 interface ApiTrainee {
@@ -428,13 +429,14 @@ export default function ClientManagementPage() {
             
       {/* Client table */}
       <div className="bg-white rounded-25 shadow-md p-6">
-              <ClientTable 
+        <ClientTable 
           clients={clientsList}
           onViewClient={handleViewClient}
           onTogglePush={handleTogglePush}
+          onEdit={handleEditClient}
           searchTerm={searchTerm}
-              />
-            </div>
+        />
+      </div>
     </>
   )
 
@@ -558,12 +560,13 @@ export default function ClientManagementPage() {
 
       {/* Mobile client table */}
       <div className="animate-fade-in">
-          <ClientTable 
+        <ClientTable 
           searchTerm={searchTerm}
-            onViewClient={handleViewClient}
-            onTogglePush={handleTogglePush}
-            isMobile={true}
-            clients={clientsList}
+          onViewClient={handleViewClient}
+          onTogglePush={handleTogglePush}
+          onEdit={handleEditClient}
+          isMobile={true}
+          clients={clientsList}
         />
       </div>
     </>
@@ -625,6 +628,7 @@ export default function ClientManagementPage() {
       )}
       
       {selectedClient && isClientDetailsModalOpen && (
+        <>
         <ClientDetailsModal
           isOpen={isClientDetailsModalOpen}
           onClose={() => setIsClientDetailsModalOpen(false)}
@@ -632,6 +636,7 @@ export default function ClientManagementPage() {
           onEdit={handleEditClient}
           onDelete={handleDeleteClient}
         />
+        </>
       )}
     </DashboardLayout>
   )

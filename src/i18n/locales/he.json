@@ -354,5 +354,11 @@
   "group": {
     "dietary_guidelines": "הנחיות תזונה",
     "weekly_menu": "תפריט שבועי"
-  }
+  },
+  "goal_compliance": "יעד/עמידה ביעדים",
+  "weekly_goals": "יעדים שבועיים",
+  "additional_info": "מידע נוסף",
+  "client_metrics": "מדדי לקוח",
+  "no_additional_info": "אין מידע נוסף",
+  "no_metrics_available": "אין מדדים זמינים"
 }
