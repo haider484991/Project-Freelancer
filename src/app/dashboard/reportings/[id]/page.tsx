@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { formatDate } from '@/utils/dateFormat'
+import { parseApiResponse } from '@/utils/config'
+import { reportingsApi } from '@/services/fitTrackApi'
 
 // Define strongly typed interfaces for the meal report
 interface MealReport {
@@ -19,13 +21,6 @@ interface MealReport {
   trainee_name: string;
   trainee_id: string;
   status?: 'completed' | 'pending' | 'in_progress';
-}
-
-// API response interface
-interface ApiResponse {
-  success: boolean;
-  message?: string;
-  report?: MealReport;
 }
 
 export default function ReportDetailPage() {
@@ -43,40 +38,40 @@ export default function ReportDetailPage() {
       setError(null)
       
       try {
-        const response = await fetch('/api/proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            mdl: 'reportings',
-            act: 'get',
-            id: id
-          }),
-          credentials: 'include'
-        })
+        // Use the fitTrackApi service instead of direct fetch
+        if (!reportingsApi) {
+          setError('API service not available')
+          setIsLoading(false)
+          return
+        }
         
-        const data: ApiResponse = await response.json()
+        const response = await reportingsApi.get(id as string)
         
-        if (data.success && data.report) {
-          // Use typed data to prevent rendering objects directly
+        // Use the shared parsing logic to handle different API response formats
+        const reportData = parseApiResponse<any>(response.data)
+        
+        if (reportData && reportData.length > 0) {
+          // The first item contains our report data
+          const apiReport = reportData[0]
+          
+          // Create a properly typed report object
           const typedReport: MealReport = {
-            id: data.report.id || '',
-            on_date: data.report.on_date || '',
-            meal_text: data.report.meal_text || '',
-            meal_protein: Number(data.report.meal_protein) || 0,
-            meal_carbs: Number(data.report.meal_carbs) || 0,
-            meal_fats: Number(data.report.meal_fats) || 0,
-            calories: Number(data.report.calories) || 0,
-            feedback: data.report.feedback || '',
-            trainee_name: data.report.trainee_name || '',
-            trainee_id: data.report.trainee_id || '',
-            status: (data.report.status as 'completed' | 'pending' | 'in_progress') || 'pending'
+            id: apiReport.id || '',
+            on_date: apiReport.on_date || '',
+            meal_text: apiReport.meal_text || '',
+            meal_protein: Number(apiReport.meal_protein) || 0,
+            meal_carbs: Number(apiReport.meal_carbs) || 0,
+            meal_fats: Number(apiReport.meal_fats) || 0,
+            calories: Number(apiReport.calories) || 0,
+            feedback: apiReport.feedback || '',
+            trainee_name: apiReport.trainee_name || '',
+            trainee_id: apiReport.trainee_id || '',
+            status: (apiReport.status as 'completed' | 'pending' | 'in_progress') || 'pending'
           }
           
           setReport(typedReport)
         } else {
-          setError(data.message || 'Failed to fetch report details')
+          setError('Failed to fetch report details')
         }
       } catch (error) {
         console.error('Error fetching report details:', error)
@@ -110,7 +105,7 @@ export default function ReportDetailPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-2xl p-8 shadow-sm text-center">
+          <div className="bg-red-50 rounded-2xl p-8 shadow-md text-center">
             <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -120,13 +115,13 @@ export default function ReportDetailPage() {
             <p className="mt-1 text-sm text-gray-500">{error}</p>
             <button 
               onClick={() => window.history.back()} 
-              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
             >
               {t('common.goBack', 'Go Back')}
             </button>
           </div>
         ) : report ? (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <div className="flex flex-col lg:flex-row justify-between">
                 <div>
@@ -158,7 +153,7 @@ export default function ReportDetailPage() {
                 {/* Meal details */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">{t('reportings.mealDetails', 'Meal Details')}</h2>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-xl">
                     <div className="whitespace-pre-wrap">{report.meal_text}</div>
                   </div>
                 </div>
@@ -166,21 +161,21 @@ export default function ReportDetailPage() {
                 {/* Nutritional information */}
                 <div>
                   <h2 className="text-lg font-semibold mb-4">{t('reportings.nutritionalInfo', 'Nutritional Information')}</h2>
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 p-4 rounded-xl">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-white rounded-lg shadow-sm">
+                      <div className="p-3 bg-white rounded-xl shadow-sm">
                         <div className="text-sm text-gray-500">{t('reportings.protein', 'Protein')}</div>
                         <div className="text-xl font-semibold">{report.meal_protein}g</div>
                       </div>
-                      <div className="p-3 bg-white rounded-lg shadow-sm">
+                      <div className="p-3 bg-white rounded-xl shadow-sm">
                         <div className="text-sm text-gray-500">{t('reportings.carbs', 'Carbs')}</div>
                         <div className="text-xl font-semibold">{report.meal_carbs}g</div>
                       </div>
-                      <div className="p-3 bg-white rounded-lg shadow-sm">
+                      <div className="p-3 bg-white rounded-xl shadow-sm">
                         <div className="text-sm text-gray-500">{t('reportings.fat', 'Fat')}</div>
                         <div className="text-xl font-semibold">{report.meal_fats}g</div>
                       </div>
-                      <div className="p-3 bg-white rounded-lg shadow-sm">
+                      <div className="p-3 bg-white rounded-xl shadow-sm">
                         <div className="text-sm text-gray-500">{t('reportings.calories', 'Calories')}</div>
                         <div className="text-xl font-semibold">{report.calories} kcal</div>
                       </div>
@@ -193,7 +188,7 @@ export default function ReportDetailPage() {
               {report.feedback && (
                 <div className="mt-8">
                   <h2 className="text-lg font-semibold mb-4">{t('reportings.feedback', 'Coach Feedback')}</h2>
-                  <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="bg-blue-50 p-4 rounded-xl">
                     <div className="whitespace-pre-wrap">{report.feedback}</div>
                   </div>
                 </div>
@@ -201,7 +196,7 @@ export default function ReportDetailPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+          <div className="bg-white rounded-2xl p-8 shadow-md text-center">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
