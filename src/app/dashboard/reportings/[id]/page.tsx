@@ -57,17 +57,19 @@ export default function ReportDetailPage() {
           // Create a properly typed report object
           const typedReport: MealReport = {
             id: apiReport.id || '',
-            on_date: apiReport.on_date || '',
-            meal_text: apiReport.meal_text || '',
+            on_date: apiReport.on_date || new Date().toISOString().split('T')[0],
+            meal_text: apiReport.meal_text || 'No meal description provided',
             meal_protein: Number(apiReport.meal_protein) || 0,
             meal_carbs: Number(apiReport.meal_carbs) || 0,
             meal_fats: Number(apiReport.meal_fats) || 0,
             calories: Number(apiReport.calories) || 0,
             feedback: apiReport.feedback || '',
-            trainee_name: apiReport.trainee_name || '',
+            trainee_name: apiReport.trainee_name || 'Unknown Trainee',
             trainee_id: apiReport.trainee_id || '',
             status: (apiReport.status as 'completed' | 'pending' | 'in_progress') || 'pending'
           }
+          
+          console.log('Processed report:', typedReport)
           
           setReport(typedReport)
         } else {

@@ -45,22 +45,58 @@ export default function ReportingsPage() {
         
         // Use the shared parsing logic for API responses
         const reportData = parseApiResponse<any>(response.data)
+        console.log('Raw API response:', response.data)
+        console.log('Parsed API data:', reportData)
         
-        if (reportData && reportData.length > 0) {
+        // Check for different possible data structures
+        let dataToProcess = reportData;
+        
+        // If there's a nested 'reports' array in the response
+        if (reportData && reportData.length === 1 && Array.isArray(reportData[0].reports)) {
+          console.log('Found nested reports array structure')
+          dataToProcess = reportData[0].reports;
+        }
+        // If there's a nested array with a different name
+        else if (reportData && reportData.length === 1 && (
+          Array.isArray(reportData[0].items) || 
+          Array.isArray(reportData[0].data) || 
+          Array.isArray(reportData[0].list)
+        )) {
+          const possibleArrays = ['items', 'data', 'list'];
+          for (const key of possibleArrays) {
+            if (Array.isArray(reportData[0][key])) {
+              console.log(`Found nested ${key} array structure`);
+              dataToProcess = reportData[0][key];
+              break;
+            }
+          }
+        }
+        
+        if (dataToProcess && dataToProcess.length > 0) {
           // Map API response to our Report interface
-          const formattedReports: Report[] = reportData.map((report: any) => ({
-            id: report.id,
-            name: report.name,
-            date: report.date,
-            type: report.type,
-            // Ensure status is one of our valid enum values
-            status: (report.status === 'completed' || report.status === 'pending' || report.status === 'in_progress') 
-              ? report.status as 'completed' | 'pending' | 'in_progress'
-              : 'pending', // Default fallback
-            protein: Number(report.protein) || undefined,
-            carbs: Number(report.carbs) || undefined,
-            fat: Number(report.fat) || undefined
-          }))
+          const formattedReports: Report[] = dataToProcess.map((report: any) => {
+            console.log('Processing report item:', report)
+            
+            // Handle different possible field names in the API response
+            const reportItem = {
+              id: report.id || report.report_id || '',
+              name: report.name || report.report_name || report.meal_name || report.title || 'Untitled Report',
+              date: report.date || report.on_date || report.report_date || new Date().toISOString().split('T')[0],
+              type: report.type || report.report_type || report.meal_type || 'Daily Meal',
+              // Ensure status is one of our valid enum values
+              status: (report.status === 'completed' || report.status === 'pending' || report.status === 'in_progress') 
+                ? report.status as 'completed' | 'pending' | 'in_progress'
+                : 'pending', // Default fallback
+              protein: Number(report.protein || report.meal_protein || (report.details?.protein) || (report.nutritional?.protein)) || undefined,
+              carbs: Number(report.carbs || report.meal_carbs || (report.details?.carbs) || (report.nutritional?.carbs)) || undefined,
+              fat: Number(report.fat || report.meal_fats || (report.details?.fat) || (report.nutritional?.fat)) || undefined
+            }
+            
+            console.log('Formatted report item:', reportItem)
+            return reportItem
+          })
+          
+          console.log('Formatted reports:', formattedReports)
           
           setReports(formattedReports)
         } else {
