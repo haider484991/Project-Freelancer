@@ -183,6 +183,7 @@ export async function POST(req: NextRequest) {
     const isVercelBot = req.headers.get('x-vercel-internal-bot-check') === 'pass' || 
                         req.headers.get('user-agent')?.includes('vercel-screenshot');
     
+    // Don't use mock automatically, let the user choose
     if (isVercelBot) {
       console.log('[Proxy] Detected Vercel bot/preview - returning mock response');
       return mockResponseForRequest(body);

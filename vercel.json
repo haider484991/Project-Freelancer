@@ -1,0 +1,14 @@
+{
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://bot.fit-track.net/api",
+    "NEXT_PUBLIC_AUTH_TOKEN_NAME": "auth_token",
+    "DEBUG_MODE": "false"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "https://bot.fit-track.net/api",
+      "NEXT_PUBLIC_AUTH_TOKEN_NAME": "auth_token",
+      "DEBUG_MODE": "false"
+    }
+  }
+} 

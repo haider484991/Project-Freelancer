@@ -559,23 +559,23 @@ export function CreateGroupModal({
               
               <div className="grid grid-cols-1 gap-4">
                 {/* Name */}
-                <div>
+          <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('group.name', 'Group Name')} <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
+            <input
+              type="text"
                     name="name"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
+              required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('group.enterName', 'Enter group name')}
-                  />
-                </div>
-                
+            />
+          </div>
+          
                 {/* Dietary Guidelines */}
-                <div>
+          <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
                   </label>
@@ -588,26 +588,26 @@ export function CreateGroupModal({
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
                   />
-                </div>
-                
-                {/* Meal Plan */}
-                <div>
+          </div>
+          
+          {/* Meal Plan */}
+          <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
+            <input
+              type="text"
                     name="mealPlan"
                     value={formData.mealPlan}
                     onChange={(e) => setFormData({...formData, mealPlan: e.target.value})}
                     required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
-                  />
-                </div>
-              </div>
-            </div>
-            
+            />
+          </div>
+                  </div>
+          </div>
+          
             {/* Action Buttons */}
             <div className="flex gap-3 justify-end pt-4">
               <button
@@ -617,15 +617,15 @@ export function CreateGroupModal({
               >
                 {t('common.cancel', 'Cancel')}
               </button>
-              <button
-                type="submit"
+            <button
+              type="submit"
                 className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-[25px] text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
-              >
+            >
                 {t('common.create', 'Create')}
-              </button>
-            </div>
-          </form>
-        </div>
+            </button>
+          </div>
+        </form>
+      </div>
       </div>
     </div>
   );
@@ -704,10 +704,10 @@ export function EditGroupModal({
                   <path d="M4.16 14.56C1.74 16.18 1.74 18.82 4.16 20.43C6.91 22.27 11.42 22.27 14.17 20.43C16.59 18.81 16.59 16.17 14.17 14.56C11.43 12.73 6.92 12.73 4.16 14.56Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M18.34 20C19.06 19.85 19.74 19.56 20.3 19.13C21.86 17.96 21.86 16.03 20.3 14.86C19.75 14.44 19.08 14.16 18.37 14" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-              </div>
+          </div>
               <h2 className="text-2xl font-semibold text-gray-800">{t('group.edit', 'Edit Group')}</h2>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-[25px]"
               aria-label={t('common.close', 'Close')}
@@ -739,14 +739,14 @@ export function EditGroupModal({
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('group.enterName', 'Enter group name')}
                   />
-                </div>
-                
+              </div>
+              
                 {/* Dietary Guidelines */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('group.dietary_guidelines', 'Dietary Guidelines')} <span className="text-red-500">*</span>
                   </label>
-                  <input
+                    <input
                     type="text"
                     name="dietary"
                     value={formData.dietary}
@@ -755,10 +755,10 @@ export function EditGroupModal({
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('group.enterDietary', 'Enter dietary guidelines')}
                   />
-                </div>
-                
+          </div>
+          
                 {/* Meal Plan */}
-                <div>
+          <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('group.weekly_menu', 'Weekly Menu')} <span className="text-red-500">*</span>
                   </label>
@@ -771,10 +771,10 @@ export function EditGroupModal({
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[25px] text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('group.enterMealPlan', 'Enter weekly menu')}
                   />
-                </div>
-              </div>
+          </div>
             </div>
-            
+          </div>
+          
             {/* Action Buttons */}
             <div className="flex gap-3 justify-end pt-4">
               <button
@@ -784,15 +784,15 @@ export function EditGroupModal({
               >
                 {t('common.cancel', 'Cancel')}
               </button>
-              <button
-                type="submit"
+            <button
+              type="submit"
                 className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-[25px] text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
-              >
+            >
                 {t('common.save', 'Save')}
-              </button>
-            </div>
-          </form>
-        </div>
+            </button>
+          </div>
+        </form>
+      </div>
       </div>
     </div>
   );

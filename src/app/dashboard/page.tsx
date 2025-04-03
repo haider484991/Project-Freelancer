@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { dashboardApi, traineesApi, reportingsApi, groupsApi } from '@/services/fitTrackApi'
-import { mockDashboardData } from '@/services/mockData'
 import { DEBUG_MODE, parseApiResponse } from '@/utils/config'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useUser } from '@/context/UserContext'
@@ -14,6 +13,17 @@ import StatsCards from '@/components/dashboard/StatsCards'
 import FlaggedIssues from '@/components/dashboard/FlaggedIssues'
 import ClientDistributionChart from '@/components/dashboard/ClientDistributionChart'
 import MobileStatsCards from '@/components/dashboard/MobileStatsCards'
+import styles from './dashboard.module.css'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { ArrowUpIcon, ArrowDownIcon } from '@radix-ui/react-icons'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CalendarIcon, PersonIcon, FileTextIcon, StarIcon } from '@radix-ui/react-icons'
+import { format } from 'date-fns'
+import { he } from 'date-fns/locale'
+import Link from 'next/link'
 
 // Define the dashboard data interface
 interface DashboardData {
@@ -52,6 +62,23 @@ interface Activity {
   time: string;
   image: string;
 }
+
+// Colors for charts
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const RADIAN = Math.PI / 180;
+
+// Custom label for pie chart
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
 
 export default function DashboardPage() {
   const { t } = useTranslation()
@@ -102,20 +129,38 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         
-        // Fetch trainees
-        const traineeResponse = await traineesApi.get('');
-        const traineeData = parseApiResponse(traineeResponse.data);
-        setTrainees(traineeData as Trainee[]);
+        // Fetch trainees with null checks
+        if (traineesApi) {
+          try {
+            const traineeResponse = await traineesApi.get('');
+            const traineeData = parseApiResponse(traineeResponse.data);
+            setTrainees(traineeData as Trainee[]);
+          } catch (error) {
+            console.error('Error fetching trainees:', error);
+          }
+        }
         
-        // Fetch report data for statistics
-        const reportResponse = await reportingsApi.get('');
-        const reportData = parseApiResponse(reportResponse.data);
-        setReportings(reportData);
+        // Fetch report data for statistics with null checks
+        if (reportingsApi) {
+          try {
+            const reportResponse = await reportingsApi.get('');
+            const reportData = parseApiResponse(reportResponse.data);
+            setReportings(reportData);
+          } catch (error) {
+            console.error('Error fetching reports:', error);
+          }
+        }
         
-        // Fetch groups data
-        const groupResponse = await groupsApi.get('');
-        const groupData = parseApiResponse(groupResponse.data);
-        setGroups(groupData);
+        // Fetch groups data with null checks
+        if (groupsApi) {
+          try {
+            const groupResponse = await groupsApi.get('');
+            const groupData = parseApiResponse(groupResponse.data);
+            setGroups(groupData);
+          } catch (error) {
+            console.error('Error fetching groups:', error);
+          }
+        }
         
         setLoading(false);
         setHasLoaded(true); // Mark as loaded to prevent re-fetching
@@ -366,12 +411,12 @@ export default function DashboardPage() {
                   fill="#8884d8"
                   dataKey="trainees_count"
                   nameKey="name"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={renderCustomizedLabel}
                 >
                   {groupsDataForChart.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={['#13A753', '#4285F4', '#F59E0B', '#8B5CF6', '#EC4899'][index % 5]} 
+                      fill={COLORS[index % COLORS.length]} 
                     />
                   ))}
                 </Pie>
@@ -387,7 +432,6 @@ export default function DashboardPage() {
         {/* Flagged Issues */}
         <div className="col-span-1 animate-fade-in staggered-delay-2">
           <FlaggedIssues 
-            inactiveClients={analytics.inactiveTrainees} 
             inactiveTraineesList={trainees.filter(trainee => trainee.is_active === '0')}
           />
         </div>
@@ -489,7 +533,7 @@ export default function DashboardPage() {
                 {groupsDataForChart.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={['#13A753', '#4285F4', '#F59E0B', '#8B5CF6', '#EC4899'][index % 5]} 
+                    fill={COLORS[index % COLORS.length]} 
                   />
                 ))}
               </Pie>
