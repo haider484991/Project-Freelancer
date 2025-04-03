@@ -174,7 +174,7 @@ export default function ReportingsPage() {
                 placeholder={t('common.search', 'Search reports...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full lg:w-[300px] rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full lg:w-[300px] rounded-25 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <div className="absolute left-3 top-2.5">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -191,7 +191,7 @@ export default function ReportingsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-2xl p-8 shadow-md text-center">
+          <div className="bg-red-50 rounded-25 p-8 shadow-md text-center">
             <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -201,13 +201,13 @@ export default function ReportingsPage() {
             <p className="mt-1 text-sm text-gray-500">{error}</p>
             <button 
               onClick={() => setSearchTerm('')} 
-              className="mt-4 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-25 hover:bg-primary-dark transition-colors"
             >
               {t('common.try_again', 'Try Again')}
             </button>
           </div>
         ) : reports.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-25 shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -251,15 +251,20 @@ export default function ReportingsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">{report.type}</div>
                       </td>
-                      {/* Values without 'g' suffix */}
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="text-sm text-gray-900">{report.protein !== undefined ? report.protein : '-'}</div>
+                        <div className="text-sm text-gray-500">
+                          {report.protein !== undefined ? report.protein : '-'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="text-sm text-gray-900">{report.carbs !== undefined ? report.carbs : '-'}</div>
+                        <div className="text-sm text-gray-500">
+                          {report.carbs !== undefined ? report.carbs : '-'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="text-sm text-gray-900">{report.fat !== undefined ? report.fat : '-'}</div>
+                        <div className="text-sm text-gray-500">
+                          {report.fat !== undefined ? report.fat : '-'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -291,7 +296,7 @@ export default function ReportingsPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-8 shadow-md text-center">
+          <div className="bg-white rounded-25 p-8 shadow-md text-center">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>

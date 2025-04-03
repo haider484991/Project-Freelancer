@@ -29,6 +29,7 @@ module.exports = {
         'xl': '40px',
         '2xl': '60px',
         '3xl': '100px',
+        '25': '25px',
       },
       fontFamily: {
         'manrope': ['Manrope', 'sans-serif'],

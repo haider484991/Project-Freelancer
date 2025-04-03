@@ -956,358 +956,260 @@ export function EditClientModal({
   onEditClient,
   availableGroups = []
 }: EditClientModalProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ClientType | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
-  // Update formData when client changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (client) {
-      setFormData({...client});
-    } else {
-      setFormData(null);
+      // Extract target values from dietaryGoal if available
+      let targetCalories = '';
+      let targetWeight = '';
+      
+      if (client.dietaryGoal) {
+        const parts = client.dietaryGoal.split(' ');
+        if (parts.length >= 1) targetCalories = parts[0];
+        if (parts.length >= 4) targetWeight = parts[3];
+      }
+      
+      setFormData({
+        ...client,
+        target_calories: targetCalories,
+        target_weight: targetWeight
+      });
     }
   }, [client]);
 
-  if (!formData) return null;
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  
   const handleDietaryGoalChange = (targetCalories: string, targetWeight: string) => {
-    // Format dietary goal as "targetCalories cal | targetWeight kg"
-    const combinedDietaryGoal = `${targetCalories || '0'} cal | ${targetWeight || '0'} kg`;
-    setFormData({
-      ...formData,
-      dietaryGoal: combinedDietaryGoal
-    });
+    setFormData(prev => ({
+      ...prev,
+      target_calories: targetCalories,
+      target_weight: targetWeight
+    }));
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData) return;
     
     try {
-      setLoading(true);
-      setNotification(null);
+      setIsSubmitting(true);
       
-      // Call the edit function
-      await onEditClient(formData);
-      setNotification({type: 'success', message: t('clientManagementPage.clientUpdated')});
-      // Close the modal after a short delay
-      setTimeout(() => {
-        onClose();
-        setNotification(null);
-      }, 1500);
+      // Create updated client object
+      const updatedClient: ClientType = {
+        ...formData,
+        dietaryGoal: `${formData.target_calories} calories / ${formData.target_weight} kg`
+      };
+      
+      await onEditClient(updatedClient);
+      onClose();
     } catch (error) {
-      setNotification({type: 'error', message: t('clientManagementPage.errorUpdatingClient')});
+      console.error('Error updating client:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
-  // Extract dietary goal values
-  let targetCalories = '0';
-  let targetWeight = '0';
   
-  if (formData.dietaryGoal) {
-    const parts = formData.dietaryGoal.split('|');
-    if (parts.length >= 1) {
-      const calParts = parts[0].trim().split(' ');
-      if (calParts.length >= 1) {
-        targetCalories = calParts[0];
-      }
-    }
-    if (parts.length >= 2) {
-      const weightParts = parts[1].trim().split(' ');
-      if (weightParts.length >= 1) {
-        targetWeight = weightParts[0];
-      }
-    }
-  }
-
+  // Get gender text based on language
+  const getMaleText = () => {
+    return i18n.language === 'he' ? 'זכר' : 'Male';
+  };
+  
+  const getFemaleText = () => {
+    return i18n.language === 'he' ? 'נקבה' : 'Female';
+  };
+  
+  if (!isOpen) return null;
+  
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/25" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+      <div className="bg-white rounded-25 w-full max-w-2xl mx-auto">
+        <div className="p-6 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#13A753]/10 p-2.5 rounded-25">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#13A753" fillOpacity="0.3"/>
+                  <path d="M12 14.5C6.99 14.5 2.91 17.86 2.91 22C2.91 22.28 3.13 22.5 3.41 22.5H20.59C20.87 22.5 21.09 22.28 21.09 22C21.09 17.86 17.01 14.5 12 14.5Z" fill="#13A753" fillOpacity="0.3"/>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800">{t('edit_client.title', 'Edit Client')}</h2>
+            </div>
+            <button 
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-25"
+              aria-label="Close"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex justify-between items-center mb-4">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-semibold text-gray-900 flex items-center"
-                  >
-                    <svg className="mr-2" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M20.5899 22C20.5899 18.13 16.7399 15 11.9999 15C7.25991 15 3.40991 18.13 3.40991 22" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    {t('clientManagementPage.editClient')}
-                  </Dialog.Title>
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                    onClick={onClose}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18 6L6 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6 6L18 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-
-                {notification && (
-                  <div className={`mb-4 p-3 rounded-lg ${notification.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                    {notification.message}
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Client Name */}
-                    <div className="col-span-2">
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.clientName')} *
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-[#13A753] focus:border-[#13A753] focus:outline-none transition-colors"
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div className="col-span-2">
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.email')} *
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        required
-                        value={formData.email || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-[#13A753] focus:border-[#13A753] focus:outline-none transition-colors"
-                      />
-                    </div>
-
-                    {/* Phone */}
-                    <div className="col-span-2">
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.phone')}
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        id="phone"
-                        value={formData.phone || ''}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-[#13A753] focus:border-[#13A753] focus:outline-none transition-colors"
-                      />
-                    </div>
-
-                    {/* Group */}
-                    <div className="col-span-2">
-                      <label htmlFor="group" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.group')}
-                      </label>
-                      <div className="relative">
-                        <select
-                          name="group"
-                          id="group"
-                          value={formData.group || ''}
-                          onChange={handleChange}
-                          className="appearance-none w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#13A753] focus:border-[#13A753] focus:outline-none transition-colors pr-10"
-                        >
-                          <option value="">{t('clientManagementPage.selectGroup')}</option>
-                          {availableGroups.map(group => (
-                            <option key={group.id} value={group.name}>
-                              {group.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 9L12 15L18 9" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Dietary Goals */}
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.dietaryGoals')}
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label htmlFor="targetCalories" className="block text-xs text-gray-600 mb-1">
-                            {t('clientManagementPage.targetCalories')}
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              id="targetCalories"
-                              value={targetCalories}
-                              onChange={(e) => handleDietaryGoalChange(e.target.value, targetWeight)}
-                              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-[#13A753] focus:border-[#13A753] focus:outline-none transition-colors pr-12"
-                            />
-                            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500 text-sm">
-                              cal
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <label htmlFor="targetWeight" className="block text-xs text-gray-600 mb-1">
-                            {t('clientManagementPage.targetWeight')}
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              id="targetWeight"
-                              value={targetWeight}
-                              onChange={(e) => handleDietaryGoalChange(targetCalories, e.target.value)}
-                              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-[#13A753] focus:border-[#13A753] focus:outline-none transition-colors pr-12"
-                            />
-                            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500 text-sm">
-                              kg
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Status */}
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.status')}
-                      </label>
-                      <div className="flex space-x-4">
-                        <div className="flex items-center">
-                          <input
-                            id="status-active"
-                            name="status"
-                            type="radio"
-                            value="active"
-                            checked={formData.status === 'active'}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-[#13A753] focus:ring-[#13A753] border-gray-300"
-                          />
-                          <label htmlFor="status-active" className="ml-2 block text-sm text-gray-700">
-                            {t('clientManagementPage.active')}
-                          </label>
-                        </div>
-                        <div className="flex items-center">
-                          <input
-                            id="status-inactive"
-                            name="status"
-                            type="radio"
-                            value="inactive"
-                            checked={formData.status === 'inactive'}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-[#13A753] focus:ring-[#13A753] border-gray-300"
-                          />
-                          <label htmlFor="status-inactive" className="ml-2 block text-sm text-gray-700">
-                            {t('clientManagementPage.inactive')}
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Gender */}
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('clientManagementPage.gender')}
-                      </label>
-                      <div className="flex space-x-4">
-                        <div className="flex items-center">
-                          <input
-                            id="gender-male"
-                            name="gender"
-                            type="radio"
-                            value="male"
-                            checked={formData.gender === 'male'}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-[#13A753] focus:ring-[#13A753] border-gray-300"
-                          />
-                          <label htmlFor="gender-male" className="ml-2 block text-sm text-gray-700">
-                            {t('clientManagementPage.male')}
-                          </label>
-                        </div>
-                        <div className="flex items-center">
-                          <input
-                            id="gender-female"
-                            name="gender"
-                            type="radio"
-                            value="female"
-                            checked={formData.gender === 'female'}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-[#13A753] focus:ring-[#13A753] border-gray-300"
-                          />
-                          <label htmlFor="gender-female" className="ml-2 block text-sm text-gray-700">
-                            {t('clientManagementPage.female')}
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-[#13A753] text-white font-medium py-2.5 rounded-full hover:bg-[#0D8A40] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      {loading ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          {t('clientManagementPage.updating')}
-                        </>
-                      ) : (
-                        t('clientManagementPage.updateClient')
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </Dialog.Panel>
-            </Transition.Child>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+                {t('edit_client.basic_info', 'Basic Information')}
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.name', 'Name')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData?.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('client.enter_name', 'Enter client name')}
+                  />
+                </div>
+                
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.email', 'Email')}
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData?.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('client.enter_email', 'Enter email address')}
+                  />
+                </div>
+                
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.phone', 'Phone')}
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData?.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('client.enter_phone', 'Enter phone number')}
+                  />
+                </div>
+                
+                {/* Group */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.group', 'Group')}
+                  </label>
+                  <select
+                    name="group_id"
+                    value={formData?.group_id}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  >
+                    <option value="">{t('client.select_group', 'Select group')}</option>
+                    {availableGroups.map(group => (
+                      <option key={group.id} value={group.id}>{group.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Gender */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.gender', 'Gender')}
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData?.gender}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  >
+                    <option value="male">{getMaleText()}</option>
+                    <option value="female">{getFemaleText()}</option>
+                  </select>
+                </div>
+                
+                {/* Status */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.status', 'Status')}
+                  </label>
+                  <select
+                    name="is_active"
+                    value={formData?.is_active}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                  >
+                    <option value="1">{t('client.active', 'Active')}</option>
+                    <option value="0">{t('client.inactive', 'Inactive')}</option>
+                  </select>
+                </div>
+                
+                {/* Target Calories */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.target_calories', 'Target Calories')}
+                  </label>
+                  <input
+                    type="text"
+                    name="target_calories"
+                    value={formData?.target_calories}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('client.enter_calories', 'Enter target calories')}
+                  />
+                </div>
+                
+                {/* Target Weight */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('client.target_weight', 'Target Weight (kg)')}
+                  </label>
+                  <input
+                    type="text"
+                    name="target_weight"
+                    value={formData?.target_weight}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-25 text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder={t('client.enter_weight', 'Enter target weight')}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-25 text-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30"
+              >
+                {t('common.cancel', 'Cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-[#13A753] text-white font-medium rounded-25 text-sm hover:bg-[#13A753]/90 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#13A753]/30 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+              </button>
+            </div>
+          </form>
         </div>
-      </Dialog>
-    </Transition>
+      </div>
+    </div>
   );
 }

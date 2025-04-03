@@ -376,9 +376,9 @@ export default function ClientManagementPage() {
     <>
       <style jsx>{animations}</style>
       
-      {/* Client summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 animate-fade-in">
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+      {/* Client summary cards - show only total count */}
+      <div className="mb-6 animate-fade-in">
+        <div className="bg-white p-6 rounded-25 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
           <div className="flex items-center gap-4">
             <div className="bg-[#13A753]/10 p-3 rounded-full">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -390,158 +390,59 @@ export default function ClientManagementPage() {
             </div>
             <div className="min-w-0">
               <h3 className="text-2xl font-bold text-gray-800">{clientsList.length}</h3>
-              <p className="text-gray-500 truncate max-w-[150px]">Total</p>
-            </div>
-                </div>
-              </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-50 p-3 rounded-full">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M7.75 12L10.58 14.83L16.25 9.17004" stroke="#4285F4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">{clientsList.filter(client => client.status === 'active').length}</h3>
-              <p className="text-gray-500 truncate max-w-[150px]">Active</p>
+              <p className="text-gray-500 truncate max-w-[150px]">{t('clientManagementPage.total_clients')}</p>
             </div>
           </div>
         </div>
+      </div>
         
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center gap-4">
-            <div className="bg-amber-50 p-3 rounded-full">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 8V13" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9945 16H12.0035" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Page heading and search */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t('clientManagementPage.title')}</h1>
+          <p className="text-gray-500">{t('clientManagementPage.manage_clients')}</p>
+        </div>
+        
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className="relative flex-grow md:flex-grow-0">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t('common.search')}
+              className="pl-10 pr-4 py-2 w-full md:w-[250px] rounded-25 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+            <div className="absolute left-3 top-2.5">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21 21L16.65 16.65" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">{clientsList.filter(client => client.status === 'inactive').length}</h3>
-              <p className="text-gray-500 truncate max-w-[150px]">Inactive</p>
-            </div>
           </div>
+          
+          <button
+            onClick={() => setIsAddClientModalOpen(true)}
+            className="px-4 py-2 bg-primary text-white rounded-25 flex items-center gap-2 hover:bg-[#0D8443] transition-colors whitespace-nowrap"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 12H16" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 16V8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {t('clientManagementPage.add_client')}
+          </button>
         </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-center gap-4">
-            <div className="bg-purple-50 p-3 rounded-full">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 2V5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3.5 9.09H20.5" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="#8B5CF6" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15.6947 13.7H15.7037" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15.6947 16.7H15.7037" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9955 13.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.9955 16.7H12.0045" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8.29431 13.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8.29431 16.7H8.30329" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-2xl font-bold text-gray-800">{clientsList.filter(client => client.compliance === 'compliant').length}</h3>
-              <p className="text-gray-500 truncate max-w-[150px]">Compliant</p>
-            </div>
-          </div>
-                </div>
-              </div>
-              
-      {/* Error message if any */}
-      {error && (
-        <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-sm animate-fade-in">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-            <span className="font-medium">{error}</span>
-          </div>
-                </div>
-      )}
+      </div>
       
-      {/* Client management controls */}
-      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-6 hover:shadow-lg transition-all duration-300 animate-fade-in">
-        <div className="flex justify-between items-center">
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M17.5 17.5L12.5001 12.5M14.1667 8.33333C14.1667 11.555 11.555 14.1667 8.33333 14.1667C5.11167 14.1667 2.5 11.555 2.5 8.33333C2.5 5.11167 5.11167 2.5 8.33333 2.5C11.555 2.5 14.1667 5.11167 14.1667 8.33333Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </span>
-              <input 
-                type="text" 
-                className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
-                placeholder={t('clientManagementPage.searchClients')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button 
-                  className="absolute inset-y-0 right-3 flex items-center"
-                  onClick={() => setSearchTerm('')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 6L6 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M6 6L18 18" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-              )}
-                </div>
-              </div>
-              
-          <div className="flex gap-3">
-                <button
-              onClick={handleExportClients}
-              className="bg-white flex items-center gap-2 py-3 px-5 rounded-xl text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16.44 8.8999C20.04 9.2099 21.51 11.0599 21.51 15.1099V15.2399C21.51 19.7099 19.72 21.4999 15.25 21.4999H8.73998C4.26998 21.4999 2.47998 19.7099 2.47998 15.2399V15.1099C2.47998 11.0899 3.92998 9.2399 7.46998 8.9099" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 15.0001V3.62012" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15.35 5.85L12 2.5L8.65002 5.85" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-              <span className="font-medium">{t('clientManagementPage.export')}</span>
-                </button>
-                
-                <button 
-              onClick={handleSchedule}
-              className="bg-white flex items-center gap-2 py-3 px-5 rounded-xl text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M24.5 27.5V29.5C24.5 30.5 23.5 31.5 22.5 31.5H14.5C13.5 31.5 12.5 30.5 12.5 29.5V14.5C12.5 13.5 13.5 12.5 14.5 12.5H22.5C23.5 12.5 24.5 13.5 24.5 14.5V16.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M27.5 16.5H29.5C30.5 16.5 31.5 17.5 31.5 18.5V27.5C31.5 28.5 30.5 29.5 29.5 29.5H27.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M24.5 22H31.5" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M24.5 19.25V24.75" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-              <span className="font-medium">{t('clientManagementPage.schedule')}</span>
-                </button>
-                
-                <button 
-              onClick={() => setIsAddClientModalOpen(true)}
-              className="bg-[#13A753] text-white flex items-center gap-2 py-3 px-5 rounded-xl hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 12H18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 18V6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-              <span className="font-medium">{t('clientManagementPage.addClient')}</span>
-                </button>
-              </div>
-            </div>
-            </div>
-            
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in">
-              <ClientTable 
-          searchTerm={searchTerm}
-                onViewClient={handleViewClient}
-                onTogglePush={handleTogglePush}
-          isMobile={false}
+      {/* Client table */}
+      <div className="bg-white rounded-25 shadow-md p-6">
+        <ClientTable 
           clients={clientsList}
-              />
-            </div>
+          onViewClient={handleViewClient}
+          onTogglePush={handleTogglePush}
+          searchTerm={searchTerm}
+        />
+      </div>
     </>
   )
 

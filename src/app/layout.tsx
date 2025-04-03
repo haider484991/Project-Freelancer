@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="he" dir="rtl">
       <body className={inter.className}>
         <ErrorBoundaryWrapper>
           <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
