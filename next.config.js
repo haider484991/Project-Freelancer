@@ -42,7 +42,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: app.fit-track.net bot.fit-track.net;"
+            value: "default-src 'self'; connect-src 'self' https://*.fit-track.net https://app.fit-track.net https://bot.fit-track.net; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: app.fit-track.net bot.fit-track.net;"
           },
           {
             key: 'X-Frame-Options',

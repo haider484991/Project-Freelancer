@@ -47,7 +47,7 @@ export default function ReportingsPage() {
       setError(null)
       
       try {
-        const response = await fetch('https://app.fit-track.net/api/', {
+        const response = await fetch('/api/proxy', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

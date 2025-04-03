@@ -120,7 +120,7 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
     <aside className={`${isMobile 
       ? 'relative w-full text-white' 
       : 'w-[304px] h-full text-white'
-    } p-[30px] bg-black/50 backdrop-blur-sm z-20 ${isRtl ? 'rtl' : 'ltr'} flex flex-col min-h-screen`}>
+    } p-[30px] backdrop-blur-sm z-20 ${isRtl ? 'rtl' : 'ltr'} flex flex-col min-h-screen`}>
       {/* Logo */}
       <div className="flex flex-col gap-[5px] bg-black/30 p-3 rounded-[25px]">
         <h1 className="font-michael text-primary text-[29px] uppercase tracking-[0.04em] leading-[100%] font-bold text-shadow-lg">
