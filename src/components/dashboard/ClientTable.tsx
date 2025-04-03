@@ -120,7 +120,7 @@ export default function ClientTable({
                   <td className="w-[15%] py-4 px-4 text-[#636363] align-top truncate">{client.group || '-'}</td>
                   <td className="w-[15%] py-4 px-4 align-top">
                     <div className={`flex ${isRtl ? 'gap-0 space-x-reverse space-x-2' : 'gap-2'}`}>
-                      <button
+                      <button 
                         onClick={(e) => handleViewClient(e, client)}
                         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                         aria-label={t('clientTable.view')}
@@ -130,7 +130,7 @@ export default function ClientTable({
                           <path d="M12 20.27C15.53 20.27 18.82 18.19 21.11 14.59C22.01 13.18 22.01 10.81 21.11 9.39997C18.82 5.79997 15.53 3.71997 12 3.71997C8.46997 3.71997 5.17997 5.79997 2.88997 9.39997C1.98997 10.81 1.98997 13.18 2.88997 14.59C5.17997 18.19 8.46997 20.27 12 20.27Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </button>
-                      <button
+                      <button 
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -187,7 +187,7 @@ export default function ClientTable({
                 <div className="text-sm text-[#636363] mb-2">{getGenderText(client.gender)}</div>
                 <div className="flex justify-between mt-2">
                   <div className="text-xs text-[#636363]">{client.group || '-'}</div>
-                  <button
+                  <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();

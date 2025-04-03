@@ -384,9 +384,9 @@ export default function ClientManagementPage() {
               <h3 className="text-2xl font-bold text-gray-800">{clientsList.length}</h3>
               <p className="text-gray-500 truncate max-w-[150px]">{t('clientManagementPage.total_clients')}</p>
             </div>
+            </div>
           </div>
         </div>
-      </div>
         
       {/* Page heading and search */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -397,10 +397,10 @@ export default function ClientManagementPage() {
         
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-grow md:flex-grow-0">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              <input 
+                type="text" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('common.search')}
               className="pl-10 pr-4 py-2 w-full md:w-[250px] rounded-25 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
@@ -408,33 +408,33 @@ export default function ClientManagementPage() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M21 21L16.65 16.65" stroke="#636363" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          
-          <button
-            onClick={() => setIsAddClientModalOpen(true)}
+                  </svg>
+                </div>
+              </div>
+                
+                <button 
+              onClick={() => setIsAddClientModalOpen(true)}
             className="px-4 py-2 bg-primary text-white rounded-25 flex items-center gap-2 hover:bg-[#0D8443] transition-colors whitespace-nowrap"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 12H16" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M12 16V8" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+                  </svg>
             {t('clientManagementPage.add_client')}
-          </button>
-        </div>
-      </div>
-      
+                </button>
+            </div>
+            </div>
+            
       {/* Client table */}
       <div className="bg-white rounded-25 shadow-md p-6">
-        <ClientTable 
+              <ClientTable 
           clients={clientsList}
           onViewClient={handleViewClient}
           onTogglePush={handleTogglePush}
           searchTerm={searchTerm}
-        />
-      </div>
+              />
+            </div>
     </>
   )
 
@@ -553,8 +553,8 @@ export default function ClientManagementPage() {
             <path d="M12 18V6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>{t('clientManagementPage.addClient')}</span>
-        </button>
-      </div>
+            </button>
+          </div>
 
       {/* Mobile client table */}
       <div className="animate-fade-in">

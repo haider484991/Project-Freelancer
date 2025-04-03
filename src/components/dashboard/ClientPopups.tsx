@@ -86,11 +86,12 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                   <path d="M16.44 18L17.43 18.99L19.56 17.02" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800">{t('clientManagementPage.addClient')}</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">{t('clientManagementPage.add_client')}</h2>
             </div>
             <button 
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
+              aria-label="Close"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -109,40 +110,40 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('clientManagementPage.name')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
+                  </label>
+                  <input
+                    type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                      required
+                    required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('clientManagementPage.enterName')}
-                    />
-                  </div>
-                  
+                  />
+                </div>
+                
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('clientManagementPage.email')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
+                  </label>
+                  <input
+                    type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('clientManagementPage.enterEmail')}
-                    />
-                  </div>
-                  
+                  />
+                </div>
+                
                 {/* Phone */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('clientManagementPage.phone')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
+                  </label>
+                  <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
@@ -153,8 +154,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                   />
                 </div>
               </div>
-                  </div>
-                  
+            </div>
+            
             {/* Training Details Section */}
             <div className="space-y-5">
               <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('clientManagementPage.trainingDetails')}</h3>
@@ -164,7 +165,7 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('clientManagementPage.group')} <span className="text-red-500">*</span>
-                    </label>
+                  </label>
                   <div className="relative">
                     <select 
                       name="group_id"
@@ -186,13 +187,13 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                       </svg>
                     </div>
                   </div>
-                  </div>
-                  
+                </div>
+                
                 {/* Gender */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('clientManagementPage.gender')} <span className="text-red-500">*</span>
-                    </label>
+                  </label>
                   <div className="relative">
                     <select
                       name="gender"
@@ -202,8 +203,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300 appearance-none"
                     >
                       <option value="">{t('clientManagementPage.selectGender')}</option>
-                      <option value="1">{t('clientManagementPage.male')}</option>
-                      <option value="2">{t('clientManagementPage.female')}</option>
+                      <option value="male">{t('clientManagementPage.male')}</option>
+                      <option value="female">{t('clientManagementPage.female')}</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -212,101 +213,89 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Target Calories */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('clientManagementPage.targetCalories')} <span className="text-red-500">*</span>
+                    {t('clientManagementPage.targetCalories')}
                   </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="target_calories"
-                      value={formData.target_calories}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                      placeholder="0"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500 text-sm">
-                      kcal
-                    </div>
-                  </div>
-                  </div>
-                  
+                  <input
+                    type="text"
+                    name="target_calories"
+                    value={formData.target_calories}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder="1800"
+                  />
+                </div>
+                
                 {/* Target Weight */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {t('clientManagementPage.targetWeight')} <span className="text-red-500">*</span>
+                    {t('clientManagementPage.targetWeight')}
+                  </label>
+                  <input
+                    type="text"
+                    name="target_weight"
+                    value={formData.target_weight}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
+                    placeholder="75"
+                  />
+                </div>
+                
+                {/* Status */}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    {t('clientManagementPage.status')}
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        value="1"
+                        checked={formData.is_active === '1'}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-[#13A753] focus:ring-[#13A753]"
+                      />
+                      {t('clientManagementPage.active')}
                     </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="target_weight"
-                      value={formData.target_weight}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                      placeholder="0"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500 text-sm">
-                      kg
-                    </div>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        value="0"
+                        checked={formData.is_active === '0'}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-[#13A753] focus:ring-[#13A753]"
+                      />
+                      {t('clientManagementPage.inactive')}
+                    </label>
                   </div>
                 </div>
               </div>
-                  </div>
-                  
-            {/* Status Section */}
-            <div className="space-y-5">
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('clientManagementPage.status')}</h3>
-              
-              <div className="flex gap-4">
-                <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-[#13A753] transition-colors">
-                  <input
-                    type="radio"
-                    name="is_active"
-                    value="1"
-                    checked={formData.is_active === '1'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-[#13A753] border-gray-300 focus:ring-[#13A753]"
-                  />
-                  <span className="text-sm font-medium text-gray-900">{t('clientManagementPage.active')}</span>
-                    </label>
-                
-                <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-[#13A753] transition-colors">
-                  <input
-                    type="radio"
-                    name="is_active"
-                    value="0"
-                    checked={formData.is_active === '0'}
-                    onChange={handleChange}
-                    className="w-4 h-4 text-[#13A753] border-gray-300 focus:ring-[#13A753]"
-                  />
-                  <span className="text-sm font-medium text-gray-900">{t('clientManagementPage.inactive')}</span>
-                </label>
-              </div>
-                  </div>
-                  
+            </div>
+            
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors text-sm"
-                    >
-                {t('clientManagementPage.cancel')}
-                    </button>
-                    <button
-                      type="submit"
-                className="flex-1 px-6 py-3 bg-[#13A753] text-white font-medium rounded-xl hover:bg-[#0F8A44] transition-colors text-sm"
-                    >
-                {t('clientManagementPage.save')}
-                    </button>
-                  </div>
-                </form>
-          </div>
+            <div className="pt-4 flex space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full border border-gray-300 text-gray-700 font-medium py-3 rounded-xl hover:bg-gray-100 transition-colors"
+              >
+                {t('common.close')}
+              </button>
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#106A02] to-[#13A753] text-white font-medium py-3 rounded-xl"
+              >
+                {t('clientManagementPage.add_client')}
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
   );
 }
@@ -984,7 +973,7 @@ export function EditClientModal({
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleDietaryGoalChange = (targetCalories: string, targetWeight: string) => {
     setFormData(prev => ({
       ...prev,
@@ -992,7 +981,7 @@ export function EditClientModal({
       target_weight: targetWeight
     }));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -1008,7 +997,7 @@ export function EditClientModal({
       };
       
       await onEditClient(updatedClient);
-      onClose();
+        onClose();
     } catch (error) {
       console.error('Error updating client:', error);
     } finally {
@@ -1036,24 +1025,26 @@ export function EditClientModal({
             <div className="flex items-center gap-3">
               <div className="bg-[#13A753]/10 p-2.5 rounded-xl">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#13A753" fillOpacity="0.3"/>
-                  <path d="M12 14.5C6.99 14.5 2.91 17.86 2.91 22C2.91 22.28 3.13 22.5 3.41 22.5H20.59C20.87 22.5 21.09 22.28 21.09 22C21.09 17.86 17.01 14.5 12 14.5Z" fill="#13A753" fillOpacity="0.3"/>
+                  <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3.41003 22C3.41003 18.13 7.26003 15 12 15C12.96 15 13.89 15.13 14.76 15.37" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M22 18C22 18.75 21.79 19.46 21.42 20.06C21.21 20.42 20.94 20.74 20.63 21C19.93 21.63 19.01 22 18 22C16.54 22 15.27 21.22 14.58 20.06C14.21 19.46 14 18.75 14 18C14 16.74 14.58 15.61 15.5 14.88C16.19 14.33 17.06 14 18 14C20.21 14 22 15.79 22 18Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16.44 18L17.43 18.99L19.56 17.02" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <h2 className="text-2xl font-semibold text-gray-800">{t('edit_client.title', 'Edit Client')}</h2>
             </div>
-            <button 
-              onClick={onClose}
+                  <button
+                    onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
               aria-label="Close"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
-          
+                    </svg>
+                  </button>
+                </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-5">
@@ -1063,74 +1054,74 @@ export function EditClientModal({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Name */}
-                <div className="col-span-2">
+                    <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.name', 'Name')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
                     value={formData?.name}
-                    onChange={handleChange}
+                        onChange={handleChange}
                     required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_name', 'Enter client name')}
-                  />
-                </div>
-                
-                {/* Email */}
+                      />
+                    </div>
+
+                    {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.email', 'Email')}
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
                     value={formData?.email}
-                    onChange={handleChange}
+                        onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_email', 'Enter email address')}
-                  />
-                </div>
-                
-                {/* Phone */}
+                      />
+                    </div>
+
+                    {/* Phone */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.phone', 'Phone')}
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
                     value={formData?.phone}
-                    onChange={handleChange}
+                        onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_phone', 'Enter phone number')}
-                  />
-                </div>
-                
-                {/* Group */}
+                      />
+                    </div>
+
+                    {/* Group */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.group', 'Group')}
-                  </label>
-                  <select
+                      </label>
+                        <select
                     name="group_id"
                     value={formData?.group_id}
-                    onChange={handleChange}
+                          onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
-                  >
+                        >
                     <option value="">{t('client.select_group', 'Select group')}</option>
-                    {availableGroups.map(group => (
+                          {availableGroups.map(group => (
                       <option key={group.id} value={group.id}>{group.name}</option>
-                    ))}
-                  </select>
-                </div>
-                
+                          ))}
+                        </select>
+                    </div>
+
                 {/* Gender */}
-                <div>
+                        <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.gender', 'Gender')}
-                  </label>
+                          </label>
                   <select
                     name="gender"
                     value={formData?.gender}
@@ -1140,13 +1131,13 @@ export function EditClientModal({
                     <option value="male">{getMaleText()}</option>
                     <option value="female">{getFemaleText()}</option>
                   </select>
-                </div>
+                            </div>
                 
                 {/* Status */}
-                <div>
+                        <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.status', 'Status')}
-                  </label>
+                          </label>
                   <select
                     name="is_active"
                     value={formData?.is_active}
@@ -1156,40 +1147,40 @@ export function EditClientModal({
                     <option value="1">{t('client.active', 'Active')}</option>
                     <option value="0">{t('client.inactive', 'Inactive')}</option>
                   </select>
-                </div>
-                
+                    </div>
+
                 {/* Target Calories */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.target_calories', 'Target Calories')}
-                  </label>
-                  <input
+                      </label>
+                          <input
                     type="text"
                     name="target_calories"
                     value={formData?.target_calories}
-                    onChange={handleChange}
+                            onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_calories', 'Enter target calories')}
                   />
-                </div>
-                
+                    </div>
+
                 {/* Target Weight */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {t('client.target_weight', 'Target Weight (kg)')}
-                  </label>
-                  <input
+                      </label>
+                          <input
                     type="text"
                     name="target_weight"
                     value={formData?.target_weight}
-                    onChange={handleChange}
+                            onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-[#13A753]/20 focus:border-[#13A753] transition-colors hover:border-gray-300"
                     placeholder={t('client.enter_weight', 'Enter target weight')}
                   />
-                </div>
-              </div>
-            </div>
-            
+                      </div>
+                    </div>
+                  </div>
+
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <button
@@ -1199,17 +1190,17 @@ export function EditClientModal({
               >
                 {t('common.cancel', 'Cancel')}
               </button>
-              <button
-                type="submit"
+                    <button
+                      type="submit"
                 disabled={isSubmitting}
                 className="flex-1 px-6 py-3 bg-[#13A753] text-white font-medium rounded-xl hover:bg-[#0F8A44] transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
-              </button>
-            </div>
-          </form>
+                    </button>
+                  </div>
+                </form>
+          </div>
         </div>
-      </div>
     </div>
   );
 }
