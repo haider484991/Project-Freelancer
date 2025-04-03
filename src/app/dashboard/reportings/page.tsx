@@ -128,10 +128,10 @@ export default function ReportingsPage() {
               name: report.name || report.report_name || report.meal_name || report.title || 'Untitled Report',
               date: report.date || report.on_date || report.report_date || new Date().toISOString().split('T')[0],
               type: report.type || report.report_type || report.meal_type || 'Daily Meal',
-              // Ensure status is one of our valid enum values
-              status: (report.status === 'completed' || report.status === 'pending' || report.status === 'in_progress') 
-                ? report.status as 'completed' | 'pending' | 'in_progress'
-                : 'pending', // Default fallback
+            // Ensure status is one of our valid enum values
+            status: (report.status === 'completed' || report.status === 'pending' || report.status === 'in_progress') 
+              ? report.status as 'completed' | 'pending' | 'in_progress'
+              : 'pending', // Default fallback
               protein: Number(report.protein || report.meal_protein || (report.details?.protein) || (report.nutritional?.protein)) || undefined,
               carbs: Number(report.carbs || report.meal_carbs || (report.details?.carbs) || (report.nutritional?.carbs)) || undefined,
               fat: Number(report.fat || report.meal_fats || (report.details?.fat) || (report.nutritional?.fat)) || undefined
