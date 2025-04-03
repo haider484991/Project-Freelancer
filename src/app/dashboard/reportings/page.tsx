@@ -5,6 +5,8 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { useState, useEffect } from 'react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { formatDate } from '@/utils/dateFormat'
+import { reportingsApi } from '@/services/fitTrackApi'
+import { parseApiResponse } from '@/utils/config'
 
 interface Report {
   id: string;
@@ -12,25 +14,9 @@ interface Report {
   date: string;
   type: string;
   status: 'completed' | 'pending' | 'in_progress';
-  protein?: number; // Values now expected to be numbers only
+  protein?: number;
   carbs?: number;
   fat?: number;
-}
-
-// API response interface
-interface ApiResponse {
-  success: boolean;
-  message?: string;
-  reports?: {
-    id: string;
-    name: string;
-    date: string;
-    type: string;
-    status: string;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-  }[];
 }
 
 export default function ReportingsPage() {
@@ -47,24 +33,22 @@ export default function ReportingsPage() {
       setError(null)
       
       try {
-        const response = await fetch('/api/proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            mdl: 'reportings',
-            act: 'list',
-            search: debouncedSearchTerm
-          }),
-          credentials: 'include' // Include cookies for authentication
-        })
+        // Check if the API service is available
+        if (!reportingsApi) {
+          setError('API service not available')
+          setIsLoading(false)
+          return
+        }
         
-        const data: ApiResponse = await response.json()
+        // Use the reportingsApi service instead of direct fetch
+        const response = await reportingsApi.list(debouncedSearchTerm)
         
-        if (data.success && data.reports) {
+        // Use the shared parsing logic for API responses
+        const reportData = parseApiResponse<any>(response.data)
+        
+        if (reportData && reportData.length > 0) {
           // Map API response to our Report interface
-          const formattedReports: Report[] = data.reports.map(report => ({
+          const formattedReports: Report[] = reportData.map((report: any) => ({
             id: report.id,
             name: report.name,
             date: report.date,
@@ -73,14 +57,14 @@ export default function ReportingsPage() {
             status: (report.status === 'completed' || report.status === 'pending' || report.status === 'in_progress') 
               ? report.status as 'completed' | 'pending' | 'in_progress'
               : 'pending', // Default fallback
-            protein: report.protein,
-            carbs: report.carbs,
-            fat: report.fat
+            protein: Number(report.protein) || undefined,
+            carbs: Number(report.carbs) || undefined,
+            fat: Number(report.fat) || undefined
           }))
           
           setReports(formattedReports)
         } else {
-          setError(data.message || 'Failed to fetch reports')
+          setError('Failed to fetch reports')
           setReports([])
         }
       } catch (error) {
@@ -109,7 +93,7 @@ export default function ReportingsPage() {
                 placeholder={t('common.search', 'Search reports...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full lg:w-[300px] rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full lg:w-[300px] rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <div className="absolute left-3 top-2.5">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -126,7 +110,7 @@ export default function ReportingsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
-          <div className="bg-red-50 rounded-2xl p-8 shadow-sm text-center">
+          <div className="bg-red-50 rounded-2xl p-8 shadow-md text-center">
             <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -136,13 +120,13 @@ export default function ReportingsPage() {
             <p className="mt-1 text-sm text-gray-500">{error}</p>
             <button 
               onClick={() => setSearchTerm('')} 
-              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors"
             >
               {t('common.try_again', 'Try Again')}
             </button>
           </div>
         ) : reports.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
@@ -226,7 +210,7 @@ export default function ReportingsPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+          <div className="bg-white rounded-2xl p-8 shadow-md text-center">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
