@@ -8,6 +8,23 @@ import { formatDate } from '@/utils/dateFormat'
 import { parseApiResponse } from '@/utils/config'
 import { reportingsApi } from '@/services/fitTrackApi'
 
+// Define strongly typed interfaces for the meal report response
+interface ReportItemDetails {
+  id?: string;
+  report_id?: string;
+  on_date?: string;
+  meal_text?: string;
+  meal_protein?: number | string;
+  meal_carbs?: number | string;
+  meal_fats?: number | string;
+  calories?: number | string;
+  feedback?: string;
+  trainee_name?: string;
+  trainee_id?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
 // Define strongly typed interfaces for the meal report
 interface MealReport {
   id: string;
@@ -47,8 +64,10 @@ export default function ReportDetailPage() {
         
         const response = await reportingsApi.get(id as string)
         
-        // Use the shared parsing logic to handle different API response formats
-        const reportData = parseApiResponse<any>(response.data)
+        // Use the shared parsing logic for API responses
+        const reportData = parseApiResponse<ReportItemDetails>(response.data)
+        console.log('Raw report data:', response.data)
+        console.log('Parsed report data:', reportData)
         
         if (reportData && reportData.length > 0) {
           // The first item contains our report data
@@ -56,7 +75,7 @@ export default function ReportDetailPage() {
           
           // Create a properly typed report object
           const typedReport: MealReport = {
-            id: apiReport.id || '',
+            id: apiReport.id || apiReport.report_id || '',
             on_date: apiReport.on_date || new Date().toISOString().split('T')[0],
             meal_text: apiReport.meal_text || 'No meal description provided',
             meal_protein: Number(apiReport.meal_protein) || 0,

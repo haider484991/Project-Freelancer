@@ -8,6 +8,47 @@ import { formatDate } from '@/utils/dateFormat'
 import { reportingsApi } from '@/services/fitTrackApi'
 import { parseApiResponse } from '@/utils/config'
 
+// Data structures for API responses
+interface ReportItem {
+  id?: string;
+  report_id?: string;
+  name?: string;
+  report_name?: string;
+  meal_name?: string;
+  title?: string;
+  date?: string;
+  on_date?: string;
+  report_date?: string;
+  type?: string;
+  report_type?: string;
+  meal_type?: string;
+  status?: string;
+  protein?: number | string;
+  meal_protein?: number | string;
+  carbs?: number | string;
+  meal_carbs?: number | string;
+  fat?: number | string;
+  meal_fats?: number | string;
+  details?: {
+    protein?: number | string;
+    carbs?: number | string;
+    fat?: number | string;
+  };
+  nutritional?: {
+    protein?: number | string;
+    carbs?: number | string;
+    fat?: number | string;
+  };
+}
+
+interface NestedResponse {
+  reports?: ReportItem[];
+  items?: ReportItem[];
+  data?: ReportItem[];
+  list?: ReportItem[];
+  [key: string]: unknown;
+}
+
 interface Report {
   id: string;
   name: string;
@@ -44,37 +85,41 @@ export default function ReportingsPage() {
         const response = await reportingsApi.list(debouncedSearchTerm)
         
         // Use the shared parsing logic for API responses
-        const reportData = parseApiResponse<any>(response.data)
+        const reportData = parseApiResponse<unknown>(response.data)
         console.log('Raw API response:', response.data)
         console.log('Parsed API data:', reportData)
         
         // Check for different possible data structures
-        let dataToProcess = reportData;
+        let dataToProcess: ReportItem[] = [];
         
-        // If there's a nested 'reports' array in the response
-        if (reportData && reportData.length === 1 && Array.isArray(reportData[0].reports)) {
-          console.log('Found nested reports array structure')
-          dataToProcess = reportData[0].reports;
-        }
-        // If there's a nested array with a different name
-        else if (reportData && reportData.length === 1 && (
-          Array.isArray(reportData[0].items) || 
-          Array.isArray(reportData[0].data) || 
-          Array.isArray(reportData[0].list)
-        )) {
-          const possibleArrays = ['items', 'data', 'list'];
-          for (const key of possibleArrays) {
-            if (Array.isArray(reportData[0][key])) {
-              console.log(`Found nested ${key} array structure`);
-              dataToProcess = reportData[0][key];
-              break;
+        // Handle different response formats
+        if (Array.isArray(reportData)) {
+          // Direct array of report items
+          if (reportData.length > 0 && 
+              ((reportData[0] as Record<string, unknown>).id !== undefined || 
+               (reportData[0] as Record<string, unknown>).name !== undefined || 
+               (reportData[0] as Record<string, unknown>).date !== undefined)) {
+            dataToProcess = reportData as ReportItem[];
+          } 
+          // Nested structure with a reports/items/data/list property
+          else if (reportData.length > 0) {
+            const firstItem = reportData[0] as Record<string, unknown>;
+            
+            // Check for nested arrays with known property names
+            const possibleArrayProps = ['reports', 'items', 'data', 'list'];
+            for (const prop of possibleArrayProps) {
+              if (Array.isArray(firstItem[prop])) {
+                console.log(`Found nested ${prop} array`);
+                dataToProcess = firstItem[prop] as ReportItem[];
+                break;
+              }
             }
           }
         }
         
-        if (dataToProcess && dataToProcess.length > 0) {
+        if (dataToProcess.length > 0) {
           // Map API response to our Report interface
-          const formattedReports: Report[] = dataToProcess.map((report: any) => {
+          const formattedReports: Report[] = dataToProcess.map((report: ReportItem) => {
             console.log('Processing report item:', report)
             
             // Handle different possible field names in the API response
