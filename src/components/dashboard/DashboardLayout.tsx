@@ -65,17 +65,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isRtl ? 'rtl' : 'ltr'} bg-dark`}>
-      {/* Background image */}
-      <div 
-        className="absolute inset-0 z-0" 
-        style={{ 
-          backgroundImage: 'url(/images/background-image.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: 0.8
-        }}
-      ></div>
+      {/* Background grid lines */}
+      <div className="absolute inset-0 z-0 opacity-20">
+        <div className="grid grid-cols-6 lg:grid-cols-12 h-full">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={`col-${i}`} className={`border-r border-white/12 h-full ${i >= 6 ? 'hidden lg:block' : ''}`}></div>
+          ))}
+        </div>
+        <div className="grid grid-rows-6 lg:grid-rows-12 w-full absolute top-0 left-0 h-full">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={`row-${i}`} className={`border-b border-white/12 w-full ${i >= 6 ? 'hidden lg:block' : ''}`}></div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Background blur elements */}
+      <div className="absolute w-[418px] h-[633px] top-[-363px] right-[639px] rounded-full bg-primary/80 blur-[287px] hidden lg:block"></div>
+      <div className="absolute w-[418px] h-[633px] bottom-[-400px] left-[-84px] rounded-full bg-primary/80 blur-[324px] hidden lg:block"></div>
+      
+      {/* Mobile background blur elements */}
+      <div className="absolute w-[300px] h-[300px] top-[-150px] right-[-150px] rounded-full bg-primary/50 blur-[150px] lg:hidden block"></div>
+      <div className="absolute w-[300px] h-[300px] bottom-[-150px] left-[-150px] rounded-full bg-[#4D4D4D]/50 blur-[150px] lg:hidden block"></div>
       
       {/* Mobile Menu Overlay - Updated background color and removed blur */}
       {isMobileMenuOpen && (
@@ -128,7 +138,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </div>
       
       {/* Mobile Layout */}
-      <div className={`relative w-full min-h-screen z-10 lg:hidden ${isRtl ? 'rtl' : 'ltr'}`}>
+      <div className={`relative w-full min-h-screen z-10 lg:hidden bg-black ${isRtl ? 'rtl' : 'ltr'}`}>
         {/* Mobile Top Bar */}
         <TopBar
           pageTitle={pageTitle}
