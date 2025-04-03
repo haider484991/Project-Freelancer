@@ -29,6 +29,8 @@ interface ReportItem {
   meal_carbs?: number | string;
   fat?: number | string;
   meal_fats?: number | string;
+  trainee_id?: string;
+  trainee_name?: string;
   details?: {
     protein?: number | string;
     carbs?: number | string;
@@ -58,7 +60,27 @@ interface Report {
   protein?: number;
   carbs?: number;
   fat?: number;
+  trainee_id?: string;
 }
+
+// Add a date formatting function at the top of the file after imports
+const formatDateTimeCustom = (dateString: string) => {
+  if (!dateString) return '-';
+  
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '-';
+  
+  // Format as dd-mm-yyyy hh:ii
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  return `${day}-${month}-${year} ${hours}:${minutes}`;
+};
 
 export default function ReportingsPage() {
   const { t, i18n } = useTranslation()
@@ -134,7 +156,8 @@ export default function ReportingsPage() {
               : 'pending', // Default fallback
               protein: Number(report.protein || report.meal_protein || (report.details?.protein) || (report.nutritional?.protein)) || undefined,
               carbs: Number(report.carbs || report.meal_carbs || (report.details?.carbs) || (report.nutritional?.carbs)) || undefined,
-              fat: Number(report.fat || report.meal_fats || (report.details?.fat) || (report.nutritional?.fat)) || undefined
+              fat: Number(report.fat || report.meal_fats || (report.details?.fat) || (report.nutritional?.fat)) || undefined,
+              trainee_id: report.trainee_id || ''
             }
             
             console.log('Formatted report item:', reportItem)
@@ -212,29 +235,23 @@ export default function ReportingsPage() {
               <table className="w-full table-fixed border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="w-[20%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      {t('reportings.name', 'Report Name')}
-                    </th>
-                    <th className="w-[12%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[15%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.date', 'Date')}
                     </th>
-                    <th className="w-[10%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[15%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.type', 'Type')}
                     </th>
                     {/* Nutritional values with (g) in header */}
-                    <th className="w-[10%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[15%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.protein', 'Protein (g)')}
                     </th>
-                    <th className="w-[10%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[15%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.carbs', 'Carbs (g)')}
                     </th>
-                    <th className="w-[10%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[15%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.fat', 'Fat (g)')}
                     </th>
-                    <th className="w-[13%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      {t('reportings.status', 'Status')}
-                    </th>
-                    <th className="w-[15%] px-6 py-4 text-end text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[25%] px-6 py-4 text-end text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.actions', 'Actions')}
                     </th>
                   </tr>
@@ -242,16 +259,13 @@ export default function ReportingsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {reports.map((report) => (
                     <tr key={report.id} className="hover:bg-gray-50">
-                      <td className="w-[20%] px-6 py-4 whitespace-nowrap align-top">
-                        <div className="text-sm font-medium text-gray-900 truncate">{report.name}</div>
+                      <td className="w-[15%] px-6 py-4 whitespace-nowrap align-top">
+                        <div className="text-sm text-gray-500">{formatDateTimeCustom(report.date)}</div>
                       </td>
-                      <td className="w-[12%] px-6 py-4 whitespace-nowrap align-top">
-                        <div className="text-sm text-gray-500">{formatDate(report.date)}</div>
-                      </td>
-                      <td className="w-[10%] px-6 py-4 whitespace-nowrap align-top">
+                      <td className="w-[15%] px-6 py-4 whitespace-nowrap align-top">
                         <div className="text-sm text-gray-500">{report.type}</div>
                       </td>
-                      <td className="w-[10%] px-6 py-4 whitespace-nowrap text-center align-top">
+                      <td className="w-[15%] px-6 py-4 whitespace-nowrap text-center align-top">
                         <div className="text-sm text-gray-500">
                           {report.protein !== undefined ? report.protein : '-'}
                         </div>
@@ -280,12 +294,38 @@ export default function ReportingsPage() {
                         <div className={`flex ${i18n.dir() === 'rtl' ? 'justify-start gap-2 space-x-reverse' : 'justify-end gap-2'}`}>
                           <button 
                             onClick={() => window.location.href = `/dashboard/reportings/${report.id}`}
-                            className="text-primary hover:text-primary-dark"
+                            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            aria-label={t('reportings.view', 'View')}
                           >
-                            {t('reportings.view', 'View')}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M15.58 12C15.58 13.98 13.98 15.58 12 15.58C10.02 15.58 8.42001 13.98 8.42001 12C8.42001 10.02 10.02 8.42001 12 8.42001C13.98 8.42001 15.58 10.02 15.58 12Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M12 20.27C15.53 20.27 18.82 18.19 21.11 14.59C22.01 13.18 22.01 10.81 21.11 9.39997C18.82 5.79997 15.53 3.71997 12 3.71997C8.46997 3.71997 5.17997 5.79997 2.88997 9.39997C1.98997 10.81 1.98997 13.18 2.88997 14.59C5.17997 18.19 8.46997 20.27 12 20.27Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                           </button>
-                          <button className="text-red-600 hover:text-red-800">
-                            {t('common.cancel', 'Cancel')}
+                          <button 
+                            onClick={() => window.location.href = `/dashboard/reportings/edit/${report.id}`}
+                            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            aria-label={t('common.edit', 'Edit')}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M11 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22H15C20 22 22 20 22 15V13" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M16.04 3.02L8.16 10.9C7.86 11.2 7.56 11.79 7.5 12.22L7.07 15.23C6.91 16.32 7.68 17.08 8.77 16.93L11.78 16.5C12.2 16.44 12.79 16.14 13.1 15.84L20.98 7.96C22.34 6.6 22.98 5.02 20.98 3.02C18.98 1.02 17.4 1.66 16.04 3.02Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M14.91 4.1501C15.58 6.5401 17.45 8.4101 19.85 9.0901" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                          <button 
+                            onClick={() => confirm(t('reportings.confirm_cancel', 'Are you sure you want to cancel this report?')) && 
+                                      console.log('Canceling report:', report.id)}
+                            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            aria-label={t('common.cancel', 'Cancel')}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M10.33 16.5H13.66" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M9.5 12.5H14.5" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                           </button>
                         </div>
                       </td>

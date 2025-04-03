@@ -40,6 +40,25 @@ interface MealReport {
   status?: 'completed' | 'pending' | 'in_progress';
 }
 
+// Add a date formatting function at the top of the file after imports
+const formatDateTimeCustom = (dateString: string) => {
+  if (!dateString) return '-';
+  
+  const date = new Date(dateString);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '-';
+  
+  // Format as dd-mm-yyyy hh:ii
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  return `${day}-${month}-${year} ${hours}:${minutes}`;
+};
+
 export default function ReportDetailPage() {
   const { id } = useParams()
   const { t } = useTranslation()
@@ -150,20 +169,18 @@ export default function ReportDetailPage() {
                     {t('reportings.mealReport', 'Meal Report')}
                   </h1>
                   <p className="mt-1 text-sm text-gray-600">
-                    {`${t('common.for', 'For')}: ${report.trainee_name}`}
+                    {`${t('common.for', 'For')}: `}
+                    <a 
+                      href={`/dashboard/clients/${report.trainee_id}`} 
+                      className="text-primary hover:underline"
+                    >
+                      {report.trainee_name}
+                    </a>
                   </p>
                 </div>
                 <div className="mt-4 lg:mt-0">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                    ${report.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                    report.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 
-                    'bg-yellow-100 text-yellow-800'}`}>
-                    {report.status === 'completed' ? t('reportings.status_completed', 'Completed') :
-                    report.status === 'in_progress' ? t('reportings.status_in_progress', 'In Progress') :
-                    t('reportings.status_pending', 'Pending')}
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    {formatDate(report.on_date)}
+                  <div className="text-sm text-gray-500">
+                    {formatDateTimeCustom(report.on_date)}
                   </div>
                 </div>
               </div>

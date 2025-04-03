@@ -942,7 +942,7 @@ export function EditClientModal({ isOpen, onClose, onSubmit, client, groups = []
     
     try {
       await onSubmit(formData);
-      onClose();
+        onClose();
     } catch (error) {
       console.error('Error submitting form:', error);
     } finally {
@@ -957,27 +957,27 @@ export function EditClientModal({ isOpen, onClose, onSubmit, client, groups = []
           <h2 className="text-xl font-semibold text-gray-900">
             {t('clientManagementPage.edit_client')}
           </h2>
-          <button
-            onClick={onClose}
+                  <button
+                    onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
+                    </svg>
+                  </button>
+                </div>
 
         <ClientForm
           formData={formData}
-          onChange={handleChange}
+                        onChange={handleChange}
           onSubmit={handleSubmit}
           onClose={onClose}
           isEditing={true}
           isSubmitting={isSubmitting}
           groups={groups}
-        />
-      </div>
+                      />
+                    </div>
     </Modal>
   );
 }
@@ -1051,10 +1051,10 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                   <path d="M22 18C22 18.75 21.79 19.46 21.42 20.06C21.21 20.42 20.94 20.74 20.63 21C19.93 21.63 19.01 22 18 22C16.54 22 15.27 21.22 14.58 20.06C14.21 19.46 14 18.75 14 18C14 16.74 14.58 15.61 15.5 14.88C16.19 14.33 17.06 14 18 14C20.21 14 22 15.79 22 18Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M16.44 18L17.43 18.99L19.56 17.02" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-              </div>
+                        </div>
               <h2 className="text-2xl font-semibold text-gray-800">{t('clientManagementPage.add_client')}</h2>
-            </div>
-            <button
+                        </div>
+                    <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
               aria-label="Close"
@@ -1062,9 +1062,9 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
+                          </svg>
+                    </button>
+                  </div>
 
           <ClientForm
             formData={formData}
@@ -1074,8 +1074,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
             isEditing={false}
             groups={groups}
           />
+          </div>
         </div>
-      </div>
     </div>
   );
 }

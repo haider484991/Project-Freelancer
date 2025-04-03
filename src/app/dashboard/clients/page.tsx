@@ -334,12 +334,12 @@ export default function ClientManagementPage() {
         console.log('Update response:', response);
         
         if (response.data && response.data.result) {
-          // Update client in context with the ID and updated client data
-          updateClient(updatedClient.id, updatedClient);
-          
-          // Refresh table data
-          await fetchClients();
-          showToast('success', t('clientManagementPage.clientUpdated'));
+        // Update client in context with the ID and updated client data
+        updateClient(updatedClient.id, updatedClient);
+        
+        // Refresh table data
+        await fetchClients();
+        showToast('success', t('clientManagementPage.clientUpdated'));
           
           // Close the modal
           setIsClientDetailsModalOpen(false);
@@ -503,14 +503,14 @@ export default function ClientManagementPage() {
             
       {/* Client table */}
       <div className="bg-white rounded-25 shadow-md p-6">
-        <ClientTable 
+              <ClientTable 
           clients={clientsList}
           onViewClient={handleViewClient}
           onTogglePush={handleTogglePush}
           onEdit={handleEditClientClick}
           searchTerm={searchTerm}
-        />
-      </div>
+              />
+            </div>
     </>
   )
 
@@ -634,13 +634,13 @@ export default function ClientManagementPage() {
 
       {/* Mobile client table */}
       <div className="animate-fade-in">
-        <ClientTable 
+          <ClientTable 
           searchTerm={searchTerm}
-          onViewClient={handleViewClient}
-          onTogglePush={handleTogglePush}
+            onViewClient={handleViewClient}
+            onTogglePush={handleTogglePush}
           onEdit={handleEditClientClick}
-          isMobile={true}
-          clients={clientsList}
+            isMobile={true}
+            clients={clientsList}
         />
       </div>
     </>
