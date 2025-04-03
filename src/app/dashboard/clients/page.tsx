@@ -303,11 +303,8 @@ export default function ClientManagementPage() {
           }
         }
 
-        // Prepare trainee data for API - ensure all fields are strings and match expected format
-        // IMPORTANT: We need to match the exact API request format from the Postman collection
+        // Prepare trainee data for API
         const traineeData = {
-          mdl: "trainees",
-          act: "set",
           id: originalData.id,
           name: updatedClient.name || originalData.name,
           email: updatedClient.email || originalData.email || '',
@@ -321,33 +318,23 @@ export default function ClientManagementPage() {
         
         console.log('Sending update with data:', traineeData);
         
-        // Call API to update the trainee - use the raw API call to ensure proper format
-        const response = await fetch('https://app.fit-track.net/api/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(traineeData),
-          credentials: 'include'
-        });
+        // Use the traineesApi.set method instead of direct fetch
+        const response = await traineesApi.set(traineeData);
         
-        const result = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(`API error: ${result.message || response.statusText}`);
+        if (response.data && response.data.result) {
+          // Update client in context with the ID and updated client data
+          updateClient(updatedClient.id, updatedClient);
+          
+          // Refresh table data
+          await fetchClients();
+          showToast('success', t('clientManagementPage.clientUpdated'));
+        } else {
+          throw new Error(response.data?.message || 'Failed to update client');
         }
-        
-        // Update client in context with the ID and updated client data
-        updateClient(updatedClient.id, updatedClient);
-        
-        // Refresh table data
-        await fetchClients();
-        showToast('success', t('clientManagementPage.clientUpdated'));
       }
     } catch (error) {
       console.error('Error updating client:', error);
       showToast('error', t('clientManagementPage.errorUpdatingClient'));
-      throw error;
     } finally {
       setIsLoading(false);
     }
