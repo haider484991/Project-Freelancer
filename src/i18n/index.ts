@@ -26,7 +26,7 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources,
-      lng: 'he', // Default language
+      lng: 'he', // Default language is Hebrew
       fallbackLng: 'en',
       interpolation: {
         escapeValue: false // React already escapes by default
