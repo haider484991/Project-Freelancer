@@ -73,34 +73,34 @@ export default function GroupsTable({
     <div className={`w-full overflow-x-auto ${i18n.dir() === 'rtl' ? 'rtl' : ''}`}>
       {!isMobile ? (
         // Desktop table
-        <table className="w-full min-w-[600px] border-collapse">
+        <table className="w-full min-w-[600px] table-fixed border-collapse">
           <thead>
             <tr className="text-left text-[#636363] border-b border-gray-100">
-              <th className="py-4 px-4 font-medium">{t('group.name', 'Group Name')}</th>
-              <th className="py-4 px-4 font-medium">{t('group.members', 'Members')}</th>
-              <th className="py-4 px-4 font-medium">{t('group.dietary_guidelines', 'Dietary Guidelines')}</th>
-              <th className="py-4 px-4 font-medium">{t('group.weekly_menu', 'Weekly Menu')}</th>
-              <th className="py-4 px-4 font-medium">{t('group.created_at', 'Created At')}</th>
-              <th className="py-4 px-4 font-medium">{t('common.actions', 'Actions')}</th>
+              <th className="w-[20%] py-4 px-4 font-medium text-start">{t('groups.group_name', 'Group Name')}</th>
+              <th className="w-[10%] py-4 px-4 font-medium text-start">{t('groupsTable.Members', 'Members')}</th>
+              <th className="w-[25%] py-4 px-4 font-medium text-start">{t('group.dietary_guidelines', 'Dietary Guidelines')}</th>
+              <th className="w-[25%] py-4 px-4 font-medium text-start">{t('group.weekly_menu', 'Weekly Menu')}</th>
+              <th className="w-[15%] py-4 px-4 font-medium text-start">{t('groupsTable.Created At', 'Created At')}</th>
+              <th className="w-[10%] py-4 px-4 font-medium text-start">{t('common.actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredGroups.length > 0 ? (
               filteredGroups.map((group) => (
                 <tr key={group.id} className="border-b border-gray-100">
-                  <td className="py-4 px-4">
-                    <div className="font-medium text-[#1E1E1E]">{group.name}</div>
+                  <td className="w-[20%] py-4 px-4 align-top">
+                    <div className="font-medium text-[#1E1E1E] truncate">{group.name}</div>
                   </td>
-                  <td className="py-4 px-4 text-[#636363]">{group.members}</td>
-                  <td className="py-4 px-4 text-[#636363]">{getDietaryGuidelines(group)}</td>
-                  <td className="py-4 px-4 text-[#636363]">{getWeeklyMenu(group)}</td>
-                  <td className="py-4 px-4 text-[#636363]">{formatDate(group.createdAt)}</td>
-                  <td className="py-4 px-4">
-                    <div className="flex gap-2">
+                  <td className="w-[10%] py-4 px-4 text-[#636363] align-top">{group.members}</td>
+                  <td className="w-[25%] py-4 px-4 text-[#636363] align-top truncate">{getDietaryGuidelines(group)}</td>
+                  <td className="w-[25%] py-4 px-4 text-[#636363] align-top truncate">{getWeeklyMenu(group)}</td>
+                  <td className="w-[15%] py-4 px-4 text-[#636363] align-top">{formatDate(group.createdAt)}</td>
+                  <td className="w-[10%] py-4 px-4 align-top">
+                    <div className={`flex ${i18n.dir() === 'rtl' ? 'gap-0 space-x-reverse space-x-2' : 'gap-2'}`}>
                       <button 
                         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                         onClick={(e) => handleViewGroup(e, group)}
-                        aria-label={t('group.view_edit', 'View/Edit Group')}
+                        aria-label={t('groupsTable.View/Edit Group', 'View/Edit Group')}
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M15.58 12C15.58 13.98 13.98 15.58 12 15.58C10.02 15.58 8.42001 13.98 8.42001 12C8.42001 10.02 10.02 8.42001 12 8.42001C13.98 8.42001 15.58 10.02 15.58 12Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -110,7 +110,7 @@ export default function GroupsTable({
                       <button 
                         className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                         onClick={(e) => handleDeleteGroup(e, group)}
-                        aria-label={t('group.delete', 'Delete Group')}
+                        aria-label={t('groupsTable.Delete Group', 'Delete Group')}
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -127,7 +127,7 @@ export default function GroupsTable({
             ) : (
               <tr>
                 <td colSpan={6} className="py-8 text-center text-gray-500">
-                  {searchTerm ? t('group.no_results', 'No groups found matching your search.') : t('group.no_groups', 'No groups available.')}
+                  {searchTerm ? t('groupsTable.No groups found matching your search.', 'No groups found matching your search.') : t('groupsTable.No groups available.', 'No groups available.')}
                 </td>
               </tr>
             )}
@@ -148,7 +148,7 @@ export default function GroupsTable({
                     <button 
                       className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
                       onClick={(e) => handleViewGroup(e, group)}
-                      aria-label={t('group.view_edit', 'View/Edit Group')}
+                      aria-label={t('groupsTable.View/Edit Group', 'View/Edit Group')}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M15.58 12C15.58 13.98 13.98 15.58 12 15.58C10.02 15.58 8.42001 13.98 8.42001 12C8.42001 10.02 10.02 8.42001 12 8.42001C13.98 8.42001 15.58 10.02 15.58 12Z" stroke="#636363" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -158,7 +158,7 @@ export default function GroupsTable({
                     <button 
                       className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
                       onClick={(e) => handleDeleteGroup(e, group)}
-                      aria-label={t('group.delete', 'Delete Group')}
+                      aria-label={t('groupsTable.Delete Group', 'Delete Group')}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -188,7 +188,7 @@ export default function GroupsTable({
             ))
           ) : (
             <div className="py-8 text-center text-gray-500">
-              {searchTerm ? t('group.no_results', 'No groups found matching your search.') : t('group.no_groups', 'No groups available.')}
+              {searchTerm ? t('groupsTable.No groups found matching your search.', 'No groups found matching your search.') : t('groupsTable.No groups available.', 'No groups available.')}
             </div>
           )}
         </div>

@@ -91,40 +91,44 @@ export default function ClientTable({
       
       {!isMobile ? (
         // Desktop table
-        <table className="min-w-full">
+        <table className="min-w-full table-fixed border-collapse">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="text-left py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.client_name')}</th>
-              <th className="text-left py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.phone')}</th>
-              <th className="text-left py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.email')}</th>
-              <th className="text-left py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.gender')}</th>
-              <th className="text-left py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.group')}</th>
-              <th className="text-left py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.actions')}</th>
+              <th className="w-[20%] text-start py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.client_name')}</th>
+              <th className="w-[15%] text-start py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.phone')}</th>
+              <th className="w-[25%] text-start py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.email')}</th>
+              <th className="w-[10%] text-start py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.gender')}</th>
+              <th className="w-[15%] text-start py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.group')}</th>
+              <th className="w-[15%] text-start py-4 px-4 font-medium text-[#1E1E1E]">{t('clientTable.actions')}</th>
             </tr>
           </thead>
           <tbody>
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <tr key={client.id} className="border-b border-gray-100">
-                  <td className="py-4 px-4">
+                  <td className="w-[20%] py-4 px-4 align-top">
                     <div 
-                      className="font-medium text-[#1E1E1E] hover:text-primary cursor-pointer"
+                      className="font-medium text-[#1E1E1E] hover:text-primary cursor-pointer truncate"
                       onClick={(e) => handleViewClient(e, client)}
                     >
                       {client.name}
                     </div>
                   </td>
-                  <td className="py-4 px-4 text-[#636363]">{client.phone || '-'}</td>
-                  <td className="py-4 px-4 text-[#636363]">{client.email || '-'}</td>
-                  <td className="py-4 px-4 text-[#636363]">{getGenderText(client.gender)}</td>
-                  <td className="py-4 px-4 text-[#636363]">{client.group || '-'}</td>
-                  <td className="py-4 px-4">
-                    <div className="flex space-x-3">
+                  <td className="w-[15%] py-4 px-4 text-[#636363] align-top truncate">{client.phone || '-'}</td>
+                  <td className="w-[25%] py-4 px-4 text-[#636363] align-top truncate">{client.email || '-'}</td>
+                  <td className="w-[10%] py-4 px-4 text-[#636363] align-top">{getGenderText(client.gender)}</td>
+                  <td className="w-[15%] py-4 px-4 text-[#636363] align-top truncate">{client.group || '-'}</td>
+                  <td className="w-[15%] py-4 px-4 align-top">
+                    <div className={`flex ${isRtl ? 'gap-0 space-x-reverse space-x-2' : 'gap-2'}`}>
                       <button
                         onClick={(e) => handleViewClient(e, client)}
-                        className="text-[#13A753] hover:text-[#0D8443]"
+                        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                        aria-label={t('clientTable.view')}
                       >
-                        {t('clientTable.view')}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M15.58 12C15.58 13.98 13.98 15.58 12 15.58C10.02 15.58 8.42001 13.98 8.42001 12C8.42001 10.02 10.02 8.42001 12 8.42001C13.98 8.42001 15.58 10.02 15.58 12Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M12 20.27C15.53 20.27 18.82 18.19 21.11 14.59C22.01 13.18 22.01 10.81 21.11 9.39997C18.82 5.79997 15.53 3.71997 12 3.71997C8.46997 3.71997 5.17997 5.79997 2.88997 9.39997C1.98997 10.81 1.98997 13.18 2.88997 14.59C5.17997 18.19 8.46997 20.27 12 20.27Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </button>
                       <button
                         onClick={(e) => {
@@ -132,9 +136,16 @@ export default function ClientTable({
                           e.stopPropagation();
                           alert('Delete function')
                         }}
-                        className="text-red-500 hover:text-red-700"
+                        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                        aria-label={t('clientTable.delete')}
                       >
-                        {t('clientTable.delete')}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M10.33 16.5H13.66" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M9.5 12.5H14.5" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -182,9 +193,16 @@ export default function ClientTable({
                       e.preventDefault();
                       alert('Delete client');
                     }}
-                    className="text-red-500 text-sm"
+                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                    aria-label={t('clientTable.delete')}
                   >
-                    {t('clientTable.delete')}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 5.97998C17.67 5.64998 14.32 5.47998 10.98 5.47998C9 5.47998 7.02 5.57998 5.04 5.77998L3 5.97998" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8.5 4.97L8.72 3.66C8.88 2.71 9 2 10.69 2H13.31C15 2 15.13 2.75 15.28 3.67L15.5 4.97" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18.85 9.14001L18.2 19.21C18.09 20.78 18 22 15.21 22H8.79002C6.00002 22 5.91002 20.78 5.80002 19.21L5.15002 9.14001" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10.33 16.5H13.66" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9.5 12.5H14.5" stroke="#FF5C5C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
                 </div>
               </div>

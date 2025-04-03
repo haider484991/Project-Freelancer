@@ -153,7 +153,9 @@
     "N/A": "לא זמין",
     "No groups found matching your search.": "לא נמצאו קבוצות התואמות את החיפוש שלך.",
     "No groups available.": "אין קבוצות זמינות.",
-    "Are you sure you want to delete the group \"{{name}}\"?": "האם אתה בטוח שברצונך למחוק את הקבוצה \"{{name}}\"?"
+    "Are you sure you want to delete the group \"{{name}}\"?": "האם אתה בטוח שברצונך למחוק את הקבוצה \"{{name}}\"?",
+    "Dietary Guidelines": "הנחיות תזונה",
+    "Weekly Menu": "תפריט שבועי"
   },
   "clientPopups": {
     "add_client": "הוסף לקוח",
@@ -348,5 +350,9 @@
     "enter_calories": "הכנס קלוריות יעד",
     "target_weight": "משקל יעד (ק\"ג)",
     "enter_weight": "הכנס משקל יעד"
+  },
+  "group": {
+    "dietary_guidelines": "הנחיות תזונה",
+    "weekly_menu": "תפריט שבועי"
   }
 }

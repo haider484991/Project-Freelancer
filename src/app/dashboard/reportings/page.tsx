@@ -61,7 +61,7 @@ interface Report {
 }
 
 export default function ReportingsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [reports, setReports] = useState<Report[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -209,32 +209,32 @@ export default function ReportingsPage() {
         ) : reports.length > 0 ? (
           <div className="bg-white rounded-25 shadow-md overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full table-fixed border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[20%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.name', 'Report Name')}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[12%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.date', 'Date')}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[10%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.type', 'Type')}
                     </th>
                     {/* Nutritional values with (g) in header */}
-                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[10%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.protein', 'Protein (g)')}
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[10%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.carbs', 'Carbs (g)')}
                     </th>
-                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[10%] px-6 py-4 text-center text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.fat', 'Fat (g)')}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[13%] px-6 py-4 text-start text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.status', 'Status')}
                     </th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="w-[15%] px-6 py-4 text-end text-sm font-medium text-gray-500 uppercase tracking-wider">
                       {t('reportings.actions', 'Actions')}
                     </th>
                   </tr>
@@ -242,31 +242,31 @@ export default function ReportingsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {reports.map((report) => (
                     <tr key={report.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{report.name}</div>
+                      <td className="w-[20%] px-6 py-4 whitespace-nowrap align-top">
+                        <div className="text-sm font-medium text-gray-900 truncate">{report.name}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="w-[12%] px-6 py-4 whitespace-nowrap align-top">
                         <div className="text-sm text-gray-500">{formatDate(report.date)}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="w-[10%] px-6 py-4 whitespace-nowrap align-top">
                         <div className="text-sm text-gray-500">{report.type}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="w-[10%] px-6 py-4 whitespace-nowrap text-center align-top">
                         <div className="text-sm text-gray-500">
                           {report.protein !== undefined ? report.protein : '-'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="w-[10%] px-6 py-4 whitespace-nowrap text-center align-top">
                         <div className="text-sm text-gray-500">
                           {report.carbs !== undefined ? report.carbs : '-'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="w-[10%] px-6 py-4 whitespace-nowrap text-center align-top">
                         <div className="text-sm text-gray-500">
                           {report.fat !== undefined ? report.fat : '-'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="w-[13%] px-6 py-4 whitespace-nowrap align-top">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                           ${report.status === 'completed' ? 'bg-green-100 text-green-800' : 
                             report.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 
@@ -276,8 +276,8 @@ export default function ReportingsPage() {
                            t('reportings.status_pending', 'Pending')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end gap-2">
+                      <td className="w-[15%] px-6 py-4 whitespace-nowrap text-end text-sm font-medium align-top">
+                        <div className={`flex ${i18n.dir() === 'rtl' ? 'justify-start gap-2 space-x-reverse' : 'justify-end gap-2'}`}>
                           <button 
                             onClick={() => window.location.href = `/dashboard/reportings/${report.id}`}
                             className="text-primary hover:text-primary-dark"
