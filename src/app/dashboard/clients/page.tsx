@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import ClientTable, { Client } from '@/components/dashboard/ClientTable'
-import { AddClientModal, ClientDetailsModal } from '@/components/dashboard/ClientPopups'
+import { AddClientModal, ClientDetailsModal, EditClientModal } from '@/components/dashboard/ClientPopups'
 import { useAppContext } from '@/context/AppContext'
 import { useTranslation } from 'react-i18next'
 import { traineesApi } from '@/services/fitTrackApi'
@@ -55,6 +55,7 @@ export default function ClientManagementPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false)
   const [isClientDetailsModalOpen, setIsClientDetailsModalOpen] = useState(false)
+  const [isEditClientModalOpen, setIsEditClientModalOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<ExtendedClient | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -270,6 +271,12 @@ export default function ClientManagementPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Handle opening the edit client modal
+  const handleEditClientClick = (client: ExtendedClient) => {
+    setSelectedClient(client);
+    setIsEditClientModalOpen(true);
   };
   
   // Handle edit client submission
@@ -500,7 +507,7 @@ export default function ClientManagementPage() {
           clients={clientsList}
           onViewClient={handleViewClient}
           onTogglePush={handleTogglePush}
-          onEdit={handleEditClient}
+          onEdit={handleEditClientClick}
           searchTerm={searchTerm}
         />
       </div>
@@ -631,7 +638,7 @@ export default function ClientManagementPage() {
           searchTerm={searchTerm}
           onViewClient={handleViewClient}
           onTogglePush={handleTogglePush}
-          onEdit={handleEditClient}
+          onEdit={handleEditClientClick}
           isMobile={true}
           clients={clientsList}
         />
@@ -694,16 +701,53 @@ export default function ClientManagementPage() {
         />
       )}
       
+      {/* Edit Client Modal */}
+      {selectedClient && isEditClientModalOpen && (
+        <EditClientModal
+          isOpen={isEditClientModalOpen}
+          onClose={() => setIsEditClientModalOpen(false)}
+          onSubmit={(formData) => {
+            // Convert the form data to ExtendedClient format
+            if (selectedClient) {
+              const updatedClient: ExtendedClient = {
+                ...selectedClient,
+                name: formData.name,
+                email: formData.email || '',
+                phone: formData.phone || '',
+                group: apiGroups.find(g => g.id === formData.group_id)?.name || selectedClient.group || '',
+                status: formData.is_active === '1' ? 'active' : 'inactive',
+                gender: formData.gender === '1' ? 'male' : 'female',
+                dietaryGoal: `${formData.target_calories} calories / ${formData.target_weight} kg`,
+                apiData: {
+                  ...selectedClient.apiData,
+                  id: formData.id,
+                  name: formData.name,
+                  email: formData.email,
+                  phone: formData.phone,
+                  group_id: formData.group_id,
+                  target_calories: formData.target_calories,
+                  target_weight: formData.target_weight,
+                  gender: formData.gender,
+                  is_active: formData.is_active
+                }
+              };
+              handleEditClient(updatedClient);
+            }
+          }}
+          client={selectedClient}
+          groups={apiGroups}
+        />
+      )}
+      
+      {/* Client Details Modal */}
       {selectedClient && isClientDetailsModalOpen && (
-        <>
         <ClientDetailsModal
           isOpen={isClientDetailsModalOpen}
           onClose={() => setIsClientDetailsModalOpen(false)}
           client={selectedClient}
-          onEdit={handleEditClient}
+          onEdit={handleEditClientClick}
           onDelete={handleDeleteClient}
         />
-        </>
       )}
     </DashboardLayout>
   )

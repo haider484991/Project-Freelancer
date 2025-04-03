@@ -872,63 +872,61 @@ export function ClientSelector({
 }
 
 // ==========================================================================
-// Edit Client Modal
+// Add Edit Client Modal
 // ==========================================================================
 interface EditClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  client: ClientType | null;
-  onEditClient: (updatedClient: any) => void;
-  availableGroups?: Group[];
+  onSubmit: (client: {
+    id?: string;
+    name: string;
+    email: string;
+    phone: string;
+    group_id: string;
+    target_calories: string;
+    target_weight: string;
+    gender: string;
+    is_active: string;
+  }) => void;
+  client?: ClientType & { apiData?: any };
+  groups?: Group[];
 }
 
-export function EditClientModal({ 
-  isOpen, 
-  onClose, 
-  client, 
-  onEditClient,
-  availableGroups = []
-}: EditClientModalProps) {
+export function EditClientModal({ isOpen, onClose, onSubmit, client, groups = [] }: EditClientModalProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize form data from client
   const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    email: '',
-    phone: '',
-    group_id: '',
-    target_calories: '',
-    target_weight: '',
-    gender: 'male',
-    is_active: '1'
+    id: client?.apiData?.id || '',
+    name: client?.name || '',
+    email: client?.email || '',
+    phone: client?.phone || '',
+    group_id: client?.apiData?.group_id || '',
+    target_calories: client?.apiData?.target_calories || '',
+    target_weight: client?.apiData?.target_weight || '',
+    gender: client?.gender === 'male' ? '1' : '2',
+    is_active: client?.status === 'active' ? '1' : '0'
   });
 
+  // Update form data when client changes
   useEffect(() => {
     if (client) {
-      // Extract target values from dietaryGoal if available
-      let targetCalories = '';
-      let targetWeight = '';
-      
-      if (client.dietaryGoal) {
-        const parts = client.dietaryGoal.split(' ');
-        if (parts.length >= 1) targetCalories = parts[0];
-        if (parts.length >= 4) targetWeight = parts[3];
-      }
-      
       setFormData({
-        id: client.id,
-        name: client.name || '',
-        email: client.email || '',
-        phone: client.phone || '',
-        group_id: client.group?.split(' ')[0] || '', // Assuming group ID is stored in the client object
-        target_calories: targetCalories,
-        target_weight: targetWeight,
-        gender: client.gender || 'male',
-        is_active: client.status === 'active' ? '1' : '0'
+        id: client?.apiData?.id || '',
+        name: client?.name || '',
+        email: client?.email || '',
+        phone: client?.phone || '',
+        group_id: client?.apiData?.group_id || '',
+        target_calories: client?.apiData?.target_calories || '',
+        target_weight: client?.apiData?.target_weight || '',
+        gender: client?.gender === 'male' ? '1' : '2',
+        is_active: client?.status === 'active' ? '1' : '0'
       });
     }
   }, [client]);
 
+  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -937,77 +935,50 @@ export function EditClientModal({
     }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
-      setIsSubmitting(true);
-      
-      // Create updated client object for API
-      const apiData = {
-        id: formData.id,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        group_id: formData.group_id,
-        target_calories: formData.target_calories,
-        target_weight: formData.target_weight,
-        gender: formData.gender,
-        is_active: formData.is_active
-      };
-      
-      await onEditClient(apiData);
-        onClose();
+      await onSubmit(formData);
+      onClose();
     } catch (error) {
-      console.error('Error updating client:', error);
+      console.error('Error submitting form:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-      <div className="bg-white rounded-3xl w-full max-w-2xl mx-auto">
-        <div className="p-6 md:p-8">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#13A753]/10 p-2.5 rounded-xl">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M3.41003 22C3.41003 18.13 7.26003 15 12 15C12.96 15 13.89 15.13 14.76 15.37" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M22 18C22 18.75 21.79 19.46 21.42 20.06C21.21 20.42 20.94 20.74 20.63 21C19.93 21.63 19.01 22 18 22C16.54 22 15.27 21.22 14.58 20.06C14.21 19.46 14 18.75 14 18C14 16.74 14.58 15.61 15.5 14.88C16.19 14.33 17.06 14 18 14C20.21 14 22 15.79 22 18Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M16.44 18L17.43 18.99L19.56 17.02" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800">{t('clientManagementPage.edit_client', 'Edit Client')}</h2>
-            </div>
-                  <button
-                    onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
-              aria-label="Close"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {t('clientManagementPage.edit_client')}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 6L18 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
 
-          <ClientForm
-            formData={formData}
-                        onChange={handleChange}
-            onSubmit={handleSubmit}
-            onClose={onClose}
-            isEditing={true}
-            isSubmitting={isSubmitting}
-            groups={availableGroups}
-                      />
-                    </div>
-                    </div>
-                    </div>
+        <ClientForm
+          formData={formData}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          onClose={onClose}
+          isEditing={true}
+          isSubmitting={isSubmitting}
+          groups={groups}
+        />
+      </div>
+    </Modal>
   );
 }
 
@@ -1080,10 +1051,10 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
                   <path d="M22 18C22 18.75 21.79 19.46 21.42 20.06C21.21 20.42 20.94 20.74 20.63 21C19.93 21.63 19.01 22 18 22C16.54 22 15.27 21.22 14.58 20.06C14.21 19.46 14 18.75 14 18C14 16.74 14.58 15.61 15.5 14.88C16.19 14.33 17.06 14 18 14C20.21 14 22 15.79 22 18Z" stroke="#13A753" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M16.44 18L17.43 18.99L19.56 17.02" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                        </div>
+              </div>
               <h2 className="text-2xl font-semibold text-gray-800">{t('clientManagementPage.add_client')}</h2>
-                        </div>
-                    <button
+            </div>
+            <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
               aria-label="Close"
@@ -1091,9 +1062,9 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                    </button>
-                  </div>
+              </svg>
+            </button>
+          </div>
 
           <ClientForm
             formData={formData}
@@ -1103,8 +1074,8 @@ export function AddClientModal({ isOpen, onClose, onSubmit, groups = [] }: AddCl
             isEditing={false}
             groups={groups}
           />
-          </div>
         </div>
+      </div>
     </div>
   );
 }
