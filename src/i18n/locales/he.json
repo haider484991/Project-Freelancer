@@ -87,6 +87,7 @@
     "errorAddingClient": "שגיאה בהוספת לקוח",
     "errorUpdatingClient": "שגיאה בעדכון פרטי הלקוח",
     "errorDeletingClient": "שגיאה במחיקת הלקוח",
+    "errorFetchingClientDetails": "שגיאה בטעינת פרטי הלקוח",
     "pushNotificationsUpdated": "הגדרות התראות עודכנו",
     "errorTogglePush": "שגיאה בעדכון הגדרות התראות",
     "header": "ניהול לקוחות",

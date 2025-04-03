@@ -207,10 +207,54 @@ export default function ClientManagementPage() {
   };
   
   // Handle client details
-  const handleViewClient = (client: Client) => {
-    setSelectedClient(client as ExtendedClient)
-    setIsClientDetailsModalOpen(true)
-  }
+  const handleViewClient = async (client: Client) => {
+    try {
+      setIsLoading(true);
+      
+      // Get the client ID (assuming the ExtendedClient has apiData with id)
+      const clientId = (client as ExtendedClient).apiData?.id || client.id;
+      
+      // Call the API to get detailed client data
+      const response = await traineesApi.get(clientId);
+      console.log('Client details API response:', response);
+      
+      if (response.data && response.data.result) {
+        // Get the API trainee data
+        const traineeData = response.data.result;
+        
+        // Find the corresponding group name
+        const groupName = apiGroups.find(g => g.id === traineeData.group_id)?.name || 'Unknown Group';
+        
+        // Create extended client with API data
+        const extendedClient: ExtendedClient = {
+          ...client,
+          name: traineeData.name,
+          email: traineeData.email,
+          phone: traineeData.phone,
+          group: groupName,
+          dietaryGoal: `${traineeData.target_calories} calories / ${traineeData.target_weight} kg`,
+          status: traineeData.is_active === '1' ? 'active' : 'inactive',
+          gender: traineeData.gender === '1' ? 'male' : 'female',
+          apiData: traineeData
+        };
+        
+        // Set the selected client with the API data
+        setSelectedClient(extendedClient);
+        setIsClientDetailsModalOpen(true);
+      } else {
+        throw new Error('Failed to fetch client details');
+      }
+    } catch (error) {
+      console.error('Error fetching client details:', error);
+      showToast('error', t('clientManagementPage.errorFetchingClientDetails'));
+      
+      // Fallback to using existing client data
+      setSelectedClient(client as ExtendedClient);
+      setIsClientDetailsModalOpen(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Handle toggle push notification
   const handleTogglePush = async (clientId: string, enabled: boolean) => {
@@ -242,30 +286,56 @@ export default function ClientManagementPage() {
         const groupId = selectedGroup ? selectedGroup.id : originalData.group_id;
 
         // Extract target values from dietaryGoal if available
-        let targetCalories = originalData.target_calories;
-        let targetWeight = originalData.target_weight;
+        let targetCalories = originalData.target_calories || '0';
+        let targetWeight = originalData.target_weight || '0';
         
         if (updatedClient.dietaryGoal) {
-          const parts = updatedClient.dietaryGoal.split(' ');
-          if (parts.length >= 1) targetCalories = parts[0];
-          if (parts.length >= 4) targetWeight = parts[3];
+          try {
+            // More robust parsing
+            const match = updatedClient.dietaryGoal.match(/(\d+)\s+calories\s+\/\s+(\d+)\s+kg/);
+            if (match && match.length >= 3) {
+              targetCalories = match[1];
+              targetWeight = match[2];
+            }
+          } catch (parseError) {
+            console.warn('Error parsing dietary goal:', parseError);
+            // Fallback to original values
+          }
         }
 
-        // Prepare trainee data for API - ensure all fields are strings
+        // Prepare trainee data for API - ensure all fields are strings and match expected format
+        // IMPORTANT: We need to match the exact API request format from the Postman collection
         const traineeData = {
+          mdl: "trainees",
+          act: "set",
           id: originalData.id,
-          name: updatedClient.name,
-          email: updatedClient.email || '',
-          phone: updatedClient.phone || '',
+          name: updatedClient.name || originalData.name,
+          email: updatedClient.email || originalData.email || '',
+          phone: updatedClient.phone || originalData.phone || '',
           group_id: groupId,
-          target_calories: String(targetCalories || '0'),
-          target_weight: String(targetWeight || '0'),
+          target_calories: String(targetCalories),
+          target_weight: String(targetWeight),
           gender: updatedClient.gender === 'male' ? '1' : '2',
           is_active: updatedClient.status === 'active' ? '1' : '0'
         };
         
-        // Call API to update the trainee
-        await traineesApi.set(traineeData);
+        console.log('Sending update with data:', traineeData);
+        
+        // Call API to update the trainee - use the raw API call to ensure proper format
+        const response = await fetch('https://app.fit-track.net/api/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(traineeData),
+          credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${result.message || response.statusText}`);
+        }
         
         // Update client in context with the ID and updated client data
         updateClient(updatedClient.id, updatedClient);
