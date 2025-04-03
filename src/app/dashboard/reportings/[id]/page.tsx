@@ -40,23 +40,28 @@ interface MealReport {
   status?: 'completed' | 'pending' | 'in_progress';
 }
 
-// Add a date formatting function at the top of the file after imports
+// Improve the date formatting function for better error handling
 const formatDateTimeCustom = (dateString: string) => {
   if (!dateString) return '-';
   
-  const date = new Date(dateString);
-  
-  // Check if date is valid
-  if (isNaN(date.getTime())) return '-';
-  
-  // Format as dd-mm-yyyy hh:ii
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  
-  return `${day}-${month}-${year} ${hours}:${minutes}`;
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '-';
+    
+    // Format as dd-mm-yyyy hh:ii
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
+  } catch (e) {
+    console.error("Error formatting date:", dateString, e);
+    return dateString || '-'; // Return original string if parsing fails
+  }
 };
 
 export default function ReportDetailPage() {
