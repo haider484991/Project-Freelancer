@@ -303,7 +303,7 @@ export default function ClientManagementPage() {
           }
         }
 
-        // Prepare trainee data for API
+        // Prepare trainee data for API - match the exact format from the Postman collection
         const traineeData = {
           id: originalData.id,
           name: updatedClient.name || originalData.name,
@@ -318,8 +318,13 @@ export default function ClientManagementPage() {
         
         console.log('Sending update with data:', traineeData);
         
-        // Use the traineesApi.set method instead of direct fetch
+        // Use the traineesApi correctly - it will add 'mdl' and 'act' internally
+        if (!traineesApi) {
+          throw new Error('traineesApi is not available');
+        }
+        
         const response = await traineesApi.set(traineeData);
+        console.log('Update response:', response);
         
         if (response.data && response.data.result) {
           // Update client in context with the ID and updated client data
@@ -328,9 +333,14 @@ export default function ClientManagementPage() {
           // Refresh table data
           await fetchClients();
           showToast('success', t('clientManagementPage.clientUpdated'));
+          
+          // Close the modal
+          setIsClientDetailsModalOpen(false);
         } else {
-          throw new Error(response.data?.message || 'Failed to update client');
+          throw new Error(response.data?.message || response.data?.error || 'Failed to update client');
         }
+      } else {
+        throw new Error('Missing original client data');
       }
     } catch (error) {
       console.error('Error updating client:', error);
