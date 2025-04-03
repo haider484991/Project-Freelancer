@@ -270,27 +270,17 @@ export default function ReportingsPage() {
                           {report.protein !== undefined ? report.protein : '-'}
                         </div>
                       </td>
-                      <td className="w-[10%] px-6 py-4 whitespace-nowrap text-center align-top">
+                      <td className="w-[15%] px-6 py-4 whitespace-nowrap text-center align-top">
                         <div className="text-sm text-gray-500">
                           {report.carbs !== undefined ? report.carbs : '-'}
                         </div>
                       </td>
-                      <td className="w-[10%] px-6 py-4 whitespace-nowrap text-center align-top">
+                      <td className="w-[15%] px-6 py-4 whitespace-nowrap text-center align-top">
                         <div className="text-sm text-gray-500">
                           {report.fat !== undefined ? report.fat : '-'}
                         </div>
                       </td>
-                      <td className="w-[13%] px-6 py-4 whitespace-nowrap align-top">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${report.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                            report.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 
-                            'bg-yellow-100 text-yellow-800'}`}>
-                          {report.status === 'completed' ? t('reportings.status_completed', 'Completed') :
-                           report.status === 'in_progress' ? t('reportings.status_in_progress', 'In Progress') :
-                           t('reportings.status_pending', 'Pending')}
-                        </span>
-                      </td>
-                      <td className="w-[15%] px-6 py-4 whitespace-nowrap text-end text-sm font-medium align-top">
+                      <td className="w-[25%] px-6 py-4 whitespace-nowrap text-end text-sm font-medium align-top">
                         <div className={`flex ${i18n.dir() === 'rtl' ? 'justify-start gap-2 space-x-reverse' : 'justify-end gap-2'}`}>
                           <button 
                             onClick={() => window.location.href = `/dashboard/reportings/${report.id}`}
