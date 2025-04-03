@@ -55,24 +55,13 @@ export default function ClientTable({
     setIsRtl(rtlLanguages.includes(i18n.language));
   }, [i18n.language]);
   
-  // State for filter
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  
-  // Filter clients based on search term and status filter
+  // Filter clients based on search term only - removed status filter
   const filteredClients = clientsToUse.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (client.phone && client.phone.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
-  
-  // Handle tab change
-  const handleTabChange = (e: React.MouseEvent, tab: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setStatusFilter(tab);
-  };
   
   // Handle view client details
   const handleViewClient = (e: React.MouseEvent, client: Client) => {
@@ -95,40 +84,6 @@ export default function ClientTable({
   
   return (
     <div className={`w-full ${isRtl ? 'rtl' : ''}`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Tabs */}
-      <div className="flex gap-6 mb-6 border-b border-gray-100">
-        <button
-          className={`pb-3 px-1 font-medium ${
-            statusFilter === 'all' 
-              ? 'text-[#13A753] border-b-2 border-[#13A753]' 
-              : 'text-[#636363]'
-          }`}
-          onClick={(e) => handleTabChange(e, 'all')}
-        >
-          {t('clientTable.all_clients')}
-        </button>
-        <button
-          className={`pb-3 px-1 font-medium ${
-            statusFilter === 'active' 
-              ? 'text-[#13A753] border-b-2 border-[#13A753]' 
-              : 'text-[#636363]'
-          }`}
-          onClick={(e) => handleTabChange(e, 'active')}
-        >
-          {t('clientTable.active_clients')}
-        </button>
-        <button
-          className={`pb-3 px-1 font-medium ${
-            statusFilter === 'inactive' 
-              ? 'text-[#13A753] border-b-2 border-[#13A753]' 
-              : 'text-[#636363]'
-          }`}
-          onClick={(e) => handleTabChange(e, 'inactive')}
-        >
-          {t('clientTable.inactive_clients')}
-        </button>
-      </div>
-      
       {/* Total client count */}
       <div className="mb-4">
         <p className="text-gray-600">{t('clientTable.total_count', { count: filteredClients.length })}</p>

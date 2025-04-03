@@ -422,7 +422,7 @@ export default function CoachingGroupsPage() {
         )}
         
         {/* Header Section with Stats and Actions */}
-        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8 hover:shadow-lg transition-all duration-300">
+        <div className="bg-white p-6 rounded-25 shadow-md border border-gray-100 mb-8 hover:shadow-lg transition-all duration-300">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="flex items-center gap-4">
               <div className="bg-[#13A753]/10 rounded-full w-16 h-16 flex items-center justify-center">
@@ -453,7 +453,7 @@ export default function CoachingGroupsPage() {
                   placeholder={t('groupsPage.searchPlaceholder')} 
                     value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-25 leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-[#13A753] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 />
                 {searchQuery && (
                   <button 
@@ -470,7 +470,7 @@ export default function CoachingGroupsPage() {
               
                 <button 
                   onClick={() => setShowCreateGroupModal(true)}
-                className="w-full md:w-auto bg-[#13A753] text-white flex items-center justify-center gap-2 py-3 px-6 rounded-xl hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
+                className="w-full md:w-auto bg-[#13A753] text-white flex items-center justify-center gap-2 py-3 px-6 rounded-25 hover:bg-[#0F8A44] shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 5V19" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -484,7 +484,7 @@ export default function CoachingGroupsPage() {
         
         {/* Desktop View - Replace old table with GroupsTable */}
         <div className="hidden md:block">
-          <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg">
+          <div className="bg-white rounded-25 shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg">
             <GroupsTable 
               groups={filteredGroups}
               searchTerm={searchQuery}

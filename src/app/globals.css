@@ -76,9 +76,14 @@ body {
     border-radius: 25px !important;
   }
   
-  /* Override any instances of other rounded corners */
-  .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-full, .rounded-\[10px\], .rounded-\[20px\] {
+  /* Override any instances of other rounded corners with !important to ensure they take effect */
+  .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full, .rounded-\[10px\], .rounded-\[20px\] {
     border-radius: 25px !important;
+  }
+  
+  /* Debug style to identify which elements have rounded corners */
+  .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl {
+    /* outline: 2px dashed red !important; */
   }
 }
 

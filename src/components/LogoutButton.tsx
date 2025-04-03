@@ -19,25 +19,26 @@ export default function LogoutButton({ className = '' }: LogoutButtonProps) {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      // Call the API logout endpoint based on Postman documentation
-      const response = await fetch('https://app.fit-track.net/api/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mdl: 'login',
-          act: 'logout'
-        }),
-        credentials: 'include'
-      });
-      
-      // Handle response, but don't wait for it to be successful to proceed with local logout
+      // Call the API logout endpoint using our proxy endpoint
       try {
+        const response = await fetch('/api/proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            mdl: 'login',
+            act: 'logout',
+            user_type: localStorage.getItem('user_type') || 'coach'
+          }),
+          credentials: 'include'
+        });
+        
         const data = await response.json();
         console.log('Logout API response:', data);
-      } catch (e) {
-        console.log('Error parsing logout response:', e);
+      } catch (apiError) {
+        console.error('API logout error:', apiError);
+        // Continue with local logout even if API call fails
       }
       
       // Always clear local storage and state regardless of API response
@@ -47,7 +48,15 @@ export default function LogoutButton({ className = '' }: LogoutButtonProps) {
       localStorage.removeItem('is_logged_in');
       localStorage.removeItem('user_phone');
       localStorage.removeItem('user_id');
+      localStorage.removeItem('user_type');
       sessionStorage.clear();
+      
+      // Clear cookies
+      document.cookie = "is_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "user_phone=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       
       // Clear Redux state
       dispatch(logout() as any);
@@ -62,7 +71,17 @@ export default function LogoutButton({ className = '' }: LogoutButtonProps) {
       localStorage.removeItem('token');
       localStorage.removeItem('access_token');
       localStorage.removeItem('is_logged_in');
+      localStorage.removeItem('user_phone');
+      localStorage.removeItem('user_id');
+      localStorage.removeItem('user_type');
       sessionStorage.clear();
+      
+      // Clear cookies
+      document.cookie = "is_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "user_phone=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       
       dispatch(logout() as any);
       router.push('/login');

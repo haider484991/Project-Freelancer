@@ -143,7 +143,7 @@ export default function SettingsPage() {
   
   // Settings content
   const content = (
-    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+    <div className="bg-white p-6 rounded-25 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
       <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12.12 12.78C12.05 12.77 11.96 12.77 11.88 12.78C10.12 12.72 8.72 11.28 8.72 9.51C8.72 7.7 10.18 6.23 12 6.23C13.81 6.23 15.28 7.7 15.28 9.51C15.27 11.28 13.88 12.72 12.12 12.78Z" stroke="#13A753" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
             id="name"
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
+            className="w-full p-3 border border-gray-200 rounded-25 bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
           />
@@ -180,7 +180,7 @@ export default function SettingsPage() {
             id="business"
             value={formData.business}
             onChange={(e) => setFormData(prev => ({ ...prev, business: e.target.value }))}
-            className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
+            className="w-full p-3 border border-gray-200 rounded-25 bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
           />
@@ -196,7 +196,7 @@ export default function SettingsPage() {
             id="email"
             value={formData.email}
             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-            className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
+            className="w-full p-3 border border-gray-200 rounded-25 bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
           />
@@ -212,7 +212,7 @@ export default function SettingsPage() {
             id="phone"
             value={formData.phone}
             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed text-gray-700"
+            className="w-full p-3 border border-gray-200 rounded-25 bg-gray-50 cursor-not-allowed text-gray-700"
             disabled
             readOnly
           />
